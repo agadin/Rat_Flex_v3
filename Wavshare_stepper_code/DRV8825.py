@@ -11,9 +11,6 @@ ControlMode = [
     'softward',
 ]
 
-# Wavshare_stepper_code/DRV8825.py
-import RPi.GPIO as GPIO
-
 class DRV8825:
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins):
         self.dir_pin = dir_pin
@@ -42,3 +39,17 @@ class DRV8825:
 
     def Stop(self):
         self.digital_write(self.enable_pin, 0)
+
+    def SetMicroStep(self, mode, step_format):
+        microstep_pins = {
+            'fullstep': (0, 0, 0),
+            'halfstep': (1, 0, 0),
+            '1/4step': (0, 1, 0),
+            '1/8step': (1, 1, 0),
+            '1/16step': (1, 1, 1)
+        }
+        if step_format in microstep_pins:
+            for pin, value in zip(self.mode_pins, microstep_pins[step_format]):
+                self.digital_write(pin, value)
+        else:
+            raise ValueError(f"Invalid step format: {step_format}")
