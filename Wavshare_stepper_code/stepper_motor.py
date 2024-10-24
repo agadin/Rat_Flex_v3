@@ -64,8 +64,8 @@ class StepperMotor:
         self.motor.TurnStep(Dir='forward', steps=steps, stepdelay=0.01)
 
     def cleanup(self):
-        GPIO.cleanup()
         self.motor.Stop()
+        GPIO.cleanup()
 
 # main.py
 # from stepper_motor import StepperMotor
