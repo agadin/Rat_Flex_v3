@@ -1,4 +1,3 @@
-
 # test_stepper_motor.py
 from Wavshare_stepper_code.stepper_motor import StepperMotor
 import time
@@ -11,15 +10,9 @@ def test_stepper_motor():
         motor.calibrate()
         print("Calibration complete.")
 
-        print("Jogging 90° clockwise...")
-        motor.move_to_angle(90)
-        print("Reached 90°.")
-
-        time.sleep(1)  # Wait for 1 second
-
-        print("Jogging 90° counterclockwise...")
-        motor.move_to_angle(0)
-        print("Returned to 0°.")
+        print("Turning 100 steps to the left...")
+        motor.motor.TurnStep(Dir='backward', steps=100, stepdelay=0.01)
+        print("Turned 100 steps to the left.")
 
     except Exception as e:
         print(f"An error occurred: {e}")
