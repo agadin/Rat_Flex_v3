@@ -1,7 +1,7 @@
 # stepper_motor.py
 import RPi.GPIO as GPIO
 import time
-from DRV8825 import DRV8825
+from Wavshare_stepper_code.DRV8825 import DRV8825
 
 import os
 
