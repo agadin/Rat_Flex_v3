@@ -3,7 +3,7 @@ import time
 from force_sensor import ForceSensor
 
 def test_force_sensor():
-    sensor = ForceSensor('/dev/ttyS0')  # Adjust the port if necessary
+    sensor = ForceSensor('/dev/ttyUSB0')  # Adjust the port if necessary
     sensor.open_connection()
 
     try:
