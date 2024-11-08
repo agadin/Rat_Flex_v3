@@ -15,7 +15,7 @@ class StepperMotor:
         self.angle_to_step_ratio = None
         self.calibration_file = calibration_file
         self.step_type = step_type
-        self.stepdelay=stepdelay
+        self.stepdelay= stepdelay
         self.motor.SetMicroStep('softward', self.step_type)
 
         GPIO.setmode(GPIO.BCM)
@@ -70,6 +70,20 @@ class StepperMotor:
     def cleanup(self):
         self.motor.Stop()
         GPIO.cleanup()
+
+class SimpleStepperMotorController:
+    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins):
+        self.motor = DRV8825(dir_pin=dir_pin, step_pin=step_pin, enable_pin=enable_pin, mode_pins=mode_pins)
+        self.motor.SetMicroStep('softward', 'fullstep')
+
+    def move_forward(self, steps=200, stepdelay=0.0015):
+        self.motor.TurnStep(Dir='forward', steps=steps, stepdelay=stepdelay)
+        time.sleep(0.5)
+
+if __name__ == '__main__':
+    controller = SimpleStepperMotorController(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20))
+    controller.move_forward()
+
 
 # main.py
 # from stepper_motor import StepperMotor
