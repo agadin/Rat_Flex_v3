@@ -1,49 +1,42 @@
-# plan: Use a multimeter
-# Set the multimeter to the diode test position and check for resistance between pairs of wires. There should be a few ohms of resistance between wires in the same phase, and no continuity between wires in different phases
-
 import RPi.GPIO as GPIO
 import time
-
-# Define GPIO pins connected to the DRV8825 driver
-DIR_PIN = 20  # Direction pin
-STEP_PIN = 21  # Step pin
-ENABLE_PIN = 16  # Enable pin
-
-# Setup GPIO mode
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(DIR_PIN, GPIO.OUT)
-GPIO.setup(STEP_PIN, GPIO.OUT)
-GPIO.setup(ENABLE_PIN, GPIO.OUT)
-
-# Enable the driver by setting the ENABLE_PIN low
-GPIO.output(ENABLE_PIN, GPIO.LOW)
-
-
-# Function to rotate the motor
-def rotate_motor(steps, direction, delay):
-	# Set the direction
-	GPIO.output(DIR_PIN, direction)
-
-	for _ in range(steps):
-		# Pulse the step pin to move the motor
-		GPIO.output(STEP_PIN, GPIO.HIGH)
-		time.sleep(delay)
-		GPIO.output(STEP_PIN, GPIO.LOW)
-		time.sleep(delay)
+from DRV8825 import DRV8825
 
 
 try:
-	# Rotate motor clockwise 200 steps
-	print("Rotating clockwise...")
-	rotate_motor(steps=200, direction=GPIO.HIGH, delay=0.001)
+	Motor1 = DRV8825(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20))
+	Motor2 = DRV8825(dir_pin=24, step_pin=18, enable_pin=4, mode_pins=(21, 22, 27))
 
-	time.sleep(1)
-
-	# Rotate motor counterclockwise 200 steps
-	print("Rotating counterclockwise...")
-	rotate_motor(steps=200, direction=GPIO.LOW, delay=0.001)
-
-finally:
-	# Cleanup GPIO setup
-	GPIO.output(ENABLE_PIN, GPIO.HIGH)  # Disable the motor
+	"""
+	# 1.8 degree: nema23, nema14
+	# softward Control :
+	# 'fullstep': A cycle = 200 steps
+	# 'halfstep': A cycle = 200 * 2 steps
+	# '1/4step': A cycle = 200 * 4 steps
+	# '1/8step': A cycle = 200 * 8 steps
+	# '1/16step': A cycle = 200 * 16 steps
+	# '1/32step': A cycle = 200 * 32 steps
+	"""
+	Motor1.SetMicroStep('softward','halfstep')
+	Motor1.TurnStep(Dir='forward', steps=200, stepdelay = 0.0015)
+	time.sleep(0.5)
+	Motor1.TurnStep(Dir='backward', steps=200, stepdelay = 0.0015)
+	Motor1.Stop()
 	GPIO.cleanup()
+	"""
+	# 28BJY-48:
+	# softward Control :
+	# 'fullstep': A cycle = 2048 steps
+	# 'halfstep': A cycle = 2048 * 2 steps
+	# '1/4step': A cycle = 2048 * 4 steps
+	# '1/8step': A cycle = 2048 * 8 steps
+	# '1/16step': A cycle = 2048 * 16 steps
+	# '1/32step': A cycle = 2048 * 32 steps
+	"""
+    
+except:
+    GPIO.cleanup()
+    print ("\nMotor stop")
+    Motor1.Stop()
+    Motor2.Stop()
+    exit()
