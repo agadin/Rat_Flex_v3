@@ -57,9 +57,8 @@ class StepperMotor:
             file.write(f"steps_per_revolution: {self.steps_per_revolution}\n")
             file.write(f"angle_to_step_ratio: {self.angle_to_step_ratio}\n")
 
-        # Move back to 90 degrees
-        self.move_to_angle(90)
-        self.current_angle = 90
+
+
 
     def _move_one_step(self, direction):
         """Moves the motor one step in the specified direction and updates the current angle."""
