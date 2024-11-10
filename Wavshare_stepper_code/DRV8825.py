@@ -74,15 +74,15 @@ class DRV8825():
             
         print ("turn step:",steps)
         for i in range(steps):
-            if not GPIO.input(self.limit_switch_1) or not GPIO.input(self.limit_switch_2):
+            if (Dir == MotorDir[0] and not GPIO.input(self.limit_switch_1)) or (Dir == MotorDir[1] and not GPIO.input(self.limit_switch_2)):
                 print("Limit switch triggered, stopping motor")
                 break
+
             self.digital_write(self.step_pin, True)
             time.sleep(stepdelay)
             self.digital_write(self.step_pin, False)
             if steps != 1:
                 time.sleep(stepdelay)
-
 # gpio_setup.py
 
 def setup_gpio(limit_switch_1, limit_switch_2):
