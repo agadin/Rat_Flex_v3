@@ -68,8 +68,10 @@ class StepperMotor:
         GPIO.cleanup()
 
 class SimpleStepperMotorController:
-    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins):
-        self.motor = DRV8825(dir_pin=dir_pin, step_pin=step_pin, enable_pin=enable_pin, mode_pins=mode_pins)
+    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_pins):
+        self.limit_switch_1 = limit_pins[0]
+        self.limit_switch_2 = limit_pins[1]
+        self.motor = DRV8825(dir_pin=dir_pin, step_pin=step_pin, enable_pin=enable_pin, mode_pins=mode_pins, limit_pins= (self.limit_switch_1 , self.limit_switch_2))
         self.motor.SetMicroStep('softward', 'fullstep')
 
     def move_forward(self, steps=200, stepdelay=0.0015):
@@ -77,7 +79,7 @@ class SimpleStepperMotorController:
         time.sleep(0.5)
 
 if __name__ == '__main__':
-    controller = SimpleStepperMotorController(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20))
+    controller = SimpleStepperMotorController(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_pins=(5, 6))
     controller.move_forward()
 
 
