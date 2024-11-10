@@ -59,6 +59,7 @@ class StepperMotor:
 
         # Move back to 90 degrees
         self.move_to_angle(90)
+        self.current_angle = 90
 
     def _move_one_step(self, direction):
         """Moves the motor one step in the specified direction and updates the current angle."""
