@@ -54,7 +54,7 @@ class StepperMotor:
             file.write(f"steps_per_revolution: {self.steps_per_revolution}\n")
             file.write(f"angle_to_step_ratio: {self.angle_to_step_ratio}\n")
 
-        self.move_to_angle(90)
+        # self.move_to_angle(90)
 
     def _update_angle(self, steps, direction):
         """Updates the current angle based on steps moved."""
@@ -99,7 +99,7 @@ def main():
     try:
         motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6, step_type='fullstep', stepdelay=0.003)
         motor.calibrate()
-        motor.move_to_angle(200)
+        # motor.move_to_angle(200)
 
         # Print current angle in a loop (for demonstration)
         while True:
