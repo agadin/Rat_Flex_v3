@@ -54,12 +54,11 @@ class StepperMotor:
             file.write(f"steps_per_revolution: {self.steps_per_revolution}\n")
             file.write(f"angle_to_step_ratio: {self.angle_to_step_ratio}\n")
 
-        # self.move_to_angle(90)
 
-    def _update_angle(self, steps, direction):
-        """Updates the current angle based on steps moved."""
+    def _update_angle(self, direction):
+        """Updates the current angle based on a single step."""
         with self._lock:
-            angle_change = steps / self.angle_to_step_ratio
+            angle_change = 1 / self.angle_to_step_ratio
             if direction == 'forward':
                 self.current_angle += angle_change
             else:
@@ -67,20 +66,18 @@ class StepperMotor:
 
     def move_to_angle(self, target_angle):
         if self.angle_to_step_ratio is None:
-            self.angle_to_step_ratio = 1.0
+            raise Exception("Motor not calibrated. Please run calibrate() first.")
 
         target_steps = int(target_angle * self.angle_to_step_ratio)
         current_steps = int(self.current_angle * self.angle_to_step_ratio)
         steps_to_move = abs(target_steps - current_steps)
         direction = 'forward' if target_steps > current_steps else 'backward'
 
-        def move_and_update():
-            self.motor.TurnStep(Dir=direction, steps=steps_to_move, stepdelay=self.stepdelay)
-            self._update_angle(steps_to_move, direction)
-
-        # Start movement in a separate thread
-        thread = threading.Thread(target=move_and_update)
-        thread.start()
+        # Move one step at a time and update the current angle
+        for _ in range(steps_to_move):
+            self.motor.TurnStep(Dir=direction, steps=1, stepdelay=self.stepdelay)
+            self._update_angle(direction)
+            time.sleep(self.stepdelay)
 
     def get_current_angle(self):
         """Returns the current angle of the motor."""
