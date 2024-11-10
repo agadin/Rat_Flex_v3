@@ -80,7 +80,8 @@ class DRV8825():
             self.digital_write(self.step_pin, True)
             time.sleep(stepdelay)
             self.digital_write(self.step_pin, False)
-            time.sleep(stepdelay)
+            if steps != 1:
+                time.sleep(stepdelay)
 
 # gpio_setup.py
 

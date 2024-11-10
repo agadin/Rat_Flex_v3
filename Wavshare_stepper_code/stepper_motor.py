@@ -61,7 +61,7 @@ class StepperMotor:
             #raise Exception("Motor not calibrated. Please run calibrate() first.")
 
         steps = int(angle * self.angle_to_step_ratio)
-        self.motor.TurnStep(Dir='forward', steps=steps, stepdelay=0.01)
+        self.motor.TurnStep(Dir='forward', steps=steps, stepdelay=0.0015)
 
     def cleanup(self):
         self.motor.Stop()
@@ -94,8 +94,7 @@ def main():
         motor.stop()
         motor.cleanup()
     time.sleep(5)
-    controller = SimpleStepperMotorController(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20),
-                                              limit_pins=(5, 6))
+    controller = SimpleStepperMotorController(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_pins=(5, 6))
     controller.move_forward()
     controller.stop()
 
