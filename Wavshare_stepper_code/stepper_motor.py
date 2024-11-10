@@ -67,6 +67,10 @@ class StepperMotor:
         self.motor.Stop()
         GPIO.cleanup()
 
+    def stop(self):
+        self.motor.Stop()
+
+
 class SimpleStepperMotorController:
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_pins):
         self.limit_switch_1 = limit_pins[0]
@@ -77,13 +81,24 @@ class SimpleStepperMotorController:
     def move_forward(self, steps=200, stepdelay=0.0015):
         self.motor.TurnStep(Dir='forward', steps=steps, stepdelay=stepdelay)
         time.sleep(0.5)
+
     def stop(self):
         self.motor.Stop()
 
+def main():
+    try:
+        motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6)
+        # motor.calibrate()
+        motor.move_to_angle(200)  # Move to 200 degrees
+    finally:
+        motor.stop()
+        motor.cleanup()
+
 if __name__ == '__main__':
-    controller = SimpleStepperMotorController(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_pins=(5, 6))
-    controller.move_forward()
-    controller.stop()
+    #controller = SimpleStepperMotorController(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_pins=(5, 6))
+    # controller.move_forward()
+    #controller.stop()
+    main()
 
 
 # main.py
