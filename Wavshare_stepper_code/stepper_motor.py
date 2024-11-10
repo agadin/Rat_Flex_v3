@@ -21,7 +21,7 @@ class StepperMotor:
 
         # Initialize current angle
         self.current_angle = 0
-        self._lock = threading.Lock()  # To safely update the current angle
+        self._lock = threading.Lock()
 
     def load_calibration(self):
         if os.path.exists(self.calibration_file):
@@ -36,25 +36,35 @@ class StepperMotor:
             print(f"Calibration file {self.calibration_file} not found. Please run calibrate() first.")
 
     def calibrate(self):
-        self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
+        """Calibrate the motor by moving to both limit switches and updating steps per revolution."""
+        # Move clockwise until the first limit switch is pressed
+        print("Starting calibration...")
         while GPIO.input(self.limit_switch_1):
-            self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
-            time.sleep(self.stepdelay)
+            self._move_one_step(direction='forward')
 
+        # Move counter-clockwise to find the other limit switch
         steps = 0
         while GPIO.input(self.limit_switch_2):
-            self.motor.TurnStep(Dir='backward', steps=1, stepdelay=self.stepdelay)
-            time.sleep(self.stepdelay)
+            self._move_one_step(direction='backward')
             steps += 1
 
+        # Update calibration parameters
         self.steps_per_revolution = steps
         self.angle_to_step_ratio = steps / 180.0
 
+        # Save calibration data
         with open(self.calibration_file, 'w') as file:
             file.write(f"steps_per_revolution: {self.steps_per_revolution}\n")
             file.write(f"angle_to_step_ratio: {self.angle_to_step_ratio}\n")
 
-        # self.move_to_angle(90)
+        # Move back to 90 degrees
+        self.move_to_angle(90)
+
+    def _move_one_step(self, direction):
+        """Moves the motor one step in the specified direction and updates the current angle."""
+        self.motor.TurnStep(Dir=direction, steps=1, stepdelay=self.stepdelay)
+        time.sleep(self.stepdelay)
+        self._update_angle(1, direction)
 
     def _update_angle(self, steps, direction):
         """Updates the current angle based on steps moved."""
@@ -66,21 +76,20 @@ class StepperMotor:
                 self.current_angle -= angle_change
 
     def move_to_angle(self, target_angle):
+        """Moves the motor to the specified target angle step by step."""
         if self.angle_to_step_ratio is None:
-            self.angle_to_step_ratio = 1.0
+            raise Exception("Motor not calibrated. Please run calibrate() first.")
 
         target_steps = int(target_angle * self.angle_to_step_ratio)
         current_steps = int(self.current_angle * self.angle_to_step_ratio)
         steps_to_move = abs(target_steps - current_steps)
         direction = 'forward' if target_steps > current_steps else 'backward'
 
-        def move_and_update():
-            self.motor.TurnStep(Dir=direction, steps=steps_to_move, stepdelay=self.stepdelay)
-            self._update_angle(steps_to_move, direction)
+        print(f"Moving to angle {target_angle}° ({steps_to_move} steps, direction: {direction})")
 
-        # Start movement in a separate thread
-        thread = threading.Thread(target=move_and_update)
-        thread.start()
+        # Move step by step to update angle accurately
+        for _ in range(steps_to_move):
+            self._move_one_step(direction)
 
     def get_current_angle(self):
         """Returns the current angle of the motor."""
@@ -99,11 +108,11 @@ def main():
     try:
         motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6, step_type='fullstep', stepdelay=0.003)
         motor.calibrate()
-        motor.move_to_angle(90)
+        motor.move_to_angle(200)
 
         # Print current angle in a loop (for demonstration)
         while True:
-            print(f"Current angle: {motor.get_current_angle()}")
+            print(f"Current angle: {motor.get_current_angle():.2f}°")
             time.sleep(0.1)
 
     finally:
