@@ -36,12 +36,15 @@ class StepperMotor:
         # Rotate clockwise until the first limit switch is pressed
         self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
         while GPIO.input(self.limit_switch_1):
+            print("Limit switch 1 status:", GPIO.input(self.limit_switch_1))
             self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
+            time.sleep(self.stepdelay)
 
         # Rotate counter-clockwise until the second limit switch is pressed
         steps = 0
         while GPIO.input(self.limit_switch_2):
             self.motor.TurnStep(Dir='backward', steps=1, stepdelay=self.stepdelay)
+            time.sleep(self.stepdelay)
             steps += 1
 
         self.steps_per_revolution = steps
