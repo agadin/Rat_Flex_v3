@@ -99,7 +99,7 @@ def main():
     try:
         motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6, step_type='fullstep', stepdelay=0.003)
         motor.calibrate()
-        # motor.move_to_angle(200)
+        motor.move_to_angle(90)
 
         # Print current angle in a loop (for demonstration)
         while True:
