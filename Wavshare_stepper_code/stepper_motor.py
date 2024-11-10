@@ -6,7 +6,7 @@ from DRV8825 import DRV8825, setup_gpio
 import os
 
 class StepperMotor:
-    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='1/16step', stepdelay=0.0015,  calibration_file='calibration.txt'):
+    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='fullstep', stepdelay=0.0015,  calibration_file='calibration.txt'):
         self.limit_switch_1 = limit_switch_1
         self.limit_switch_2 = limit_switch_2
         self.motor = DRV8825(dir_pin=dir_pin, step_pin=step_pin, enable_pin=enable_pin, mode_pins=mode_pins, limit_pins= (self.limit_switch_1 , self.limit_switch_2))
