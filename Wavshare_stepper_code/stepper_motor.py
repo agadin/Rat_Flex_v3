@@ -1,16 +1,15 @@
 # stepper_motor.py
 import RPi.GPIO as GPIO
 import time
-from DRV8825 import DRV8825
+from DRV8825 import DRV8825, setup_gpio
 
 import os
 
 class StepperMotor:
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='1/16step', stepdelay=0.0015,  calibration_file='calibration.txt'):
-        self.motor = DRV8825(dir_pin=dir_pin, step_pin=step_pin, enable_pin=enable_pin, mode_pins=mode_pins)
-
         self.limit_switch_1 = limit_switch_1
         self.limit_switch_2 = limit_switch_2
+        self.motor = DRV8825(dir_pin=dir_pin, step_pin=step_pin, enable_pin=enable_pin, mode_pins=mode_pins, limit_pins= (self.limit_switch_1 , self.limit_switch_2))
         self.steps_per_revolution = None
         self.angle_to_step_ratio = None
         self.calibration_file = calibration_file
@@ -18,10 +17,7 @@ class StepperMotor:
         self.stepdelay= stepdelay
         self.motor.SetMicroStep('softward', self.step_type)
 
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.limit_switch_1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(self.limit_switch_2, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
+        setup_gpio(self.limit_switch_1, self.limit_switch_2)
         self.load_calibration()
 
     def load_calibration(self):

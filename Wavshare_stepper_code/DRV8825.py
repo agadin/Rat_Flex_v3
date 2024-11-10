@@ -12,12 +12,15 @@ ControlMode = [
 ]
 
 class DRV8825():
-    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins):
+    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_pins):
         self.dir_pin = dir_pin
         self.step_pin = step_pin        
         self.enable_pin = enable_pin
         self.mode_pins = mode_pins
-        
+        self.limit_pins = limit_pins
+        self.limit_switch_1 = limit_pins[0]
+        self.limit_switch_2 = limit_pins[1]
+        setup_gpio(self.limit_switch_1, self.limit_switch_2)
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
         GPIO.setup(self.dir_pin, GPIO.OUT)
@@ -75,3 +78,11 @@ class DRV8825():
             time.sleep(stepdelay)
             self.digital_write(self.step_pin, False)
             time.sleep(stepdelay)
+
+# gpio_setup.py
+
+def setup_gpio(limit_switch_1, limit_switch_2):
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+    GPIO.setup(limit_switch_1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(limit_switch_2, GPIO.IN, pull_up_down=GPIO.PUD_UP)
