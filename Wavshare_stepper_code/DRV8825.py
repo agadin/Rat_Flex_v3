@@ -76,7 +76,6 @@ class DRV8825():
         for i in range(steps):
             if not GPIO.input(self.limit_switch_1) or not GPIO.input(self.limit_switch_2):
                 print("Limit switch triggered, stopping motor")
-                self.Stop()
                 break
             self.digital_write(self.step_pin, True)
             time.sleep(stepdelay)
