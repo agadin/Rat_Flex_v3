@@ -1,6 +1,5 @@
 from Wavshare_stepper_code.stepper_motor import StepperMotor
 import time
-import threading
 import queue
 import streamlit as st
 import asyncio
@@ -14,16 +13,16 @@ async def motor_worker(motor, db_client):
     while True:
         command = command_queue.get()  # Block until a new command is available
         if command == "calibrate":
-            motor.calibrate()
+            await motor.calibrate()
         elif command.startswith("move"):
             # Extract angle from the command
             angle = int(command.split(":")[1])
-            motor.move_to_angle(angle, db_client)
+            await motor.move_to_angle(angle)
         elif command == "stop":
             motor.stop()
             await db_client.send_db_command("stop_motor")  # Stop motor command sent to WebSocket
             break
-        time.sleep(0.1)
+        await asyncio.sleep(0.1)
 
 async def get_current_state_from_db(db_client):
     """Fetch the current state of the motor from the WebSocket-based MySQL database."""
@@ -79,9 +78,8 @@ async def main():
     # Initialize the stepper motor
     motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6, step_type='fullstep', stepdelay=0.003)
 
-    # Start the motor worker thread
-    motor_thread = threading.Thread(target=motor_worker, args=(motor, db_client), daemon=True)
-    motor_thread.start()
+    # Start the motor worker coroutine
+    motor_worker_task = asyncio.create_task(motor_worker(motor, db_client))
 
     # Streamlit user interface
     st.title("Stepper Motor Control Panel")
@@ -90,7 +88,7 @@ async def main():
     debug_option = st.selectbox("Debug: Test WebSocket Connection", ["Select an option", "Test WebSocket Connection"])
 
     if debug_option == "Test WebSocket Connection":
-        connection_status = test_websocket_connection(db_client)
+        connection_status = await test_websocket_connection(db_client)
         st.write(connection_status)
 
     if 'calibrate' not in st.session_state:
@@ -121,8 +119,8 @@ async def main():
     # Continuously display the current angle
     await display_current_state(db_client)
 
-    # Wait for the motor thread to finish
-    motor_thread.join()
+    # Wait for the motor worker task to finish
+    await motor_worker_task
 
     # Close the WebSocket connection when done
     await db_client.close()
