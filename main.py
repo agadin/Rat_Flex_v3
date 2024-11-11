@@ -24,9 +24,9 @@ def motor_worker(motor, db_client):
             break
         time.sleep(0.1)
 
-def get_current_state_from_db(db_client):
+async def get_current_state_from_db(db_client):
     """Fetch the current state of the motor from the WebSocket-based MySQL database."""
-    response = db_client.send_db_command("get_motor_state")
+    response = await db_client.send_db_command("get_motor_state")
     if response and "data" in response:
         data = response["data"]
         return {
@@ -39,7 +39,7 @@ def get_current_state_from_db(db_client):
         return None
 
 # Function to display the current angle
-def display_current_state(db_client):
+async def display_current_state(db_client):
     # Create placeholders for the values to update dynamically
     angle_placeholder = st.empty()
     direction_placeholder = st.empty()
@@ -47,7 +47,7 @@ def display_current_state(db_client):
     ratio_placeholder = st.empty()
 
     while True:
-        current_state = get_current_state_from_db(db_client)  # Fetch the current state from the database
+        current_state = await get_current_state_from_db(db_client)  # Fetch the current state from the database
 
         if current_state:
             # Update the placeholders with the new values
