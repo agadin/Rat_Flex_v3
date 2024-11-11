@@ -3,6 +3,7 @@ import time
 import threading
 import queue
 import streamlit as st
+import sqlite3
 
 # Command queue to manage motor actions
 command_queue = queue.Queue()
@@ -22,14 +23,36 @@ def motor_worker(motor):
             break
         time.sleep(0.1)
 
+def get_current_state_from_db(db_file="motor_state.db"):
+    conn = sqlite3.connect(db_file, check_same_thread=False)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT current_angle, current_direction, motor_state, angle_to_step_ratio FROM motor_state WHERE id = 1;")
+    result = cursor.fetchone()
+
+    conn.close()
+
+    if result:
+        current_angle, current_direction, motor_state, angle_to_step_ratio = result
+        return {
+            'current_angle': current_angle,
+            'current_direction': current_direction,
+            'motor_state': motor_state,
+            'angle_to_step_ratio': angle_to_step_ratio
+        }
+    else:
+        return None
+
 # Function to display the current angle
-def display_current_angle(motor):
-    angle_display = st.empty()
-    while motor.current_state != "idle":
-        motor.cursor.execute("SELECT current_angle FROM motor_state WHERE id = 1;")
-        current_angle = motor.cursor.fetchone()[0]
-        angle_display.metric("Current Angle", f"{current_angle:.2f} degrees")
-        time.sleep(1)
+def display_current_state():
+    while True:
+        current_state = get_current_state_from_db()  # Fetch the current state from the database
+        if current_state:
+            st.write(f"Current Angle: {current_state['current_angle']}°")
+            st.write(f"Current Direction: {current_state['current_direction']}")
+            st.write(f"Motor State: {current_state['motor_state']}")
+            st.write(f"Angle to Step Ratio: {current_state['angle_to_step_ratio']}")
+        time.sleep(1)  # Update every second
 
 def main():
     # Initialize the stepper motor
@@ -63,7 +86,7 @@ def main():
         st.write(f"Motor moved to {angle_input} degrees")
 
     # Continuously display the current angle
-    display_current_angle(motor)
+    display_current_state()
 
     # Wait for the motor thread to finish
     motor_thread.join()
