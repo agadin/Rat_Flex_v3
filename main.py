@@ -34,11 +34,11 @@ def get_current_state_from_db(db_file="stepper_motor.db"):
     conn.close()
 
     if result:
-        current_angle, current_direction, motor_state, angle_to_step_ratio = result
+        current_angle, current_direction, current_state, angle_to_step_ratio = result
         return {
             'current_angle': current_angle,
             'current_direction': current_direction,
-            'motor_state': motor_state,
+            'motor_state': current_state,
             'angle_to_step_ratio': angle_to_step_ratio
         }
     else:
@@ -46,13 +46,22 @@ def get_current_state_from_db(db_file="stepper_motor.db"):
 
 # Function to display the current angle
 def display_current_state():
+    # Create placeholders for the values to update dynamically
+    angle_placeholder = st.empty()
+    direction_placeholder = st.empty()
+    motor_state_placeholder = st.empty()
+    ratio_placeholder = st.empty()
+
     while True:
         current_state = get_current_state_from_db()  # Fetch the current state from the database
+
         if current_state:
-            st.write(f"Current Angle: {current_state['current_angle']}°")
-            st.write(f"Current Direction: {current_state['current_direction']}")
-            st.write(f"Motor State: {current_state['motor_state']}")
-            st.write(f"Angle to Step Ratio: {current_state['angle_to_step_ratio']}")
+            # Update the placeholders with the new values
+            angle_placeholder.metric("Current Angle", f"{current_state['current_angle']}°")
+            direction_placeholder.metric("Current Direction", current_state['current_direction'])
+            motor_state_placeholder.metric("Motor State", current_state['motor_state'])
+            ratio_placeholder.metric("Angle to Step Ratio", current_state['angle_to_step_ratio'])
+
         time.sleep(1)  # Update every second
 
 def main():
