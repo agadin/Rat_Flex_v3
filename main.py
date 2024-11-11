@@ -4,6 +4,7 @@ import threading
 import queue
 import streamlit as st
 import sqlite3
+from database import init_db
 
 # Command queue to manage motor actions
 command_queue = queue.Queue()
@@ -58,6 +59,8 @@ def main():
     # Initialize the stepper motor
     motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6, step_type='fullstep', stepdelay=0.003)
 
+    # Initialize the database
+    init_db()
     # Start the motor worker thread
     motor_thread = threading.Thread(target=motor_worker, args=(motor,), daemon=True)
     motor_thread.start()
