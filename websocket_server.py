@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql
 import asyncio
 import websockets
 import json
@@ -17,7 +17,7 @@ async def handle_request(websocket, path):
         data = json.loads(message)
         command = data.get("command")
 
-        with mysql.connector.connect(**db_config) as connection:
+        with pymysql.connect(**db_config) as connection:
             cursor = connection.cursor(dictionary=True)
 
             if command == "get_motor_state":
