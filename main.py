@@ -3,6 +3,7 @@ import time
 import threading
 import queue
 import streamlit as st
+import asyncio
 from database_websocket_client import DatabaseWebSocketClient
 
 # Command queue to manage motor actions
@@ -127,4 +128,4 @@ async def main():
     await db_client.close()
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
