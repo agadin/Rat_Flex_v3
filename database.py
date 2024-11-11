@@ -50,6 +50,7 @@ def init_db():
 
         conn.commit()
         print("Database initialization complete.")
+        conn.close()
 
 def check_if_initialized():
     """Check if the database has already been initialized."""
