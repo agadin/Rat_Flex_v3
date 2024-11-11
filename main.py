@@ -9,7 +9,7 @@ from database_websocket_client import DatabaseWebSocketClient
 command_queue = queue.Queue()
 
 # Function to continuously process commands in a separate thread
-def motor_worker(motor, db_client):
+async def motor_worker(motor, db_client):
     while True:
         command = command_queue.get()  # Block until a new command is available
         if command == "calibrate":
@@ -20,7 +20,7 @@ def motor_worker(motor, db_client):
             motor.move_to_angle(angle, db_client)
         elif command == "stop":
             motor.stop()
-            db_client.send_db_command("stop_motor")  # Stop motor command sent to WebSocket
+            await db_client.send_db_command("stop_motor")  # Stop motor command sent to WebSocket
             break
         time.sleep(0.1)
 
@@ -71,7 +71,7 @@ def test_websocket_connection(db_client):
     except Exception as e:
         return f"WebSocket connection failed: {e}"
 
-def main():
+async def main():
     # Initialize the WebSocket client
     db_client = DatabaseWebSocketClient()
 
@@ -114,17 +114,17 @@ def main():
 
     # Add Stop Motor button
     if st.button("Stop Motor"):
-        db_client.send_db_command("stop_motor")
+        await db_client.send_db_command("stop_motor")
         st.write("Motor stopped.")
 
     # Continuously display the current angle
-    display_current_state(db_client)
+    await display_current_state(db_client)
 
     # Wait for the motor thread to finish
     motor_thread.join()
 
     # Close the WebSocket connection when done
-    db_client.close()
+    await db_client.close()
 
 if __name__ == '__main__':
     main()
