@@ -35,6 +35,20 @@ CREATE TABLE motor_state (
     angle_to_step_ratio FLOAT DEFAULT 1.0
 );
 ```
+USE motor_control;
+
+CREATE TABLE force_state (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    force_state VARCHAR(255) DEFAULT 'idle',
+    force_value FLOAT DEFAULT 0.0
+);
+```sql
+
+```
+## Example row change
+```sql
+ALTER TABLE motor_state CHANGE motor_state current_state VARCHAR(255) DEFAULT 'idle';
+```
 
 # Data verification
 

@@ -6,9 +6,9 @@ import json
 # MySQL connection configuration
 db_config = {
     "host": "localhost",
-    "user": "your_username",
-    "password": "your_password",
-    "database": "stepper_motor_db"
+    "user": "ratflex",
+    "password": "softtissue",
+    "database": "motor_control"
 }
 
 
@@ -76,7 +76,39 @@ async def handle_request(websocket, path):
                                 "status": "error",
                                 "message": "Stop flag not found"
                             }))
+            elif command == "get_current_force":
+                # Query the motor state from the database
+                cursor.execute(
+                    "SELECT current_force FROM force_state WHERE id = 1;")
+                result = cursor.fetchone()
 
+                if result:
+                    # Send back the motor state data
+                    await websocket.send(json.dumps({
+                        "status": "success",
+                        "data": result
+                    }))
+                else:
+                    await websocket.send(json.dumps({
+                        "status": "error",
+                        "message": "Motor state not found"
+                    }))
+            elif command == "update_current_force":
+                updates = data.get("data", {})
+                if updates:
+                    # Update the motor state in the database
+                    for key, value in updates.items():
+                        cursor.execute(f"UPDATE force_state SET {key} = %s WHERE id = 1;", (value,))
+                    connection.commit()
+                    await websocket.send(json.dumps({
+                        "status": "success",
+                        "message": "Force state updated successfully"
+                    }))
+                else:
+                    await websocket.send(json.dumps({
+                        "status": "error",
+                        "message": "No data provided for update"
+                    }))
             else:
                 # Handle unknown commands
                 await websocket.send(json.dumps({
