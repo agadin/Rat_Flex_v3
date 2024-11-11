@@ -60,6 +60,8 @@ def display_current_state(db_client):
 
 def test_websocket_connection(db_client):
     """Test the WebSocket connection."""
+    # TODO: add a check for mySQL connection
+
     try:
         response = db_client.send_db_command("get_motor_state")
         if response and response.get("status") == "success":
