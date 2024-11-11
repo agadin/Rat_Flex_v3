@@ -4,7 +4,7 @@ import threading
 import queue
 import streamlit as st
 import sqlite3
-from database import init_db
+from database import init_db, DATABASE_PATH
 
 # Command queue to manage motor actions
 command_queue = queue.Queue()
@@ -24,7 +24,7 @@ def motor_worker(motor):
             break
         time.sleep(0.1)
 
-def get_current_state_from_db(db_file="motor_state.db"):
+def get_current_state_from_db(db_file="stepper_motor.db"):
     conn = sqlite3.connect(db_file, check_same_thread=False)
     cursor = conn.cursor()
 
