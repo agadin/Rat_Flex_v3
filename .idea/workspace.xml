@@ -4,9 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3d1e1a3a-9498-4134-8874-999583fd15c5" name="Changes" comment="force sensor test">
+    <list default="true" id="3d1e1a3a-9498-4134-8874-999583fd15c5" name="Changes" comment="database streamlit test5 need patched display">
+      <change afterPath="$PROJECT_DIR$/database_websocket_client.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/websocket_server.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/force_sensor.py" beforeDir="false" afterPath="$PROJECT_DIR$/force_sensor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Wavshare_stepper_code/stepper_motor.py" beforeDir="false" afterPath="$PROJECT_DIR$/Wavshare_stepper_code/stepper_motor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/database.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -106,22 +109,11 @@
       <workItem from="1729720075706" duration="1722000" />
       <workItem from="1729788662885" duration="3789000" />
       <workItem from="1729796022079" duration="20000" />
-    </task>
-    <task id="LOCAL-00001" summary="intial plan for viewer">
-      <option name="closed" value="true" />
-      <created>1727798496390</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1727798496390</updated>
-    </task>
-    <task id="LOCAL-00002" summary="forc sensor test">
-      <option name="closed" value="true" />
-      <created>1729789743217</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1729789743217</updated>
+      <workItem from="1729796051743" duration="2999000" />
+      <workItem from="1730994376570" duration="2172000" />
+      <workItem from="1731001789753" duration="12000" />
+      <workItem from="1731085748806" duration="10321000" />
+      <workItem from="1731216625378" duration="21692000" />
     </task>
     <task id="LOCAL-00003" summary="force sensor test">
       <option name="closed" value="true" />
@@ -131,16 +123,422 @@
       <option name="project" value="LOCAL" />
       <updated>1729792678920</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="began stepper test">
+      <option name="closed" value="true" />
+      <created>1729796175933</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1729796175933</updated>
+    </task>
+    <task id="LOCAL-00005" summary="fixed module pathing">
+      <option name="closed" value="true" />
+      <created>1729798680180</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1729798680180</updated>
+    </task>
+    <task id="LOCAL-00006" summary="stepper wrong">
+      <option name="closed" value="true" />
+      <created>1729798865291</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1729798865291</updated>
+    </task>
+    <task id="LOCAL-00007" summary="stepper wrong">
+      <option name="closed" value="true" />
+      <created>1729799178362</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1729799178362</updated>
+    </task>
+    <task id="LOCAL-00008" summary="updated stepper_motor.py">
+      <option name="closed" value="true" />
+      <created>1729799262802</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1729799262802</updated>
+    </task>
+    <task id="LOCAL-00009" summary="updated DRV8825.py">
+      <option name="closed" value="true" />
+      <created>1729799328163</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1729799328163</updated>
+    </task>
+    <task id="LOCAL-00010" summary="trying new stepper motor test">
+      <option name="closed" value="true" />
+      <created>1730995112893</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1730995112893</updated>
+    </task>
+    <task id="LOCAL-00011" summary="trying new stepper motor test">
+      <option name="closed" value="true" />
+      <created>1731095899655</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1731095899655</updated>
+    </task>
+    <task id="LOCAL-00012" summary="trying new stepper motor test">
+      <option name="closed" value="true" />
+      <created>1731096815387</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1731096815387</updated>
+    </task>
+    <task id="LOCAL-00013" summary="added safety limit switches">
+      <option name="closed" value="true" />
+      <created>1731270186807</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1731270186807</updated>
+    </task>
+    <task id="LOCAL-00014" summary="patched safety limit switches">
+      <option name="closed" value="true" />
+      <created>1731270434632</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1731270434632</updated>
+    </task>
+    <task id="LOCAL-00015" summary="patched safety limit switches">
+      <option name="closed" value="true" />
+      <created>1731270639270</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1731270639270</updated>
+    </task>
+    <task id="LOCAL-00016" summary="added stop test to safety limit switches">
+      <option name="closed" value="true" />
+      <created>1731270739018</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1731270739018</updated>
+    </task>
+    <task id="LOCAL-00017" summary="patched it so that .stop() method is not triggered in DRV8825.py when limit switch is triggered (just breaks loop instead">
+      <option name="closed" value="true" />
+      <created>1731270867160</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1731270867160</updated>
+    </task>
+    <task id="LOCAL-00018" summary="StepperMotor class test1">
+      <option name="closed" value="true" />
+      <created>1731271031072</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1731271031072</updated>
+    </task>
+    <task id="LOCAL-00019" summary="StepperMotor class test2 fixed default step_type">
+      <option name="closed" value="true" />
+      <created>1731271145242</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1731271145242</updated>
+    </task>
+    <task id="LOCAL-00020" summary="StepperMotor class test3 investigating weird stepper motor behavior.">
+      <option name="closed" value="true" />
+      <created>1731271266413</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1731271266413</updated>
+    </task>
+    <task id="LOCAL-00021" summary="added jog mode to DRV8825.py by removing tailing step delay. NOTE: tailing step delay (after step_pin false) has to be done in jog mode but can be done elsewhere (ie after switch read or sensor read occurs)">
+      <option name="closed" value="true" />
+      <created>1731272109037</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1731272109037</updated>
+    </task>
+    <task id="LOCAL-00022" summary="begin testing calibrate">
+      <option name="closed" value="true" />
+      <created>1731272252101</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1731272252101</updated>
+    </task>
+    <task id="LOCAL-00023" summary="while GPIO.input(self.limit_switch_1): is not exiting upin trigger instead it is triggering upon release">
+      <option name="closed" value="true" />
+      <created>1731277025742</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1731277025742</updated>
+    </task>
+    <task id="LOCAL-00024" summary="updated safety limit switch logic to be direction dependent&#10;if (Dir == MotorDir[0] and not GPIO.input(self.limit_switch_1)) or (Dir == MotorDir[1] and not GPIO.input(self.limit_switch_2)):">
+      <option name="closed" value="true" />
+      <created>1731277852289</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1731277852289</updated>
+    </task>
+    <task id="LOCAL-00025" summary="added updating class logic">
+      <option name="closed" value="true" />
+      <created>1731280305443</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1731280305443</updated>
+    </task>
+    <task id="LOCAL-00026" summary="debug added updating class logic">
+      <option name="closed" value="true" />
+      <created>1731280552959</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1731280552959</updated>
+    </task>
+    <task id="LOCAL-00027" summary="debug added updating class logic test2">
+      <option name="closed" value="true" />
+      <created>1731280614266</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1731280614266</updated>
+    </task>
+    <task id="LOCAL-00028" summary="debug added updating class logic test3">
+      <option name="closed" value="true" />
+      <created>1731281929663</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1731281929663</updated>
+    </task>
+    <task id="LOCAL-00029" summary="debug added updating class logic test4">
+      <option name="closed" value="true" />
+      <created>1731281995961</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1731281995961</updated>
+    </task>
+    <task id="LOCAL-00030" summary="debug added updating class logic test5">
+      <option name="closed" value="true" />
+      <created>1731282067507</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1731282067507</updated>
+    </task>
+    <task id="LOCAL-00031" summary="debug added updating class logic test6">
+      <option name="closed" value="true" />
+      <created>1731282111548</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1731282111548</updated>
+    </task>
+    <task id="LOCAL-00032" summary="debug added updating class logic test7">
+      <option name="closed" value="true" />
+      <created>1731282160396</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1731282160396</updated>
+    </task>
+    <task id="LOCAL-00033" summary="debug added updating class logic test8 roll back">
+      <option name="closed" value="true" />
+      <created>1731282206238</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1731282206238</updated>
+    </task>
+    <task id="LOCAL-00034" summary="debug added updating class logic test9 roll back">
+      <option name="closed" value="true" />
+      <created>1731282267937</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1731282267937</updated>
+    </task>
+    <task id="LOCAL-00035" summary="debug added updating class logic test10 move one step at a time retest">
+      <option name="closed" value="true" />
+      <created>1731282357117</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1731282357117</updated>
+    </task>
+    <task id="LOCAL-00036" summary="database test2">
+      <option name="closed" value="true" />
+      <created>1731285325774</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1731285325774</updated>
+    </task>
+    <task id="LOCAL-00037" summary="database test3">
+      <option name="closed" value="true" />
+      <created>1731285392273</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1731285392273</updated>
+    </task>
+    <task id="LOCAL-00038" summary="database test4 need to be more specific?">
+      <option name="closed" value="true" />
+      <created>1731285505252</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1731285505252</updated>
+    </task>
+    <task id="LOCAL-00039" summary="database test5 streamlit test">
+      <option name="closed" value="true" />
+      <created>1731287108153</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1731287108153</updated>
+    </task>
+    <task id="LOCAL-00040" summary="database test6 streamlit test">
+      <option name="closed" value="true" />
+      <created>1731287866880</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1731287866880</updated>
+    </task>
+    <task id="LOCAL-00041" summary="database streamlit test2">
+      <option name="closed" value="true" />
+      <created>1731288376036</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1731288376036</updated>
+    </task>
+    <task id="LOCAL-00042" summary="database streamlit test3">
+      <option name="closed" value="true" />
+      <created>1731288554360</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1731288554360</updated>
+    </task>
+    <task id="LOCAL-00043" summary="database streamlit test4 added queue">
+      <option name="closed" value="true" />
+      <created>1731288942543</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1731288942543</updated>
+    </task>
+    <task id="LOCAL-00044" summary="database streamlit test4 need to patch sqlite">
+      <option name="closed" value="true" />
+      <created>1731289340986</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1731289340986</updated>
+    </task>
+    <task id="LOCAL-00045" summary="database streamlit test4 need to patch sqlite">
+      <option name="closed" value="true" />
+      <created>1731289653931</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1731289653931</updated>
+    </task>
+    <task id="LOCAL-00046" summary="database streamlit test5 need to patch sqlite">
+      <option name="closed" value="true" />
+      <created>1731289928562</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1731289928562</updated>
+    </task>
+    <task id="LOCAL-00047" summary="database streamlit test5 need to patch sqlite">
+      <option name="closed" value="true" />
+      <created>1731290033301</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1731290033301</updated>
+    </task>
+    <task id="LOCAL-00048" summary="database streamlit test5 need to patch sqlite added database tester">
+      <option name="closed" value="true" />
+      <created>1731290251082</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1731290251082</updated>
+    </task>
+    <task id="LOCAL-00049" summary="database streamlit test5 need to patch sqlite added database tester changed name">
+      <option name="closed" value="true" />
+      <created>1731290366365</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1731290366365</updated>
+    </task>
+    <task id="LOCAL-00050" summary="database streamlit test5 need to patch sqlite added database tester changed current_state">
+      <option name="closed" value="true" />
+      <created>1731290503760</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1731290503761</updated>
+    </task>
+    <task id="LOCAL-00051" summary="database streamlit test5 need patched display">
+      <option name="closed" value="true" />
+      <created>1731290798757</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1731290798757</updated>
+    </task>
+    <option name="localTasksCounter" value="52" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="intial plan for viewer" />
-    <MESSAGE value="forc sensor test" />
-    <MESSAGE value="force sensor test" />
-    <option name="LAST_COMMIT_MESSAGE" value="force sensor test" />
+    <MESSAGE value="added updating class logic" />
+    <MESSAGE value="debug added updating class logic" />
+    <MESSAGE value="debug added updating class logic test2" />
+    <MESSAGE value="debug added updating class logic test3" />
+    <MESSAGE value="debug added updating class logic test4" />
+    <MESSAGE value="debug added updating class logic test5" />
+    <MESSAGE value="debug added updating class logic test6" />
+    <MESSAGE value="debug added updating class logic test7" />
+    <MESSAGE value="debug added updating class logic test8 roll back" />
+    <MESSAGE value="debug added updating class logic test9 roll back" />
+    <MESSAGE value="debug added updating class logic test10 move one step at a time retest" />
+    <MESSAGE value="database test2" />
+    <MESSAGE value="database test3" />
+    <MESSAGE value="database test4 need to be more specific?" />
+    <MESSAGE value="database test5 streamlit test" />
+    <MESSAGE value="database test6 streamlit test" />
+    <MESSAGE value="database streamlit test2" />
+    <MESSAGE value="database streamlit test3" />
+    <MESSAGE value="database streamlit test4 added queue" />
+    <MESSAGE value="database streamlit test4 need to patch sqlite" />
+    <MESSAGE value="database streamlit test5 need to patch sqlite" />
+    <MESSAGE value="database streamlit test5 need to patch sqlite added database tester" />
+    <MESSAGE value="database streamlit test5 need to patch sqlite added database tester changed name" />
+    <MESSAGE value="database streamlit test5 need to patch sqlite added database tester changed current_state" />
+    <MESSAGE value="database streamlit test5 need patched display" />
+    <option name="LAST_COMMIT_MESSAGE" value="database streamlit test5 need patched display" />
   </component>
 </project>

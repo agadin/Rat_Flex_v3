@@ -1,54 +1,62 @@
-import sqlite3
-import os
+import mysql.connector
 
-DATABASE_PATH = "stepper_motor.db"
+# MySQL connection configuration
+db_config = {
+    "host": "localhost",
+    "user": "your_username",
+    "password": "your_password",
+    "database": "stepper_motor_db"
+}
 
 def init_db():
     """Initialize the database if it hasn't been initialized yet."""
-    # Check if the database file exists
-    if os.path.exists(DATABASE_PATH):
-        with sqlite3.connect(DATABASE_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='motor_state';")
-            table_exists = cursor.fetchone()
+    connection = mysql.connector.connect(
+        host=db_config["host"],
+        user=db_config["user"],
+        password=db_config["password"],
+    )
+    cursor = connection.cursor()
 
-            # If the table exists, mark the database as initialized
-            if table_exists:
-                print("Database already initialized.")
-                return
+    # Create the database if it doesn't exist
+    cursor.execute("CREATE DATABASE IF NOT EXISTS stepper_motor_db;")
+    cursor.execute("USE stepper_motor_db;")
 
-    print("Initializing database...")
+    # Create motor_state table if it doesn't exist
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS motor_state (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        current_angle FLOAT DEFAULT 0,
+        current_state VARCHAR(50) DEFAULT 'idle',
+        current_direction VARCHAR(50) DEFAULT 'idle',
+        stop_flag BOOLEAN DEFAULT 0,
+        calibration_detected BOOLEAN DEFAULT 0,
+        angle_to_step_ratio FLOAT DEFAULT 1.0
+    );
+    """)
 
-    # Create the database and tables
-    with sqlite3.connect(DATABASE_PATH) as conn:
-        cursor = conn.cursor()
+    # Check if the table already has an entry
+    cursor.execute("SELECT COUNT(*) FROM motor_state;")
+    record_count = cursor.fetchone()[0]
 
-        # Create motor_state table if it doesn't exist
+    # If no records exist, insert initial values
+    if record_count == 0:
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS motor_state (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            current_angle REAL DEFAULT 0,
-            current_state TEXT DEFAULT 'idle',
-            current_direction TEXT DEFAULT 'idle',
-            stop_flag INTEGER DEFAULT 0,
-            calibration_detected INTEGER DEFAULT 0,
-            angle_to_step_ratio REAL DEFAULT 1.0
-        );
-        """)
+        INSERT INTO motor_state (
+            current_angle,
+            current_state,
+            current_direction,
+            stop_flag,
+            calibration_detected,
+            angle_to_step_ratio
+        ) VALUES (%s, %s, %s, %s, %s, %s);
+        """, (0.0, 'idle', 'idle', 0, 0, 1.0))
 
-        # Insert initial state if the table was newly created
-        cursor.execute("INSERT INTO motor_state (current_angle, current_state, current_direction, stop_flag, calibration_detected, angle_to_step_ratio) VALUES (0, 'idle', 'idle', 0, 0, 1.0);")
+        print("Inserted initial values into motor_state table.")
 
-        # Create a meta table to track initialization
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS meta (
-            id INTEGER PRIMARY KEY,
-            initialized INTEGER DEFAULT 1
-        );
-        """)
-        cursor.execute("INSERT INTO meta (id, initialized) VALUES (1, 1);")
+    connection.commit()
+    cursor.close()
+    connection.close()
 
-        # Commit changes
-        conn.commit()
-
+if __name__ == "__main__":
+    init_db()
     print("Database initialization complete.")
