@@ -1,7 +1,7 @@
 import sqlite3
 import time
 import RPi.GPIO as GPIO
-from DRV8825 import DRV8825, setup_gpio
+from Wavshare_stepper_code.DRV8825 import DRV8825, setup_gpio
 from database import init_db, DATABASE_PATH
 import os
 
