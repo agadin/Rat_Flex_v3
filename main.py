@@ -28,7 +28,7 @@ def get_current_state_from_db(db_file="stepper_motor.db"):
     conn = sqlite3.connect(db_file, check_same_thread=False)
     cursor = conn.cursor()
 
-    cursor.execute("SELECT current_angle, current_direction, motor_state, angle_to_step_ratio FROM motor_state WHERE id = 1;")
+    cursor.execute("SELECT current_angle, current_direction, current_state, angle_to_step_ratio FROM motor_state WHERE id = 1;")
     result = cursor.fetchone()
 
     conn.close()
