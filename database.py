@@ -23,7 +23,7 @@ def init_db():
     with sqlite3.connect(DATABASE_PATH) as conn:
         cursor = conn.cursor()
 
-        # Create motor_state table
+        # Create motor_state table if it doesn't exist
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS motor_state (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,9 +37,9 @@ def init_db():
         """)
 
         # Insert initial state if the table was newly created
-        cursor.execute("INSERT INTO motor_state (id) VALUES (1);")
+        cursor.execute("INSERT INTO motor_state (current_angle, current_state, current_direction, stop_flag, calibration_detected, angle_to_step_ratio) VALUES (0, 'idle', 'idle', 0, 0, 1.0);")
 
-        # Mark the database as initialized
+        # Create a meta table to track initialization
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS meta (
             id INTEGER PRIMARY KEY,
@@ -48,17 +48,7 @@ def init_db():
         """)
         cursor.execute("INSERT INTO meta (id, initialized) VALUES (1, 1);")
 
+        # Commit changes
         conn.commit()
-        print("Database initialization complete.")
-        conn.close()
 
-def check_if_initialized():
-    """Check if the database has already been initialized."""
-    if not os.path.exists(DATABASE_PATH):
-        return False
-
-    with sqlite3.connect(DATABASE_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT initialized FROM meta WHERE id = 1;")
-        result = cursor.fetchone()
-        return result is not None and result[0] == 1
+    print("Database initialization complete.")
