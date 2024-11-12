@@ -18,7 +18,7 @@ async def handle_request(websocket, path):
         command = data.get("command")
 
         with pymysql.connect(**db_config) as connection:
-            cursor = connection.cursor(dictionary=True)
+            cursor = connection.cursor()
 
             if command == "get_motor_state":
                 # Query the motor state from the database
