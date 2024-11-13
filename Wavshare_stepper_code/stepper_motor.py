@@ -20,7 +20,7 @@ class StepperMotor:
         self.current_state = "idle"
         self.current_direction = "idle"
         self.motor.SetMicroStep('software', self.step_type)
-        self.redis_client = redis.Redis(host='localhost', port=6379, db=0)
+        self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
         setup_gpio(self.limit_switch_1, self.limit_switch_2)
         self.load_calibration()
@@ -62,8 +62,8 @@ class StepperMotor:
         self.current_direction = 'calibrating'
         # await self.update_db(current_direction=self.current_direction)
         self.current_state = 'calibrating'
-        self.redis_client.hset("current_state", self.current_direction)
-        self.redis_client.hset("current_direction", self.current_state)
+        self.redis_client.set("current_state", self.current_direction)
+        self.redis_client.set("current_direction", self.current_state)
 
         # Rotate clockwise until the first limit switch is pressed
         self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
@@ -89,8 +89,8 @@ class StepperMotor:
 
         # Update the database with calibration data
         # await self.update_db(current_direction='idle', angle_to_step_ratio=self.angle_to_step_ratio)
-        self.redis_client.hset("current_direction", "idle")
-        self.redis_client.hset("angle_to_step_ratio", self.angle_to_step_ratio)
+        self.redis_client.set("current_direction", "idle")
+        self.redis_client.set("angle_to_step_ratio", self.angle_to_step_ratio)
         self.move_to_angle(90)
 
     def move_to_angle(self, angle):
@@ -106,16 +106,12 @@ class StepperMotor:
         # Calculate the number of steps and the direction
         steps = int(abs(angle - self.current_angle) * self.angle_to_step_ratio)
         step_dir = 'forward' if angle > self.current_angle else 'backward'
-        self.redis_client.hset("current_state", self.current_state)
-        self.redis_client.hset("current_direction", self.current_direction)
+        self.redis_client.set("current_state", self.current_state)
+        self.redis_client.set("current_direction", self.current_direction)
         # Start moving the motor step by step
         for _ in range(steps):
             # Check if a stop flag has been set
             stop_flag = self.redis_client.get("stop_flag")
-            if stop_flag is not None:
-                stop_flag = stop_flag.decode()
-            else:
-                stop_flag = 0
 
             if stop_flag == 1:
                 print("Move stopped externally.")
@@ -134,8 +130,8 @@ class StepperMotor:
         # Set the motor state back to idle
         self.current_state = "idle"
         self.current_direction = "idle"
-        self.redis_client.hset("current_state", self.current_state)
-        self.redis_client.hset("current_direction", self.current_direction)
+        self.redis_client.set("current_state", self.current_state)
+        self.redis_client.set("current_direction", self.current_direction)
         # await self.update_db(current_direction=self.current_direction, motor_state=self.current_state)
 
     def cleanup(self):

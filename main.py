@@ -52,25 +52,25 @@ async def display_current_state(redis_client):
         # current_state = await get_current_state_from_db(db_client)  # Fetch the current state from the database
         current_direction = redis_client.get("current_direction")
         if current_direction is not None:
-            current_state['current_direction'] = current_direction.decode()
+            current_state['current_direction'] = current_direction
         else:
             current_state['current_direction'] = 'unknown'
 
         current_angle = redis_client.get("current_angle")
         if current_angle is not None:
-            current_state['current_angle'] = current_angle.decode()
+            current_state['current_angle'] = current_angle
         else:
             current_state['current_angle'] = 0
 
         current_state_value = redis_client.get("current_state")
         if current_state_value is not None:
-            current_state['current_state'] = current_state_value.decode()
+            current_state['current_state'] = current_state_value
         else:
             current_state['current_state'] = 'unknown'
 
         angle_to_step_ratio = redis_client.get("angle_to_step_ratio")
         if angle_to_step_ratio is not None:
-            current_state['angle_to_step_ratio'] = angle_to_step_ratio.decode()
+            current_state['angle_to_step_ratio'] = angle_to_step_ratio
         else:
             current_state['angle_to_step_ratio'] = 1.0
 
@@ -99,7 +99,7 @@ def test_websocket_connection(db_client):
 async def main():
     # Initialize the WebSocket client
     db_client = DatabaseWebSocketClient()
-    redis_client = redis.Redis(host='localhost', port=6379, db=0)
+    redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
     # Initialize the stepper motor
     motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6, step_type='fullstep', stepdelay=0.003)
 
