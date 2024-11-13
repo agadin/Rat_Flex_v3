@@ -78,7 +78,7 @@ async def display_current_state(redis_client):
             # Update the placeholders with the new values
             angle_placeholder.metric("Current Angle", f"{current_state['current_angle']}°")
             direction_placeholder.metric("Current Direction", current_state['current_direction'])
-            motor_state_placeholder.metric("Motor State", current_state['motor_state'])
+            motor_state_placeholder.metric("Motor State", current_state['current_state'])
             ratio_placeholder.metric("Angle to Step Ratio", current_state['angle_to_step_ratio'])
 
         time.sleep(1)  # Update every second
