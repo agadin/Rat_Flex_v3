@@ -50,10 +50,29 @@ async def display_current_state(redis_client):
     }
     while True:
         # current_state = await get_current_state_from_db(db_client)  # Fetch the current state from the database
-        current_state['current_direction'] = redis_client.get("current_direction").decode()
-        current_state['current_angle'] = redis_client.get("current_angle").decode()
-        current_state['current_state'] = redis_client.get("current_state").decode()
-        current_state['angle_to_step_ratio'] = redis_client.get("angle_to_step_ratio").decode()
+        current_direction = redis_client.get("current_direction")
+        if current_direction is not None:
+            current_state['current_direction'] = current_direction.decode()
+        else:
+            current_state['current_direction'] = 'unknown'
+
+        current_angle = redis_client.get("current_angle")
+        if current_angle is not None:
+            current_state['current_angle'] = current_angle.decode()
+        else:
+            current_state['current_angle'] = 0
+
+        current_state_value = redis_client.get("current_state")
+        if current_state_value is not None:
+            current_state['current_state'] = current_state_value.decode()
+        else:
+            current_state['current_state'] = 'unknown'
+
+        angle_to_step_ratio = redis_client.get("angle_to_step_ratio")
+        if angle_to_step_ratio is not None:
+            current_state['angle_to_step_ratio'] = angle_to_step_ratio.decode()
+        else:
+            current_state['angle_to_step_ratio'] = 1.0
 
         if current_state:
             # Update the placeholders with the new values

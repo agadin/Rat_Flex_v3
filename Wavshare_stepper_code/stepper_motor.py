@@ -63,7 +63,7 @@ class StepperMotor:
         # await self.update_db(current_direction=self.current_direction)
         self.current_state = 'calibrating'
         self.redis_client.hset("current_state", self.current_direction)
-        self.redis_client.hset("current_state", self.current_state)
+        self.redis_client.hset("current_direction", self.current_state)
 
         # Rotate clockwise until the first limit switch is pressed
         self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
@@ -111,7 +111,11 @@ class StepperMotor:
         # Start moving the motor step by step
         for _ in range(steps):
             # Check if a stop flag has been set
-            stop_flag = self.redis_client.get("stop_flag").decode() # await self.send_db_command("read_stop_motor")
+            stop_flag = self.redis_client.get("stop_flag")
+            if stop_flag is not None:
+                stop_flag = stop_flag.decode()
+            else:
+                stop_flag = 0
 
             if stop_flag == 1:
                 print("Move stopped externally.")
