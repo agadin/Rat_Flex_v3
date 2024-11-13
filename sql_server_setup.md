@@ -1,4 +1,21 @@
 
+
+# Redis server setup
+```bash
+sudo apt update
+sudo apt install redis-server
+pip install redis
+```
+
+```bash
+sudo systemctl start redis
+```
+
+```bash
+redis-cli ping
+# Should return "PONG"
+```
+# MySQL server setup
 ```bash
 sudo apt update
 sudo apt install mysql-server

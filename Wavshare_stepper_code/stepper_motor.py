@@ -4,6 +4,7 @@ import time
 import os
 import json
 from database_websocket_client import DatabaseWebSocketClient
+import redis
 
 class StepperMotor:
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='fullstep', stepdelay=0.0015, calibration_file='calibration.txt'):
@@ -19,18 +20,19 @@ class StepperMotor:
         self.current_state = "idle"
         self.current_direction = "idle"
         self.motor.SetMicroStep('software', self.step_type)
+        self.redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
         setup_gpio(self.limit_switch_1, self.limit_switch_2)
         self.load_calibration()
 
         # Initialize WebSocket client
-        self.db_client = DatabaseWebSocketClient()
+        # self.db_client = DatabaseWebSocketClient()
 
-    async def send_db_command(self, command, data=None):
+    def send_db_command(self, command, data=None):
         """Send a command to the WebSocket database server."""
-        return await self.db_client.send_db_command(command, data)
+        return # await self.db_client.send_db_command(command, data)
 
-    async def update_db(self, current_direction=None, current_angle=None, angle_to_step_ratio=None, motor_state=None):
+    def update_db(self, current_direction=None, current_angle=None, angle_to_step_ratio=None, motor_state=None):
         """Update the motor state in the database using WebSocket."""
         data = {}
         if current_direction is not None:
@@ -42,7 +44,7 @@ class StepperMotor:
         if motor_state is not None:
             data["current_state"] = motor_state
 
-        await self.send_db_command("update_motor_state", data)
+        # await self.send_db_command("update_motor_state", data)
 
     def load_calibration(self):
         if os.path.exists(self.calibration_file):
@@ -58,7 +60,10 @@ class StepperMotor:
 
     async def calibrate(self):
         self.current_direction = 'calibrating'
-        await self.update_db(current_direction=self.current_direction)
+        # await self.update_db(current_direction=self.current_direction)
+        self.current_state = 'calibrating'
+        self.redis_client.hset("current_state", self.current_direction)
+        self.redis_client.hset("current_state", self.current_state)
 
         # Rotate clockwise until the first limit switch is pressed
         self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
@@ -83,10 +88,12 @@ class StepperMotor:
             file.write(f"angle_to_step_ratio: {self.angle_to_step_ratio}\n")
 
         # Update the database with calibration data
-        await self.update_db(current_direction='idle', angle_to_step_ratio=self.angle_to_step_ratio)
-        await self.move_to_angle(90)
+        # await self.update_db(current_direction='idle', angle_to_step_ratio=self.angle_to_step_ratio)
+        self.redis_client.hset("current_direction", "idle")
+        self.redis_client.hset("angle_to_step_ratio", self.angle_to_step_ratio)
+        self.move_to_angle(90)
 
-    async def move_to_angle(self, angle):
+    def move_to_angle(self, angle):
         """Move the motor to a specified angle using WebSocket-based database updates."""
         if self.angle_to_step_ratio is None:
             raise Exception("Motor not calibrated. Please run calibrate() first.")
@@ -94,17 +101,18 @@ class StepperMotor:
         # Determine the direction and set the motor state
         self.current_state = "moving"
         self.current_direction = "forward" if angle > self.current_angle else "backward"
-        await self.update_db(current_direction=self.current_direction, motor_state=self.current_state)
+        # await self.update_db(current_direction=self.current_direction, motor_state=self.current_state)
 
         # Calculate the number of steps and the direction
         steps = int(abs(angle - self.current_angle) * self.angle_to_step_ratio)
         step_dir = 'forward' if angle > self.current_angle else 'backward'
-
+        self.redis_client.hset("current_state", self.current_state)
+        self.redis_client.hset("current_direction", self.current_direction)
         # Start moving the motor step by step
         for _ in range(steps):
             # Check if a stop flag has been set
-            stop_flag_response = await self.send_db_command("read_stop_motor")
-            stop_flag = stop_flag_response.get("stop_flag", 0)
+            stop_flag = self.redis_client.get("stop_flag").decode() # await self.send_db_command("read_stop_motor")
+
             if stop_flag == 1:
                 print("Move stopped externally.")
                 break
@@ -116,13 +124,15 @@ class StepperMotor:
             self.current_angle += (1 / self.angle_to_step_ratio) * (1 if step_dir == 'forward' else -1)
 
             # Update the current angle in the database
-            await self.update_db(current_angle=self.current_angle)
+            self.redis_client.set("current_angle", self.current_angle)
             time.sleep(self.stepdelay)
 
         # Set the motor state back to idle
         self.current_state = "idle"
         self.current_direction = "idle"
-        await self.update_db(current_direction=self.current_direction, motor_state=self.current_state)
+        self.redis_client.hset("current_state", self.current_state)
+        self.redis_client.hset("current_direction", self.current_direction)
+        # await self.update_db(current_direction=self.current_direction, motor_state=self.current_state)
 
     def cleanup(self):
         self.motor.Stop()

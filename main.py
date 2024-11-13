@@ -4,12 +4,13 @@ import queue
 import streamlit as st
 import asyncio
 from database_websocket_client import DatabaseWebSocketClient
+import redis
 
 # Command queue to manage motor actions
 command_queue = queue.Queue()
 
 # Function to continuously process commands in a separate thread
-async def motor_worker(motor, db_client):
+async def motor_worker(motor, redis_client):
     while True:
         command = command_queue.get()  # Block until a new command is available
         if command == "calibrate":
@@ -18,15 +19,11 @@ async def motor_worker(motor, db_client):
             # Extract angle from the command
             angle = int(command.split(":")[1])
             await motor.move_to_angle(angle)
-        elif command == "stop":
-            motor.stop()
-            await db_client.send_db_command("stop_motor")  # Stop motor command sent to WebSocket
-            break
         await asyncio.sleep(0.1)
 
-async def get_current_state_from_db(db_client):
+def get_current_state_from_db(db_client):
     """Fetch the current state of the motor from the WebSocket-based MySQL database."""
-    response = await db_client.send_db_command("get_motor_state")
+    response = False #await db_client.send_db_command("get_motor_state")
     if response and "data" in response:
         data = response["data"]
         return {
@@ -39,15 +36,24 @@ async def get_current_state_from_db(db_client):
         return None
 
 # Function to display the current angle
-async def display_current_state(db_client):
+async def display_current_state(redis_client):
     # Create placeholders for the values to update dynamically
     angle_placeholder = st.empty()
     direction_placeholder = st.empty()
     motor_state_placeholder = st.empty()
     ratio_placeholder = st.empty()
-
+    current_state = {
+        'current_angle': 0,
+        'current_direction': 'idle',
+        'current_state': 'idle',
+        'angle_to_step_ratio': 1.0
+    }
     while True:
-        current_state = await get_current_state_from_db(db_client)  # Fetch the current state from the database
+        # current_state = await get_current_state_from_db(db_client)  # Fetch the current state from the database
+        current_state['current_direction'] = redis_client.get("current_direction").decode()
+        current_state['current_angle'] = redis_client.get("current_angle").decode()
+        current_state['current_state'] = redis_client.get("current_state").decode()
+        current_state['angle_to_step_ratio'] = redis_client.get("angle_to_step_ratio").decode()
 
         if current_state:
             # Update the placeholders with the new values
@@ -74,7 +80,7 @@ def test_websocket_connection(db_client):
 async def main():
     # Initialize the WebSocket client
     db_client = DatabaseWebSocketClient()
-
+    redis_client = redis.Redis(host='localhost', port=6379, db=0)
     # Initialize the stepper motor
     motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6, step_type='fullstep', stepdelay=0.003)
 
@@ -88,7 +94,7 @@ async def main():
     debug_option = st.selectbox("Debug: Test WebSocket Connection", ["Select an option", "Test WebSocket Connection"])
 
     if debug_option == "Test WebSocket Connection":
-        connection_status = await test_websocket_connection(db_client)
+        connection_status = redis_client.ping()
         st.write(connection_status)
 
     if 'calibrate' not in st.session_state:
@@ -113,17 +119,17 @@ async def main():
 
     # Add Stop Motor button
     if st.button("Stop Motor"):
-        await db_client.send_db_command("stop_motor")
+        redis_client.set("stop_flag", 1)
         st.write("Motor stopped.")
 
     # Continuously display the current angle
-    await display_current_state(db_client)
+    await display_current_state(redis_client)
 
     # Wait for the motor worker task to finish
     await motor_worker_task
 
     # Close the WebSocket connection when done
-    await db_client.close()
+    # await db_client.close()
 
 if __name__ == '__main__':
     asyncio.run(main())
