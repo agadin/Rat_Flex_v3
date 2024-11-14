@@ -90,7 +90,8 @@ def start_server():
             step_type='fullstep',
             stepdelay=0.0015
         )
-
+    motor.calibrate()
+    motor.move_to_angle(20)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((host, port))
         server_socket.listen()
