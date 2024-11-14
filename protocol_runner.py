@@ -93,21 +93,15 @@ def start_server():
             step_type='fullstep',
             stepdelay=0.0015
         )
-
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-        server_socket.bind((host, port))
-        server_socket.listen()
-
-        print("Server waiting for connections...")
-        calibrate()
-        move_to_angle(20)
+        # Connect to Redis server
         while True:
-            conn, addr = server_socket.accept()
-            with conn:
-                print(f"Connected by {addr}")
-                data = conn.recv(1024)  # Receive the protocol path
-                if data:
-                    process_protocol(data.decode())
+            # Check for a value in the Redis key
+            protocol_path = redis_client.get("protocol_trigger")
+            if protocol_path:
+                print(f"Found protocol path: {protocol_path}")
+                process_protocol(protocol_path)
+                redis_client.set("protocol_trigger", "")  # Clear the trigger after processing
+            time.sleep(1)  # Wait for 1 second before checking again
 
 if __name__ == "__main__":
     start_server()

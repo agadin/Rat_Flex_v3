@@ -3,6 +3,10 @@ import socket
 import asyncio
 import os
 import subprocess
+import redis
+
+redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
 
 def send_protocol_path(protocol_path):
     server_address = ('localhost', 8765)  # Server's address and port
@@ -23,17 +27,8 @@ def send_protocol_path(protocol_path):
         print(f"Error: {e}")
 
 def run_protocol(protocol_path):
-    trigger_protocol(protocol_path)
-
-
-
-def trigger_protocol(protocol_path):
-    host = 'localhost'
-    port = 12345
-
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-        client_socket.connect((host, port))
-        client_socket.sendall(protocol_path.encode())  # Send protocol path to server
+    redis_client.publish('protocol_channel', protocol_path)
+    print(f"Triggered protocol: {protocol_path}")
 
 
 
