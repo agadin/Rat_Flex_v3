@@ -5,7 +5,6 @@ import streamlit as st
 import asyncio
 from database_websocket_client import DatabaseWebSocketClient
 import redis
-
 # Command queue to manage motor actions
 command_queue = queue.Queue()
 

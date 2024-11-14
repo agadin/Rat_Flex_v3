@@ -7,6 +7,7 @@ class ForceSensor:
         self.baudrate = baudrate
         self.timeout = timeout
         self.ser = None
+        self.open_connection()
 
     def open_connection(self):
         try:
