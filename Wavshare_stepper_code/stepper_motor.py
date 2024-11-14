@@ -53,9 +53,12 @@ class StepperMotor:
         setup_gpio(self.limit_switch_1, self.limit_switch_2)
         self.load_calibration()
 
-        # Initialize shared memory
-        shm_size = struct.calcsize('i d d d')
-        self.smh = sm.SharedMemory(create=True, name='test', size=shm_size)
+        shm_name = 'shared_data'
+        fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
+
+        # Attach to the existing shared memory
+        self.shm = sm.SharedMemory(name=shm_name)
+
 
     def load_calibration(self):
         if os.path.exists(self.calibration_file):
