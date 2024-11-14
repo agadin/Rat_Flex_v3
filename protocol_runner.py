@@ -7,7 +7,11 @@ from Wavshare_stepper_code.stepper_motor import StepperMotor
 # Initialize Redis client
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
-async def process_protocol(protocol_path, motor):
+# Define motor as a global variable
+motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6, step_type='fullstep', stepdelay=0.0015)
+
+async def process_protocol(protocol_path):
+    global motor
     with open(protocol_path, 'r') as file:
         commands = file.readlines()
 
@@ -24,7 +28,7 @@ async def process_protocol(protocol_path, motor):
 
         if command.startswith("Move_to_angle"):
             angle = int(command.split(":")[1])
-            move_to_angle(motor, angle)
+            move_to_angle(angle)
         elif command.startswith("Move_to_force"):
             force = float(command.split(":")[1])
             move_to_force(force)
@@ -41,25 +45,25 @@ async def process_protocol(protocol_path, motor):
         elif command.startswith("Wait for user input"):
             wait_for_user_input()
 
-    end_all_commands(motor)
+    end_all_commands()
 
-def end_all_commands(motor):
+def end_all_commands():
+    global motor
     motor.stop_motor()
     redis_client.set("current_step", "")
     redis_client.set("stop_flag", "0")
 
-def move_to_angle(motor, angle):
+def move_to_angle(angle):
+    global motor
     print(f"Moving to angle: {angle}")
     motor.move_to_angle(angle)
 
 def move_to_force(force):
     print(f"Moving to force: {force}")
-    # Implement the logic to move the motor to the specified force
     time.sleep(1)  # Simulate the action
 
 def move_until_force_or_angle(force, angle):
     print(f"Moving until force: {force} or angle: {angle}")
-    # Implement the logic to move the motor until the specified force or angle is reached
     time.sleep(1)  # Simulate the action
 
 def wait(wait_time):
@@ -74,15 +78,15 @@ def wait_for_user_input():
             break
         time.sleep(1)
 
-async def websocket_handler(websocket, path, motor):
+async def websocket_handler(websocket, path):
     async for message in websocket:
         protocol_path = message
-        await process_protocol(protocol_path, motor)
+        await process_protocol(protocol_path)
 
 async def main():
-    motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5,
-                         limit_switch_2=6, step_type='fullstep', stepdelay=0.0015)
-    async with websockets.serve(lambda ws, path: websocket_handler(ws, path, motor), "localhost", 8765):
+    global motor
+
+    async with websockets.serve(websocket_handler, "localhost", 8765):
         print("WebSocket server running on ws://localhost:8765")
         await asyncio.Future()  # Run forever
 
