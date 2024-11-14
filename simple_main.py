@@ -7,7 +7,6 @@ import numpy as np
 import time
 import struct
 import pandas as pd
-import matplotlib.pyplot as plt
 
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
@@ -28,10 +27,6 @@ def send_protocol_path(protocol_path):
 
             # Send the protocol path to the server
             client_socket.sendall(protocol_path.encode('utf-8'))
-
-            # Optionally, you can wait for a response from the server
-            # response = client_socket.recv(1024).decode('utf-8')
-            # print(f"Server response: {response}")
 
     except Exception as e:
         print(f"Error: {e}")
@@ -113,22 +108,23 @@ if __name__ == "__main__":
             # Display the dot plot
             st.subheader("Angle and Force over Time (Dot Plot)")
 
-            # Use Matplotlib to create a dot plot
-            if st.button("Clear Dot Plot"):
+            # Use Streamlit's scatter_chart for dot plot
+            # Pass a unique key to each button to avoid Streamlit errors
+            if st.button("Clear Dot Plot", key="clear_dot_plot_button"):
                 dot_time_data.clear()
                 dot_angle_data.clear()
                 dot_force_data.clear()
 
             if dot_time_data:
-                fig, ax = plt.subplots(figsize=(10, 5))
-                ax.scatter(dot_time_data, dot_angle_data, label='Angle', color='blue')
-                ax.scatter(dot_time_data, dot_force_data, label='Force', color='red')
-                ax.set_xlabel('Time (s)')
-                ax.set_ylabel('Value')
-                ax.set_title('Angle and Force over Time (Dot Plot)')
-                ax.legend()
-                ax.grid(True)
-                st.pyplot(fig)
+                # Prepare data for scatter chart
+                scatter_data = pd.DataFrame({
+                    'Time': dot_time_data,
+                    'Angle': dot_angle_data,
+                    'Force': dot_force_data
+                })
+
+                # Display the scatter chart
+                st.scatter_chart(scatter_data.set_index('Time'))
 
         else:
             shared_memory_placeholder.write("Shared memory not available.")
