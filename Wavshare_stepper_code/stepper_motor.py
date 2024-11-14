@@ -50,7 +50,7 @@ class StepperMotor:
         self.load_calibration()
 
         # Initialize shared memory
-        self.shm = shared_memory.SharedMemory(create=True, size=1024)
+        self.shm = shared_memory.SharedMemory(name='psm_12345',create=True, size=8*256)
         self.shared_data = np.ndarray((256,), dtype=np.float64, buffer=self.shm.buf)
 
     def load_calibration(self):
