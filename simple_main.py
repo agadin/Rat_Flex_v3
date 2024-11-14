@@ -6,6 +6,7 @@ import multiprocessing.shared_memory as sm
 import numpy as np
 import time
 import struct
+import pandas as pd
 import matplotlib.pyplot as plt
 
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
@@ -66,14 +67,18 @@ if __name__ == "__main__":
     # Display shared memory data
     st.subheader("Shared Memory Data")
     shared_memory_placeholder = st.empty()
-    plot_placeholder=st.empty()
+
     # Initialize lists to store data for plotting
     time_data = []
     angle_data = []
     force_data = []
+    dot_time_data = []
+    dot_angle_data = []
+    dot_force_data = []
 
     start_time = time.time()
 
+    # Set up Streamlit's interval behavior
     while True:
         shared_data = read_shared_memory()
         if shared_data is not None:
@@ -85,19 +90,47 @@ if __name__ == "__main__":
             angle_data.append(current_angle)
             force_data.append(current_force)
 
+            # Add to dot data as well
+            dot_time_data.append(current_time)
+            dot_angle_data.append(current_angle)
+            dot_force_data.append(current_force)
+
+            # Update the shared memory display
             shared_memory_placeholder.write(
                 f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}")
 
-            # Plot the data
-            plt.figure(figsize=(10, 5))
-            plt.plot(time_data, angle_data, label='Angle')
-            plt.plot(time_data, force_data, label='Force')
-            plt.xlabel('Time (s)')
-            plt.ylabel('Value')
-            plt.title('Angle and Force over Time')
-            plt.legend()
-            plt.grid(True)
-            plot_placeholder.pyplot(plt)
+            # Create a DataFrame for the line chart
+            plot_data = pd.DataFrame({
+                'Time': time_data,
+                'Angle': angle_data,
+                'Force': force_data
+            })
+
+            # Display the line chart
+            st.subheader("Angle and Force over Time (Line Plot)")
+            st.line_chart(plot_data.set_index('Time'))
+
+            # Display the dot plot
+            st.subheader("Angle and Force over Time (Dot Plot)")
+
+            # Use Matplotlib to create a dot plot
+            if st.button("Clear Dot Plot"):
+                dot_time_data.clear()
+                dot_angle_data.clear()
+                dot_force_data.clear()
+
+            if dot_time_data:
+                fig, ax = plt.subplots(figsize=(10, 5))
+                ax.scatter(dot_time_data, dot_angle_data, label='Angle', color='blue')
+                ax.scatter(dot_time_data, dot_force_data, label='Force', color='red')
+                ax.set_xlabel('Time (s)')
+                ax.set_ylabel('Value')
+                ax.set_title('Angle and Force over Time (Dot Plot)')
+                ax.legend()
+                ax.grid(True)
+                st.pyplot(fig)
+
         else:
             shared_memory_placeholder.write("Shared memory not available.")
+
         time.sleep(0.1)
