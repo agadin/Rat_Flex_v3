@@ -54,10 +54,10 @@ class StepperMotor:
         self.load_calibration()
 
         shm_name = 'shared_data'
-        fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
+        self.fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
 
         # Attach to the existing shared memory
-
+        shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
         self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
 
 
