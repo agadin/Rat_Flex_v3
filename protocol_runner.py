@@ -46,6 +46,9 @@ def process_protocol(protocol_path):
 
     end_all_commands()
 
+def calibrate():
+    motor.calibrate()
+
 def end_all_commands():
     motor.cleanup()
     redis_client.set("current_step", "")
@@ -90,8 +93,8 @@ def start_server():
             step_type='fullstep',
             stepdelay=0.0015
         )
-    motor.calibrate()
-    motor.move_to_angle(20)
+    calibrate()
+    move_to_angle(20)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((host, port))
         server_socket.listen()
