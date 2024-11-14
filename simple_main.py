@@ -9,11 +9,8 @@ import struct
 
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
-shm_name = 'shared_data'
-shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
+shm_name = 'test'
 
-# Packing format: (stop_flag, step_count, current_angle, current_force)
-fmt = 'i d d d'
 shm = sm.SharedMemory(name=shm_name)
 
 def send_protocol_path(protocol_path):
