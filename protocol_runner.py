@@ -27,43 +27,43 @@ def process_protocol(protocol_path, motor):
 
         if command.startswith("Move_to_angle"):
             angle = int(command.split(":")[1])
-            move_to_angle(angle)
+            move_to_angle(angle, motor)
         elif command.startswith("Move_to_force"):
             force = float(command.split(":")[1])
-            move_to_force(force)
+            move_to_force(force,motor)
         elif command.startswith("calibrate"):
             motor.calibrate()
         elif command.startswith("Move until force or angle"):
             params = command.split(":")[1].split(",")
             force = float(params[0])
             angle = int(params[1])
-            move_until_force_or_angle(force, angle)
+            move_until_force_or_angle(force, angle, motor)
         elif command.startswith("wait"):
             wait_time = int(command.split(":")[1])
             wait(wait_time)
         elif command.startswith("Wait for user input"):
             wait_for_user_input()
 
-    end_all_commands()
+    end_all_commands(motor)
 
 
-def end_all_commands():
+def end_all_commands(motor):
     motor.cleanup()
     redis_client.set("current_step", "")
     redis_client.set("stop_flag", "0")
 
 
-def move_to_angle(angle):
+def move_to_angle(angle,motor):
     print(f"Moving to angle: {angle}")
     motor.move_to_angle(angle)
 
 
-def move_to_force(force):
+def move_to_force(force,motor):
     print(f"Moving to force: {force}")
     time.sleep(1)  # Simulate the action
 
 
-def move_until_force_or_angle(force, angle):
+def move_until_force_or_angle(force, angle, motor):
     print(f"Moving until force: {force} or angle: {angle}")
     time.sleep(1)  # Simulate the action
 
