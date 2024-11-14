@@ -1,15 +1,29 @@
 import streamlit as st
-import websockets
+import socket
 import asyncio
 import os
 
-async def send_command(command):
-    uri = "ws://localhost:8765"
-    async with websockets.connect(uri) as websocket:
-        await websocket.send(command)
+
+def send_protocol_path(protocol_path):
+    server_address = ('localhost', 8765)  # Server's address and port
+    try:
+        # Create a TCP/IP socket
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+            # Connect the client to the server
+            client_socket.connect(server_address)
+
+            # Send the protocol path to the server
+            client_socket.sendall(protocol_path.encode('utf-8'))
+
+            # Optionally, you can wait for a response from the server
+            # response = client_socket.recv(1024).decode('utf-8')
+            # print(f"Server response: {response}")
+
+    except Exception as e:
+        print(f"Error: {e}")
 
 def run_protocol(protocol_path):
-    asyncio.run(send_command(protocol_path))
+    send_protocol_path(protocol_path)
 
 # List protocol files in the protocols folder
 protocol_folder = './protocols'
