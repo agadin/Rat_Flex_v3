@@ -12,7 +12,7 @@ redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 def run_protocol(protocol_path):
     #redis_client.set('protocol_trigger', protocol_path)
     python_path= 'base/bin/python'
-    result = subprocess.run([python_path, 'your_script.py', protocol_path], capture_output=True, text=True)
+    result = subprocess.run([python_path, 'protocol_runner.py', protocol_path], capture_output=True, text=True)
 
     if result.returncode == 0:
         print("Script ran successfully")
@@ -21,18 +21,6 @@ def run_protocol(protocol_path):
         print("Error running script")
         print(result.stderr)  # If you want to capture and print error output
 
-if __name__ == "__main__":
-    # Provide the protocol path to trigger_script()
-    protocol_path = "path_to_your_protocol_file.txt"
-    trigger_script(protocol_path)
-
-
-
-if __name__ == "__main__":
-    # Provide the protocol path to trigger_script()
-    #protocol_path = "path_to_your_protocol_file.txt"
-    #trigger_script(protocol_path)
-    print('Hello')
 
 
 # List protocol files in the protocols folder
