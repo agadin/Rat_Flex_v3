@@ -31,7 +31,7 @@ def trigger_script(protocol_path):
     try:
         # Run the subprocess and capture both stdout and stderr
         result = subprocess.run(
-            ['python', 'your_script.py', protocol_path],
+            ['python', 'protocol_runner.py', protocol_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True  # This ensures that the output is captured as strings, not bytes
