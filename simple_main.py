@@ -93,38 +93,38 @@ if __name__ == "__main__":
             # Update the shared memory display
             shared_memory_placeholder.write(
                 f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}")
-
-            # Create a DataFrame for the line chart
-            plot_data = pd.DataFrame({
-                'Time': time_data,
-                'Angle': angle_data,
-                'Force': force_data
-            })
-
-            # Display the line chart
-            st.subheader("Angle and Force over Time (Line Plot)")
-            st.line_chart(plot_data.set_index('Time'))
-
-            # Display the dot plot
-            st.subheader("Angle and Force over Time (Dot Plot)")
-
-            # Use Streamlit's scatter_chart for dot plot
-            # Pass a unique key to each button to avoid Streamlit errors
-            if st.button("Clear Dot Plot", key="clear_dot_plot_button"):
-                dot_time_data.clear()
-                dot_angle_data.clear()
-                dot_force_data.clear()
-
-            if dot_time_data:
-                # Prepare data for scatter chart
-                scatter_data = pd.DataFrame({
-                    'Time': dot_time_data,
-                    'Angle': dot_angle_data,
-                    'Force': dot_force_data
+            if False:
+                # Create a DataFrame for the line chart
+                plot_data = pd.DataFrame({
+                    'Time': time_data,
+                    'Angle': angle_data,
+                    'Force': force_data
                 })
 
-                # Display the scatter chart
-                st.scatter_chart(scatter_data.set_index('Time'))
+                # Display the line chart
+                st.subheader("Angle and Force over Time (Line Plot)")
+                st.line_chart(plot_data.set_index('Time'))
+
+                # Display the dot plot
+                st.subheader("Angle and Force over Time (Dot Plot)")
+
+                # Use Streamlit's scatter_chart for dot plot
+                # Pass a unique key to each button to avoid Streamlit errors
+                if st.button("Clear Dot Plot", key="clear_dot_plot_button"):
+                    dot_time_data.clear()
+                    dot_angle_data.clear()
+                    dot_force_data.clear()
+
+                if dot_time_data:
+                    # Prepare data for scatter chart
+                    scatter_data = pd.DataFrame({
+                        'Time': dot_time_data,
+                        'Angle': dot_angle_data,
+                        'Force': dot_force_data
+                    })
+
+                    # Display the scatter chart
+                    st.scatter_chart(scatter_data.set_index('Time'))
 
         else:
             shared_memory_placeholder.write("Shared memory not available.")
