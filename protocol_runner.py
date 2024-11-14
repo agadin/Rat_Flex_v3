@@ -1,7 +1,6 @@
-import threading
 import redis
 import time
-import socket
+import websockets
 from Wavshare_stepper_code.stepper_motor import StepperMotor
 
 # Initialize Redis client
@@ -87,35 +86,32 @@ def wait_for_user_input():
         time.sleep(1)
 
 
-# Handle client connection in a separate thread
-def handle_client_connection(client_socket, client_address, motor):
-    try:
-        print(f"Connection from {client_address} established.")
-
-        # Receive the protocol path (this would typically be the file path)
-        protocol_path = client_socket.recv(1024).decode('utf-8').strip()
-
-        if protocol_path:
-            process_protocol(protocol_path, motor)  # Pass motor as argument
-
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        client_socket.close()
-
-
-# Function to start the server and listen for connections
-def start_server():
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('localhost', 8765))
-    server_socket.listen(5)
-    print("Server running on port 8765")
-
+# WebSocket handler function
+def websocket_handler(websocket, path):
     while True:
-        client_socket, client_address = server_socket.accept()
-        # Start a new thread for each client connection
-        threading.Thread(target=handle_client_connection, args=(client_socket, client_address, motor)).start()
+        try:
+            message = websocket.recv()  # Block and wait for message
+            protocol_path = message.strip()  # The protocol file path will be sent as a message
+            if protocol_path:
+                process_protocol(protocol_path, motor)  # Pass motor as argument to process protocol
+        except Exception as e:
+            print(f"Error handling WebSocket message: {e}")
+            break
+
+
+# Main function to start WebSocket server
+def main():
+    server = websockets.serve(websocket_handler, "localhost", 8765)
+    print("WebSocket server running on ws://localhost:8765")
+
+    try:
+        server.serve_forever()  # Block and keep the WebSocket server running
+    except KeyboardInterrupt:
+        print("Server stopped.")
+    finally:
+        # Optionally: Clean up resources here
+        pass
 
 
 if __name__ == "__main__":
-    start_server()
+    main()
