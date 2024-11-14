@@ -50,25 +50,32 @@ def calibrate():
     motor.calibrate()
 
 def end_all_commands():
+    global motor
     motor.cleanup()
     redis_client.set("current_step", "")
     redis_client.set("stop_flag", "0")
 
+
 def move_to_angle(angle):
+    global motor
     print(f"Moving to angle: {angle}")
     motor.move_to_angle(angle)
+
 
 def move_to_force(force):
     print(f"Moving to force: {force}")
     time.sleep(1)  # Simulate the action
 
+
 def move_until_force_or_angle(force, angle):
     print(f"Moving until force: {force} or angle: {angle}")
     time.sleep(1)  # Simulate the action
 
+
 def wait(wait_time):
     print(f"Waiting for {wait_time} seconds")
     time.sleep(wait_time)
+
 
 def wait_for_user_input():
     print("Waiting for user input")
