@@ -9,10 +9,28 @@ from force_sensor import ForceSensor
 
 
 class StepperMotor:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(StepperMotor, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='fullstep', stepdelay=0.0015, calibration_file='calibration.txt'):
+        if not hasattr(self, 'initialized'):  # Ensure __init__ is only called once
+            self.dir_pin = dir_pin
+            self.step_pin = step_pin
+            self.enable_pin = enable_pin
+            self.mode_pins = mode_pins
+            self.limit_switch_1 = limit_switch_1
+            self.limit_switch_2 = limit_switch_2
+            self.step_type = step_type
+            self.stepdelay = stepdelay
+            self.initialized = True
+            self.motor = DRV8825(dir_pin=dir_pin, step_pin=step_pin, enable_pin=enable_pin, mode_pins=mode_pins,
+                                 limit_pins=(self.limit_switch_1, self.limit_switch_2))
         self.limit_switch_1 = limit_switch_1
         self.limit_switch_2 = limit_switch_2
-        self.motor = DRV8825(dir_pin=dir_pin, step_pin=step_pin, enable_pin=enable_pin, mode_pins=mode_pins, limit_pins=(self.limit_switch_1, self.limit_switch_2))
         self.steps_per_revolution = None
         self.step_to_angle_ratio = None
         self.current_angle = 0

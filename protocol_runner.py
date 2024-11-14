@@ -1,3 +1,5 @@
+# protocol_runner.py
+
 import sys
 import redis
 import time
@@ -6,9 +8,6 @@ import socket
 
 # Initialize Redis client
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-
-# Define motor as a global variable
-motor = None
 
 def process_protocol(protocol_path):
     with open(protocol_path, 'r') as file:
