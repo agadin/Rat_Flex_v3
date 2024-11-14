@@ -76,6 +76,7 @@ class StepperMotor:
     def calibrate(self):
         self.current_direction = 'calibrating'
         self.current_state = 'calibrating'
+        self.current_angle = 0
         self.redis_client.set("current_state", self.current_direction)
         self.redis_client.set("current_direction", self.current_state)
 
@@ -99,6 +100,7 @@ class StepperMotor:
 
         self.redis_client.set("current_direction", "idle")
         self.redis_client.set("step_to_angle_ratio", self.step_to_angle_ratio)
+
         self.move_to_angle(90)
 
     def move_to_angle(self, angle):

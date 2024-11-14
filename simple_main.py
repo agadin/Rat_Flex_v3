@@ -72,4 +72,4 @@ if __name__ == "__main__":
             shared_memory_placeholder.write(f"Step Count: {shared_data[0]}, Current Angle: {shared_data[1]}, Current Force: {shared_data[2]}")
         else:
             shared_memory_placeholder.write("Shared memory not available.")
-        time.sleep(1)
+        time.sleep(0.25)
