@@ -2,7 +2,7 @@ import streamlit as st
 import socket
 import asyncio
 import os
-
+import subprocess
 
 def send_protocol_path(protocol_path):
     server_address = ('localhost', 8765)  # Server's address and port
@@ -23,7 +23,27 @@ def send_protocol_path(protocol_path):
         print(f"Error: {e}")
 
 def run_protocol(protocol_path):
-    send_protocol_path(protocol_path)
+    trigger_script(protocol_path)
+
+
+
+def trigger_script(protocol_path):
+    # Run the other Python script and pass the protocol path as an argument
+    result = subprocess.run(['python', 'your_script.py', protocol_path], capture_output=True, text=True)
+
+    if result.returncode == 0:
+        print("Script ran successfully")
+        print(result.stdout)  # If you want to capture and print output from the script
+    else:
+        print("Error running script")
+        print(result.stderr)  # If you want to capture and print error output
+
+
+if __name__ == "__main__":
+    # Provide the protocol path to trigger_script()
+    protocol_path = "path_to_your_protocol_file.txt"
+    trigger_script(protocol_path)
+
 
 # List protocol files in the protocols folder
 protocol_folder = './protocols'
