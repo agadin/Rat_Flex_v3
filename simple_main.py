@@ -27,7 +27,7 @@ def send_protocol_path(protocol_path):
         print(f"Error: {e}")
 
 def run_protocol(protocol_path):
-    redis_client.publish('protocol_channel', protocol_path)
+    redis_client.publish('protocol_trigger', protocol_path)
     print(f"Triggered protocol: {protocol_path}")
 
 
