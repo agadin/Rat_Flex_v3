@@ -73,7 +73,7 @@ class DRV8825():
         if (steps == 0):
             return
             
-        print ("turn step:",steps)
+        # print ("turn step:",steps)
         for i in range(steps):
             if (Dir == MotorDir[0] and not GPIO.input(self.limit_switch_1)) or (Dir == MotorDir[1] and not GPIO.input(self.limit_switch_2)):
                 print("Limit switch triggered, stopping motor")
