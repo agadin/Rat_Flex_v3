@@ -57,7 +57,8 @@ class StepperMotor:
         fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
 
         # Attach to the existing shared memory
-        self.shm = sm.SharedMemory(name=shm_name)
+
+        self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
 
 
     def load_calibration(self):

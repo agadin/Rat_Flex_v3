@@ -14,7 +14,7 @@ shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes eac
 fmt = 'i d d d'  # Format for packing (stop_flag, step_count, current_angle, current_force)
 
 # Create shared memory block
-shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
+shm = sm.SharedMemory(name=shm_name)
 
 def send_protocol_path(protocol_path):
     server_address = ('localhost', 8765)  # Server's address and port
