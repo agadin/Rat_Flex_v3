@@ -25,6 +25,7 @@ class StepperMotor:
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         self.ForceSensor = ForceSensor()
 
+        GPIO.setmode(GPIO.BCM)
         setup_gpio(self.limit_switch_1, self.limit_switch_2)
         self.load_calibration()
 
