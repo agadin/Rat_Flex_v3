@@ -80,6 +80,7 @@ def wait_for_user_input():
         if user_input == "continue":
             break
         time.sleep(1)
+
 def start_server():
     host = 'localhost'
     port = 12345
@@ -99,12 +100,14 @@ def start_server():
         server_socket.listen()
 
         print("Server waiting for connections...")
-        conn, addr = server_socket.accept()
-        with conn:
-            print(f"Connected by {addr}")
-            data = conn.recv(1024)  # Receive the protocol path
-            if data:
-                process_protocol(data.decode(), motor)
+        while True:
+            conn, addr = server_socket.accept()
+            with conn:
+                print(f"Connected by {addr}")
+                data = conn.recv(1024)  # Receive the protocol path
+                if data:
+                    process_protocol(data.decode(), motor)
+
 
 if __name__ == "__main__":
     start_server()
