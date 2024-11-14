@@ -126,7 +126,7 @@ class StepperMotor:
             packed_data = struct.pack(fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
 
             # Write packed data to shared memory
-            self.smh.buf[:len(packed_data)] = packed_data
+            self.shm.buf[:len(packed_data)] = packed_data
 
         self.current_state = "idle"
         self.current_direction = "idle"
