@@ -2,7 +2,7 @@
 import serial
 
 class ForceSensor:
-    def __init__(self, port='/dev/ttyUSB0', baudrate=9600, timeout=1):
+    def __init__(self, port='/dev/ttyUSB1', baudrate=9600, timeout=1):
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
