@@ -125,10 +125,13 @@ class StepperMotor:
 
 
             stop_flag = 0
-            packed_data = struct.pack(fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
+            try:
+                packed_data = struct.pack(fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
 
             # Write packed data to shared memory
-            self.shm.buf[:len(packed_data)] = packed_data
+                self.shm.buf[:len(packed_data)] = packed_data
+            except Exception as e:
+                print(f"Error: {e}")
 
         self.current_state = "idle"
         self.current_direction = "idle"
