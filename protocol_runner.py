@@ -7,7 +7,7 @@ import socket
 # Initialize Redis client
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
-# Define motor as a global variable
+# Define motor as a global variabl
 motor = None
 
 def process_protocol(protocol_path):

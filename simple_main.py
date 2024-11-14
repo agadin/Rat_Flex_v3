@@ -9,7 +9,7 @@ redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 
 def send_protocol_path(protocol_path):
-    server_address = ('localhost', 8765)  # Server's address and port
+    server_address = ('localhost', 8765)  # Server's address and por
     try:
         # Create a TCP/IP socket
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
