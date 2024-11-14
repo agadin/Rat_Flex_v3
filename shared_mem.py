@@ -9,6 +9,7 @@ shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes eac
 
 # Packing format: (stop_flag, step_count, current_angle, current_force)
 fmt = 'i d d d'
+shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
 
 
 # Function to write data to shared memory (simulates the main script)

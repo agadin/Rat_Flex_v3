@@ -9,6 +9,9 @@ import json
 from database_websocket_client import DatabaseWebSocketClient
 import redis
 from force_sensor import ForceSensor
+import struct
+import multiprocessing.shared_memory as sm
+
 
 class StepperMotor:
     _instance = None
@@ -31,6 +34,7 @@ class StepperMotor:
             self.initialized = True
             self.motor = DRV8825(dir_pin=dir_pin, step_pin=step_pin, enable_pin=enable_pin, mode_pins=mode_pins,
                                  limit_pins=(self.limit_switch_1, self.limit_switch_2))
+
         self.limit_switch_1 = limit_switch_1
         self.limit_switch_2 = limit_switch_2
         self.steps_per_revolution = None
@@ -50,8 +54,8 @@ class StepperMotor:
         self.load_calibration()
 
         # Initialize shared memory
-        self.shm = shared_memory.SharedMemory(name='psm_12345',create=True, size=8*256)
-        self.shared_data = np.ndarray((256,), dtype=np.float64, buffer=self.shm.buf)
+        shm_size = struct.calcsize('i d d d')
+        self.smh = sm.SharedMemory(create=True, name='test', size=shm_size)
 
     def load_calibration(self):
         if os.path.exists(self.calibration_file):
@@ -108,20 +112,17 @@ class StepperMotor:
         angle_increment = 1 / self.step_to_angle_ratio
         angle_increment = angle_increment if self.current_direction == 'forward' else -angle_increment
         batch_size = 100
-
+        fmt = 'i d d d'
         for i in range(steps):
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
 
-            if i % batch_size == 0:
-                stop_flag = self.redis_client.get("stop_flag")
-                if stop_flag == 1:
-                    print("Move stopped externally.")
-                    break
 
-                self.shared_data[0] = i
-                self.shared_data[1] = self.current_angle
-                self.shared_data[2] = float(self.ForceSensor.read_force())
+            stop_flag = 0
+            packed_data = struct.pack(fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
+
+            # Write packed data to shared memory
+            self.smh.buf[:len(packed_data)] = packed_data
 
         self.current_state = "idle"
         self.current_direction = "idle"

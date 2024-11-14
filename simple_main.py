@@ -2,11 +2,19 @@ import streamlit as st
 import socket
 import os
 import redis
-import multiprocessing.shared_memory as shared_memory
+import multiprocessing.shared_memory as sm
 import numpy as np
 import time
+import struct
 
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+shm_name = 'shared_data'
+shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
+
+# Packing format: (stop_flag, step_count, current_angle, current_force)
+fmt = 'i d d d'
+shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
 
 def send_protocol_path(protocol_path):
     server_address = ('localhost', 8765)  # Server's address and port
@@ -32,9 +40,9 @@ def run_protocol(protocol_path):
 
 def read_shared_memory():
     try:
-        shm = shared_memory.SharedMemory(name='psm_12345')  # Use the correct shared memory name
-        shared_data = np.ndarray((256,), dtype=np.float64, buffer=shm.buf)
-        return shared_data[:3]  # Return the first three values
+        data = bytes(shm.buf[:struct.calcsize(fmt)])
+        stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
+        return step_count, current_angle, current_force
     except FileNotFoundError:
         return None
 
