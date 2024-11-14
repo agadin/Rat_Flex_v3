@@ -3,7 +3,7 @@ import redis
 import time
 from Wavshare_stepper_code.stepper_motor import StepperMotor
 
-# Initialize Redis client
+# Initialize Redis clien
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 # Define motor as a global variable
