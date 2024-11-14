@@ -1,12 +1,13 @@
 import websockets
 import redis
 import time
+import asyncio
 from Wavshare_stepper_code.stepper_motor import StepperMotor
 
 # Initialize Redis client
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
-def process_protocol(protocol_path, motor):
+async def process_protocol(protocol_path, motor):
     with open(protocol_path, 'r') as file:
         commands = file.readlines()
 
@@ -51,7 +52,6 @@ def move_to_angle(motor, angle):
     print(f"Moving to angle: {angle}")
     motor.move_to_angle(angle)
 
-
 def move_to_force(force):
     print(f"Moving to force: {force}")
     # Implement the logic to move the motor to the specified force
@@ -77,13 +77,14 @@ def wait_for_user_input():
 async def websocket_handler(websocket, path, motor):
     async for message in websocket:
         protocol_path = message
-        process_protocol(protocol_path, motor)
+        await process_protocol(protocol_path, motor)
 
-def main():
+async def main():
     motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5,
                          limit_switch_2=6, step_type='fullstep', stepdelay=0.0015)
-    start_server = websockets.serve(lambda ws, path: websocket_handler(ws, path, motor), "localhost", 8765)
-    start_server.run_forever()
+    async with websockets.serve(lambda ws, path: websocket_handler(ws, path, motor), "localhost", 8765):
+        print("WebSocket server running on ws://localhost:8765")
+        await asyncio.Future()  # Run forever
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
