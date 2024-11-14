@@ -3,14 +3,14 @@ import redis
 import time
 from Wavshare_stepper_code.stepper_motor import StepperMotor
 import socket
+
 # Initialize Redis client
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 # Define motor as a global variable
+motor = None
 
-
-
-def process_protocol(protocol_path, motor):
+def process_protocol(protocol_path):
     with open(protocol_path, 'r') as file:
         commands = file.readlines()
 
@@ -27,51 +27,45 @@ def process_protocol(protocol_path, motor):
 
         if command.startswith("Move_to_angle"):
             angle = int(command.split(":")[1])
-            move_to_angle(angle, motor)
+            move_to_angle(angle)
         elif command.startswith("Move_to_force"):
             force = float(command.split(":")[1])
-            move_to_force(force,motor)
+            move_to_force(force)
         elif command.startswith("calibrate"):
             motor.calibrate()
         elif command.startswith("Move until force or angle"):
             params = command.split(":")[1].split(",")
             force = float(params[0])
             angle = int(params[1])
-            move_until_force_or_angle(force, angle, motor)
+            move_until_force_or_angle(force, angle)
         elif command.startswith("wait"):
             wait_time = int(command.split(":")[1])
             wait(wait_time)
         elif command.startswith("Wait for user input"):
             wait_for_user_input()
 
-    end_all_commands(motor)
+    end_all_commands()
 
-
-def end_all_commands(motor):
+def end_all_commands():
     motor.cleanup()
     redis_client.set("current_step", "")
     redis_client.set("stop_flag", "0")
 
-
-def move_to_angle(angle,motor):
+def move_to_angle(angle):
     print(f"Moving to angle: {angle}")
     motor.move_to_angle(angle)
 
-
-def move_to_force(force,motor):
+def move_to_force(force):
     print(f"Moving to force: {force}")
     time.sleep(1)  # Simulate the action
 
-
-def move_until_force_or_angle(force, angle, motor):
+def move_until_force_or_angle(force, angle):
     print(f"Moving until force: {force} or angle: {angle}")
     time.sleep(1)  # Simulate the action
-
 
 def wait(wait_time):
     print(f"Waiting for {wait_time} seconds")
     time.sleep(wait_time)
-
 
 def wait_for_user_input():
     print("Waiting for user input")
@@ -82,6 +76,7 @@ def wait_for_user_input():
         time.sleep(1)
 
 def start_server():
+    global motor
     host = 'localhost'
     port = 12345
     motor = StepperMotor(
@@ -106,8 +101,7 @@ def start_server():
                 print(f"Connected by {addr}")
                 data = conn.recv(1024)  # Receive the protocol path
                 if data:
-                    process_protocol(data.decode(), motor)
-
+                    process_protocol(data.decode())
 
 if __name__ == "__main__":
     start_server()
