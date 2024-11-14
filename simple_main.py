@@ -28,10 +28,11 @@ def run_protocol(protocol_path):
 
 
 def trigger_script(protocol_path):
+    venv_python = 'base/bin/python'  # For Linux/Mac
     try:
         # Run the subprocess and capture both stdout and stderr
         result = subprocess.run(
-            ['python', 'protocol_runner.py', protocol_path],
+            [venv_python, 'protocol_runner.py', protocol_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True  # This ensures that the output is captured as strings, not bytes
