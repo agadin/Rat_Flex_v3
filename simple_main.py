@@ -1,26 +1,27 @@
 import streamlit as st
 import websockets
 import asyncio
+import os
 
 async def send_command(command):
     uri = "ws://localhost:8765"
     async with websockets.connect(uri) as websocket:
         await websocket.send(command)
 
-def calibrate():
-    asyncio.run(send_command("calibrate"))
+def run_protocol(protocol_path):
+    asyncio.run(send_command(protocol_path))
 
-def move_to_angle(angle):
-    command = f"Move_to_angle:{angle}"
-    asyncio.run(send_command(command))
+# List protocol files in the protocols folder
+protocol_folder = 'protocols'
+protocol_files = [f for f in os.listdir(protocol_folder) if os.path.isfile(os.path.join(protocol_folder, f))]
 
 st.title("Stepper Motor Control")
 
-if st.button("Calibrate"):
-    calibrate()
-    st.write("Calibration command sent.")
+# Dropdown to select a protocol
+selected_protocol = st.selectbox("Select a protocol", protocol_files)
 
-angle = st.number_input("Enter angle to move to:", min_value=0, max_value=360, step=1)
-if st.button("Move to Angle"):
-    move_to_angle(angle)
-    st.write(f"Move to angle {angle} command sent.")
+# Button to run the selected protocol
+if st.button("Run Protocol"):
+    protocol_path = os.path.join(protocol_folder, selected_protocol)
+    run_protocol(protocol_path)
+    st.write(f"Running protocol: {selected_protocol}")

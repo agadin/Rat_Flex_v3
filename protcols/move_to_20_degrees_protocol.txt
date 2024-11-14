@@ -1,0 +1,2 @@
+Move_to_angle:20
+wait:5
