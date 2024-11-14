@@ -44,7 +44,7 @@ def process_protocol(protocol_path):
         elif command.startswith("Wait for user input"):
             wait_for_user_input()
 
-    end_all_commands()
+    # end_all_commands()
 
 def calibrate():
     motor.calibrate()
