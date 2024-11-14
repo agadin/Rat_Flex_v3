@@ -5,3 +5,5 @@ redis
 websocket-client
 websockets
 pyserial
+
+matplotlib

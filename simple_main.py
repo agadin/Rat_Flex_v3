@@ -6,6 +6,7 @@ import multiprocessing.shared_memory as sm
 import numpy as np
 import time
 import struct
+import matplotlib.pyplot as plt
 
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
@@ -65,11 +66,38 @@ if __name__ == "__main__":
     # Display shared memory data
     st.subheader("Shared Memory Data")
     shared_memory_placeholder = st.empty()
+    plot_placeholder=st.empty()
+    # Initialize lists to store data for plotting
+    time_data = []
+    angle_data = []
+    force_data = []
+
+    start_time = time.time()
 
     while True:
         shared_data = read_shared_memory()
         if shared_data is not None:
-            shared_memory_placeholder.write(f"Step Count: {shared_data[0]}, Current Angle: {shared_data[1]}, Current Force: {shared_data[2]}")
+            step_count, current_angle, current_force = shared_data
+            current_time = time.time() - start_time
+
+            # Append data to lists
+            time_data.append(current_time)
+            angle_data.append(current_angle)
+            force_data.append(current_force)
+
+            shared_memory_placeholder.write(
+                f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}")
+
+            # Plot the data
+            plt.figure(figsize=(10, 5))
+            plt.plot(time_data, angle_data, label='Angle')
+            plt.plot(time_data, force_data, label='Force')
+            plt.xlabel('Time (s)')
+            plt.ylabel('Value')
+            plt.title('Angle and Force over Time')
+            plt.legend()
+            plt.grid(True)
+            plot_placeholder.pyplot(plt)
         else:
             shared_memory_placeholder.write("Shared memory not available.")
-        time.sleep(0.25)
+        time.sleep(0.1)
