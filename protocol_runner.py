@@ -97,6 +97,7 @@ def start_server():
         while True:
             # Check for a value in the Redis key
             protocol_path = redis_client.get("protocol_trigger")
+            print(f"Checking for protocol trigger: {protocol_path}")
             if protocol_path:
                 print(f"Found protocol path: {protocol_path}")
                 process_protocol(protocol_path)
