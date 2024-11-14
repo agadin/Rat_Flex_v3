@@ -28,15 +28,26 @@ def run_protocol(protocol_path):
 
 
 def trigger_script(protocol_path):
-    # Run the other Python script and pass the protocol path as an argument
-    result = subprocess.run(['python', 'protocol_runner.py', protocol_path], capture_output=True, text=True)
+    try:
+        # Run the subprocess and capture both stdout and stderr
+        result = subprocess.run(
+            ['python', 'your_script.py', protocol_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True  # This ensures that the output is captured as strings, not bytes
+        )
 
-    if result.returncode == 0:
-        print("Script ran successfully")
-        print(result.stdout)  # If you want to capture and print output from the script
-    else:
-        print("Error running script")
-        print(result.stderr)  # If you want to capture and print error output
+        # Print the output from the script
+        print("Output from your_script.py:")
+        print(result.stdout)
+
+        # If there was any error, print the error message
+        if result.stderr:
+            print("Error from your_script.py:")
+            print(result.stderr)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
