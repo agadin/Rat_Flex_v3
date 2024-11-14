@@ -87,8 +87,6 @@ def wait_for_user_input():
 
 def start_server():
     global motor
-    host = 'localhost'
-    port = 12345
     if motor is None:
         motor = StepperMotor(
             dir_pin=13,

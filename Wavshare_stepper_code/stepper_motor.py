@@ -1,3 +1,6 @@
+import multiprocessing.shared_memory as shared_memory
+import multiprocessing
+import numpy as np
 from Wavshare_stepper_code.DRV8825 import DRV8825, setup_gpio
 import RPi.GPIO as GPIO
 import time
@@ -6,7 +9,6 @@ import json
 from database_websocket_client import DatabaseWebSocketClient
 import redis
 from force_sensor import ForceSensor
-
 
 class StepperMotor:
     _instance = None
@@ -47,26 +49,9 @@ class StepperMotor:
         setup_gpio(self.limit_switch_1, self.limit_switch_2)
         self.load_calibration()
 
-        # Initialize WebSocket client
-        # self.db_client = DatabaseWebSocketClient()
-
-    def send_db_command(self, command, data=None):
-        """Send a command to the WebSocket database server."""
-        return # await self.db_client.send_db_command(command, data)
-
-    def update_db(self, current_direction=None, current_angle=None, step_to_angle_ratio=None, motor_state=None):
-        """Update the motor state in the database using WebSocket."""
-        data = {}
-        if current_direction is not None:
-            data["current_direction"] = current_direction
-        if current_angle is not None:
-            data["current_angle"] = current_angle
-        if step_to_angle_ratio is not None:
-            data["step_to_angle_ratio"] = step_to_angle_ratio
-        if motor_state is not None:
-            data["current_state"] = motor_state
-
-        # await self.send_db_command("update_motor_state", data)
+        # Initialize shared memory
+        self.shm = shared_memory.SharedMemory(create=True, size=1024)
+        self.shared_data = np.ndarray((256,), dtype=np.float64, buffer=self.shm.buf)
 
     def load_calibration(self):
         if os.path.exists(self.calibration_file):
@@ -82,18 +67,15 @@ class StepperMotor:
 
     def calibrate(self):
         self.current_direction = 'calibrating'
-        # await self.update_db(current_direction=self.current_direction)
         self.current_state = 'calibrating'
         self.redis_client.set("current_state", self.current_direction)
         self.redis_client.set("current_direction", self.current_state)
 
-        # Rotate clockwise until the first limit switch is pressed
         self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
         while GPIO.input(self.limit_switch_1):
             self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
             time.sleep(self.stepdelay)
 
-        # Rotate counter-clockwise until the second limit switch is pressed
         steps = 0
         while GPIO.input(self.limit_switch_2):
             self.motor.TurnStep(Dir='backward', steps=1, stepdelay=self.stepdelay)
@@ -101,72 +83,57 @@ class StepperMotor:
             steps += 1
 
         self.steps_per_revolution = steps
-        print(f"Steps per revolution: {self.steps_per_revolution}")
         self.step_to_angle_ratio = steps / 180
-        print(f"Step to angle ratio: {self.step_to_angle_ratio}")
 
-        # Save calibration data to file
         with open(self.calibration_file, 'w') as file:
             file.write(f"steps_per_revolution: {self.steps_per_revolution}\n")
             file.write(f"step_to_angle_ratio: {self.step_to_angle_ratio}\n")
 
-        # Update the database with calibration data
-        # await self.update_db(current_direction='idle', step_to_angle_ratio=self.step_to_angle_ratio)
         self.redis_client.set("current_direction", "idle")
         self.redis_client.set("step_to_angle_ratio", self.step_to_angle_ratio)
         self.move_to_angle(90)
 
     def move_to_angle(self, angle):
-        """Move the motor to a specified angle using WebSocket-based database updates."""
         if self.step_to_angle_ratio is None:
             raise Exception("Motor not calibrated. Please run calibrate() first.")
 
-        # Determine the direction and set the motor state
         self.current_state = "moving"
         self.current_direction = "forward" if angle > self.current_angle else "backward"
-        # await self.update_db(current_direction=self.current_direction, motor_state=self.current_state)
 
-        # Calculate the number of steps and the direction
         steps = int(abs(angle - self.current_angle) * self.step_to_angle_ratio)
         self.redis_client.set("current_state", self.current_state)
         self.redis_client.set("current_direction", self.current_direction)
-        # Start moving the motor step by step
-        counter= 0
-        print(f"Moving to angle: {angle} with {steps} steps")
-        for _ in range(steps):
-            counter += 1
-            # Check if a stop flag has been set
-            stop_flag = self.redis_client.get("stop_flag")
 
-            if stop_flag == 1:
-                print("Move stopped externally.")
-                break
+        counter = 0
+        angle_increment = 1 / self.step_to_angle_ratio
+        angle_increment = angle_increment if self.current_direction == 'forward' else -angle_increment
+        batch_size = 100
 
-            # Perform the motor step
+        for i in range(steps):
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
+            self.current_angle += angle_increment
 
-            # Update the current angle based on the step direction
-            self.current_angle += (1 / self.step_to_angle_ratio) * (1 if self.current_direction == 'forward' else -1)
+            if i % batch_size == 0:
+                stop_flag = self.redis_client.get("stop_flag")
+                if stop_flag == 1:
+                    print("Move stopped externally.")
+                    break
 
-            # Update the current angle in the database
-            self.redis_client.set("step_count", counter)
-            self.redis_client.set("current_angle", self.current_angle)
-            self.redis_client.set("current_force", self.ForceSensor.read_force())
+                self.shared_data[0] = i
+                self.shared_data[1] = self.current_angle
+                self.shared_data[2] = float(self.ForceSensor.read_force())
 
-            # time.sleep(self.stepdelay)
-
-        # Set the motor state back to idle
         self.current_state = "idle"
         self.current_direction = "idle"
         self.redis_client.set("current_state", self.current_state)
         self.redis_client.set("current_direction", self.current_direction)
-        # await self.update_db(current_direction=self.current_direction, motor_state=self.current_state)
 
     def cleanup(self):
         self.motor.Stop()
         GPIO.cleanup()
+        self.shm.close()
+        self.shm.unlink()
 
     def stop(self):
         self.motor.Stop()
         self.update_db(motor_state='stopped', current_direction='idle')
-
