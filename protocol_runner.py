@@ -1,5 +1,3 @@
-# protocol_runner.py
-
 import sys
 import redis
 import time
@@ -8,6 +6,9 @@ import socket
 
 # Initialize Redis client
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+# Define motor as a global variable
+motor = None
 
 def process_protocol(protocol_path):
     with open(protocol_path, 'r') as file:
@@ -78,16 +79,17 @@ def start_server():
     global motor
     host = 'localhost'
     port = 12345
-    motor = StepperMotor(
-        dir_pin=13,
-        step_pin=19,
-        enable_pin=12,
-        mode_pins=(16, 17, 20),
-        limit_switch_1=5,
-        limit_switch_2=6,
-        step_type='fullstep',
-        stepdelay=0.0015
-    )
+    if motor is None:
+        motor = StepperMotor(
+            dir_pin=13,
+            step_pin=19,
+            enable_pin=12,
+            mode_pins=(16, 17, 20),
+            limit_switch_1=5,
+            limit_switch_2=6,
+            step_type='fullstep',
+            stepdelay=0.0015
+        )
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((host, port))
