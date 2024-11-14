@@ -61,7 +61,7 @@ class StepperMotor:
         else:
             print(f"Calibration file {self.calibration_file} not found. Please run calibrate() first.")
 
-    async def calibrate(self):
+    def calibrate(self):
         self.current_direction = 'calibrating'
         # await self.update_db(current_direction=self.current_direction)
         self.current_state = 'calibrating'

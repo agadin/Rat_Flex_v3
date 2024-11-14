@@ -8,8 +8,7 @@ from Wavshare_stepper_code.stepper_motor import StepperMotor
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 # Define motor as a global variable
-motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6,
-                     step_type='fullstep', stepdelay=0.0015)
+motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6,step_type='fullstep', stepdelay=0.0015)
 
 
 def process_protocol(protocol_path):
