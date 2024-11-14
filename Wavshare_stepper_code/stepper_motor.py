@@ -84,7 +84,9 @@ class StepperMotor:
             steps += 1
 
         self.steps_per_revolution = steps
+        print(f"Steps per revolution: {self.steps_per_revolution}")
         self.step_to_angle_ratio = steps / 180
+        print(f"Step to angle ratio: {self.step_to_angle_ratio}")
 
         # Save calibration data to file
         with open(self.calibration_file, 'w') as file:
@@ -113,8 +115,8 @@ class StepperMotor:
         self.redis_client.set("current_direction", self.current_direction)
         # Start moving the motor step by step
         counter= 0
+        print(f"Moving to angle: {angle} with {steps} steps")
         for _ in range(steps):
-            print(f"Step {counter} of {steps}")
             counter += 1
             # Check if a stop flag has been set
             stop_flag = self.redis_client.get("stop_flag")
