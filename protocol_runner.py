@@ -93,13 +93,14 @@ def start_server():
             step_type='fullstep',
             stepdelay=0.0015
         )
-    calibrate()
-    move_to_angle(20)
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((host, port))
         server_socket.listen()
 
         print("Server waiting for connections...")
+        calibrate()
+        move_to_angle(20)
         while True:
             conn, addr = server_socket.accept()
             with conn:
