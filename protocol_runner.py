@@ -104,6 +104,8 @@ def start_server():
     global motor
     motor= StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6,step_type='fullstep', stepdelay=0.0015)
 
+    motor.calibrate()
+    motor.move_to_angle(20)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('localhost', 8765))
     server_socket.listen(5)
