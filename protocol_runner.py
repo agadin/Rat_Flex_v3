@@ -8,7 +8,7 @@ from Wavshare_stepper_code.stepper_motor import StepperMotor
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 # Define motor as a global variable
-motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5,limit_switch_2=6, step_type='fullstep', stepdelay=0.0015)
+motor = None
 
 async def process_protocol(protocol_path):
     global motor
@@ -85,7 +85,11 @@ async def websocket_handler(websocket, path):
 
 async def main():
     global motor
-    async with websockets.serve(websocket_handler, "localhost", 8765):
+    motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5,
+                         limit_switch_2=6, step_type='fullstep', stepdelay=0.0015)
+
+    # Pass motor using lambda
+    async with websockets.serve(lambda ws, path: websocket_handler(ws, path), "localhost", 8765):
         print("WebSocket server running on ws://localhost:8765")
         await asyncio.Future()  # Run forever
 
