@@ -114,6 +114,7 @@ class StepperMotor:
         # Start moving the motor step by step
         counter= 0
         for _ in range(steps):
+            print(f"Step {counter} of {steps}")
             counter += 1
             # Check if a stop flag has been set
             stop_flag = self.redis_client.get("stop_flag")
