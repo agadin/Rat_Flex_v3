@@ -29,7 +29,7 @@ def run_protocol(protocol_path):
 
 def trigger_script(protocol_path):
     # Run the other Python script and pass the protocol path as an argument
-    result = subprocess.run(['python', 'your_script.py', protocol_path], capture_output=True, text=True)
+    result = subprocess.run(['python', 'protocol_runner.py', protocol_path], capture_output=True, text=True)
 
     if result.returncode == 0:
         print("Script ran successfully")
@@ -41,8 +41,9 @@ def trigger_script(protocol_path):
 
 if __name__ == "__main__":
     # Provide the protocol path to trigger_script()
-    protocol_path = "path_to_your_protocol_file.txt"
-    trigger_script(protocol_path)
+    #protocol_path = "path_to_your_protocol_file.txt"
+    #trigger_script(protocol_path)
+    print('Hello')
 
 
 # List protocol files in the protocols folder
