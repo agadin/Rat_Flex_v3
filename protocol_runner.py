@@ -2,7 +2,7 @@ import sys
 import redis
 import time
 from Wavshare_stepper_code.stepper_motor import StepperMotor
-
+import socket
 # Initialize Redis client
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
@@ -89,16 +89,26 @@ def wait_for_user_input():
         if user_input == "continue":
             break
         time.sleep(1)
+def start_server():
+    host = 'localhost'
+    port = 12345
 
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+        server_socket.bind((host, port))
+        server_socket.listen()
 
-def main():
-    if len(sys.argv) < 2:
-        print("Error: No protocol path provided")
-        sys.exit(1)
+        print("Server waiting for connections...")
+        conn, addr = server_socket.accept()
+        with conn:
+            print(f"Connected by {addr}")
+            data = conn.recv(1024)  # Receive the protocol path
+            if data:
+                process_protocol(data.decode())
 
-    protocol_path = sys.argv[1]
-    process_protocol(protocol_path)
+if __name__ == "__main__":
+    start_server()
+
 
 
 if __name__ == "__main__":
-    main()
+    start_server()

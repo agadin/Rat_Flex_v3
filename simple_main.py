@@ -23,32 +23,18 @@ def send_protocol_path(protocol_path):
         print(f"Error: {e}")
 
 def run_protocol(protocol_path):
-    trigger_script(protocol_path)
+    trigger_protocol(protocol_path)
 
 
 
-def trigger_script(protocol_path):
-    venv_python = 'base/bin/python'  # For Linux/Mac
-    try:
-        # Run the subprocess and capture both stdout and stderr
-        result = subprocess.run(
-            [venv_python, 'protocol_runner.py', protocol_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True  # This ensures that the output is captured as strings, not bytes
-        )
+def trigger_protocol(protocol_path):
+    host = 'localhost'
+    port = 12345
 
-        # Print the output from the script
-        print("Output from your_script.py:")
-        print(result.stdout)
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+        client_socket.connect((host, port))
+        client_socket.sendall(protocol_path.encode())  # Send protocol path to server
 
-        # If there was any error, print the error message
-        if result.stderr:
-            print("Error from your_script.py:")
-            print(result.stderr)
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
