@@ -93,8 +93,8 @@ def start_server():
             step_pin=19,
             enable_pin=12,
             mode_pins=(16, 17, 20),
-            limit_switch_1=5,
-            limit_switch_2=6,
+            limit_switch_1=6,
+            limit_switch_2=5,
             step_type='fullstep',
             stepdelay=0.0015
         )
