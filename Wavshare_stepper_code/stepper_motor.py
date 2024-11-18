@@ -2,7 +2,6 @@ import multiprocessing.shared_memory as shared_memory
 import multiprocessing
 import numpy as np
 from Wavshare_stepper_code.DRV8825 import DRV8825, setup_gpio
-import RPi.GPIO as GPIO
 import time
 import os
 import json
@@ -11,7 +10,6 @@ import redis
 from force_sensor import ForceSensor
 import struct
 import multiprocessing.shared_memory as sm
-import lgpio
 
 class StepperMotor:
     _instance = None
@@ -48,9 +46,6 @@ class StepperMotor:
         self.motor.SetMicroStep('software', self.step_type)
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         self.ForceSensor = ForceSensor()
-
-        GPIO.setmode(GPIO.BCM)
-        setup_gpio(self.limit_switch_1, self.limit_switch_2)
         self.load_calibration()
 
         shm_name = 'shared_data'
@@ -140,10 +135,13 @@ class StepperMotor:
 
     def cleanup(self):
         self.motor.Stop()
-        GPIO.cleanup()
+        self.motor.cleanup()
         self.shm.close()
         self.shm.unlink()
 
     def stop(self):
         self.motor.Stop()
-        self.update_db(motor_state='stopped', current_direction='idle')
+        self.current_state = "idle"
+        self.current_direction = "idle"
+        self.redis_client.set("current_state", self.current_state)
+        self.redis_client.set("current_direction", self.current_direction)
