@@ -5,3 +5,4 @@ websocket-client
 websockets
 matplotlib
 lgpio
+pysimpleserial
