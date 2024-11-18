@@ -1,9 +1,7 @@
-serial~=0.0.97
 pyserial~=3.5
 streamlit~=1.36.0
 redis
 websocket-client
 websockets
-pyserial
-
 matplotlib
+lgpio

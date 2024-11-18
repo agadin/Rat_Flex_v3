@@ -11,7 +11,7 @@ import redis
 from force_sensor import ForceSensor
 import struct
 import multiprocessing.shared_memory as sm
-
+import lgpio
 
 class StepperMotor:
     _instance = None
@@ -81,12 +81,12 @@ class StepperMotor:
         self.redis_client.set("current_direction", self.current_state)
 
         self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
-        while GPIO.input(self.limit_switch_1):
+        while self.motor.limit_switch_1_state:
             self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
             time.sleep(self.stepdelay)
 
         steps = 0
-        while GPIO.input(self.limit_switch_2):
+        while self.motor.limit_switch_2_state:
             self.motor.TurnStep(Dir='backward', steps=1, stepdelay=self.stepdelay)
             time.sleep(self.stepdelay)
             steps += 1
