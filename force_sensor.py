@@ -1,5 +1,5 @@
 # force_sensor.py
-from pysimpleserial import SimpleSerial
+import serial
 
 class ForceSensor:
     def __init__(self, port='/dev/ttyUSB0', baudrate=9600, timeout=1):
@@ -11,8 +11,7 @@ class ForceSensor:
 
     def open_connection(self):
         try:
-            # Initialize SimpleSerial instead of pyserial
-            self.ser = SimpleSerial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
+            self.ser = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
             print(f"Opened Port {self.port}")
         except Exception as e:
             print(f"Could not open Port {self.port}")
@@ -22,9 +21,7 @@ class ForceSensor:
     def read_force(self):
         if self.ser:
             try:
-                # Send the command 'W\r' to request force data
                 self.ser.write(b'W\r')
-                # Read the response and decode it
                 response = self.ser.readline().decode('utf-8').strip()
                 return response
             except Exception as e:
