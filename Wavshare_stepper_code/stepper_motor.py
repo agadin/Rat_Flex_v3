@@ -189,6 +189,7 @@ class StepperMotor:
             total_time += (end_time - start_time)
         with open(self.csv_name, 'a', newline='') as csvfile:
             start_time= self.read_first_value_in_last_row()
+            print(start_time)
             current_time = start_time
             for row in temp_data:
                 row[0] = current_time
