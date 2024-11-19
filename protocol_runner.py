@@ -140,9 +140,9 @@ def start_server():
                 redis_client.set("shared_memory_error", 0)
                 motor.create_shared_memory()
             if protocol_path:
+                redis_client.set("protocol_trigger", "")  # Clear the trigger after processing
                 print(f"Found protocol path: {protocol_path}")
                 process_protocol(protocol_path)
-                redis_client.set("protocol_trigger", "")  # Clear the trigger after processing
             time.sleep(1)  # Wait for 1 second before checking again
 
 if __name__ == "__main__":
