@@ -18,6 +18,13 @@ shm_size = struct.calcsize(fmt)
 
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
+shm_name = 'shared_data'
+shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
+fmt = 'i d d d'  # Format for packing (stop_flag, step_count, current_angle, current_force)
+
+# Create shared memory block
+shm = sm.SharedMemory(name=shm_name)
+
 
 
 def send_protocol_path(protocol_path):
@@ -38,7 +45,7 @@ def run_protocol(protocol_path):
     redis_client.set('protocol_trigger', protocol_path)
     print(f"Triggered protocol: {protocol_path}")
 
-def read_shared_memory(new_stop_flag=0):
+def read_shared_memory_old(new_stop_flag=0):
     with open(shm_file, "r+b") as f:
         mm = mmap.mmap(f.fileno(), shm_size, access=mmap.ACCESS_WRITE)
         try:
@@ -63,6 +70,13 @@ def read_shared_memory(new_stop_flag=0):
 
     return index, current_angle, force
 
+def read_shared_memory():
+    try:
+        data = bytes(shm.buf[:struct.calcsize(fmt)])
+        stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
+        return step_count, current_angle, current_force
+    except FileNotFoundError:
+        return None
 
 if __name__ == "__main__":
     st.title("Stepper Motor Control")

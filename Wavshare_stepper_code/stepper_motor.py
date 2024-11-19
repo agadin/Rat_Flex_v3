@@ -62,6 +62,13 @@ class StepperMotor:
         with open(self.shm_file, "wb") as f:
             f.write(b'\x00' * self.shm_size)
 
+        shm_name = 'shared_data'
+        self.fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
+
+        # Attach to the existing shared memory
+        shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
+        self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
+
         self.mm = mmap.mmap(
             os.open(self.shm_file, os.O_RDWR),
             self.shm_size,
@@ -145,6 +152,10 @@ class StepperMotor:
                 # self.mm.write(packed_data)
                 # temp_data.append([stop_flag, i, self.current_angle, float(self.current_force)])
                 test= 1
+                packed_data = struct.pack(fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
+
+                # Write packed data to shared memory
+                self.shm.buf[:len(packed_data)] = packed_data
             except Exception as e:
                 print(f"Error: {e}")
 
