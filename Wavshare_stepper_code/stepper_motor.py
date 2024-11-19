@@ -138,13 +138,13 @@ class StepperMotor:
             self.current_force= self.ForceSensor.read_force()
             try:
                 # Pack the data
-                packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
+                #packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
 
                 # Write packed data to the memory-mapped file
-                self.mm.seek(0)
-                self.mm.write(packed_data)
-                # temp_data.append([stop_flag, i, self.current_angle, float(self.ForceSensor.read_force())])
-
+                #self.mm.seek(0)
+                # self.mm.write(packed_data)
+                # temp_data.append([stop_flag, i, self.current_angle, float(self.current_force)])
+                test= 1
             except Exception as e:
                 print(f"Error: {e}")
 
