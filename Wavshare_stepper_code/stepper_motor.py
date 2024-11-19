@@ -51,7 +51,7 @@ class StepperMotor:
         self.ForceSensor = ForceSensor()
         self.load_calibration()
         self.csv_name = csv_name
-
+        self.shm = None
         shm_name = 'shared_data'
         self.fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
         self.shm_size = struct.calcsize(self.fmt)
@@ -66,15 +66,21 @@ class StepperMotor:
         self.fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
 
         # Attach to the existing shared memory
+        self.create_shared_memory()
+
+
+
+    def create_shared_memory(self):
+        try:
+            if hasattr(self, 'shm') and self.shm is not None:
+                self.shm.close()
+                self.shm.unlink()
+        except Exception as e:
+            print(f"Error: {e}")
+
+        shm_name = 'shared_data'
         shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
         self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
-
-        self.mm = mmap.mmap(
-            os.open(self.shm_file, os.O_RDWR),
-            self.shm_size,
-            access=mmap.ACCESS_WRITE
-        )
-
 
     def load_calibration(self):
         if os.path.exists(self.calibration_file):

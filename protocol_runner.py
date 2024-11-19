@@ -103,6 +103,10 @@ def start_server():
             # Check for a value in the Redis key
             protocol_path = redis_client.get("protocol_trigger")
             print(f"Checking for protocol trigger: {protocol_path}")
+            shared_memory_error=redis_client.get("shared_memory_error")
+            if shared_memory_error ==1:
+                redis_client.set("shared_memory_error", 0)
+                motor.create_shared_memory()
             if protocol_path:
                 print(f"Found protocol path: {protocol_path}")
                 process_protocol(protocol_path)

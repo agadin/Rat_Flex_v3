@@ -26,7 +26,7 @@ fmt = 'i d d d'  # Format for packing (stop_flag, step_count, current_angle, cur
 try:
     shm = sm.SharedMemory(name=shm_name)
 except FileNotFoundError:
-    shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
+    redis_client.set("shared_memory_error", 1)
 
 
 def send_protocol_path(protocol_path):
