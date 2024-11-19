@@ -249,7 +249,7 @@ class StepperMotor:
                 break
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
-            self.current_force = self.ForceSensor.read_force()
+            self.current_force = float(self.ForceSensor.read_force())
             try:
                 # Pack the data
                 # packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
