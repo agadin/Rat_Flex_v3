@@ -23,6 +23,7 @@ class StepperMotor:
         return cls._instance
 
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='fullstep', stepdelay=0.0015, calibration_file='calibration.txt', csv_name='data.csv'):
+        self.target_force = None
         self.step_number = None
         self.current_run_data = None
         self.current_force = None
@@ -237,6 +238,7 @@ class StepperMotor:
         angle_increment = 1 / self.step_to_angle_ratio
         angle_increment = angle_increment if self.current_direction == 'forward' else -angle_increment
         data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
+        self.target_force = float(target_force)
         while True:
             stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
             if stop_flag == 1:
@@ -263,7 +265,7 @@ class StepperMotor:
             except Exception as e:
                 print(f"Error: {e}")
 
-            if self.current_force >= target_force or self.current_angle <= angle_limit_min or self.current_angle >= angle_limit_max:
+            if self.current_force >= self.target_force or self.current_angle <= angle_limit_min or self.current_angle >= angle_limit_max:
                 break
 
         self.current_state = "idle"
