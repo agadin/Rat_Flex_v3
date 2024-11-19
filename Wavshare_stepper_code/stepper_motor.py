@@ -267,7 +267,7 @@ class StepperMotor:
             except Exception as e:
                 print(f"Error: {e}")
 
-            if self.current_force >= self.target_force or self.current_angle <= angle_limit_min or self.current_angle >= angle_limit_max:
+            if abs(self.current_force) >= self.target_force or self.current_angle <= angle_limit_min or self.current_angle >= angle_limit_max:
                 break
 
         self.current_state = "idle"
