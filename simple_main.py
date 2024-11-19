@@ -23,8 +23,10 @@ shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes eac
 fmt = 'i d d d'  # Format for packing (stop_flag, step_count, current_angle, current_force)
 
 # Create shared memory block
-shm = sm.SharedMemory(name=shm_name)
-
+try:
+    shm = sm.SharedMemory(name=shm_name)
+except FileNotFoundError:
+    shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
 
 
 def send_protocol_path(protocol_path):
