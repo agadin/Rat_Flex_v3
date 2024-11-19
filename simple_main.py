@@ -59,7 +59,7 @@ def read_shared_memory(new_stop_flag=0):
         except struct.error as e:
             print(f"Error: {e}")
             return None
-    return stop_flag, index, current_angle, force
+    return index, current_angle, force
 
 
 if __name__ == "__main__":
