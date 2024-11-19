@@ -52,6 +52,7 @@ class StepperMotor:
 
         shm_name = 'shared_data'
         self.fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
+        self.shm_size = struct.calcsize(self.fmt)
 
         # Attach to the existing shared memory
         # Create a memory-mapped file
