@@ -125,7 +125,10 @@ class StepperMotor:
         angle_increment = angle_increment if self.current_direction == 'forward' else -angle_increment
         batch_size = 100
         fmt = 'i d d d'
+        total_time = 0
+        iterations = steps
         for i in range(steps):
+            start_time = time.time()
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
 
@@ -142,6 +145,10 @@ class StepperMotor:
             except Exception as e:
                 print(f"Error: {e}")
 
+            end_time = time.time()
+            total_time += (end_time - start_time)
+        average_time = total_time / iterations
+        self.redis_client.set("average_time", average_time)
         self.current_state = "idle"
         self.current_direction = "idle"
         self.redis_client.set("current_state", self.current_state)
