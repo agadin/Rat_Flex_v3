@@ -239,7 +239,9 @@ class StepperMotor:
         angle_increment = angle_increment if self.current_direction == 'forward' else -angle_increment
         data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
         self.target_force = float(target_force)
+        i=0
         while True:
+            i += 1
             stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
             if stop_flag == 1:
                 self.redis_client.set("current_state", "idle")
