@@ -147,7 +147,7 @@ if __name__ == "__main__":
                 f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}")
 
             # add button to stop
-            if st.button("Stop"):
+            if st.button("Stop", key="stop_button"):
                 send_data_to_shared_memory()
             if False:
                 # Create a DataFrame for the line chart
