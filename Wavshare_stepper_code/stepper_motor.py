@@ -54,6 +54,7 @@ class StepperMotor:
         self.csv_name = csv_name
         self.shm = None
         shm_name = 'shared_data'
+        self.fmt = 'i d d d'
         self.shm_size = struct.calcsize(self.fmt)
 
         # Attach to the existing shared memory
@@ -63,7 +64,7 @@ class StepperMotor:
             f.write(b'\x00' * self.shm_size)
 
         shm_name = 'shared_data'
-        self.fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
+          # Format for unpacking (stop_flag, step_count, current_angle, current_force)
 
         # Attach to the existing shared memory
         self.create_shared_memory()
@@ -144,9 +145,9 @@ class StepperMotor:
         iterations = steps
         stop_flag = 0
         temp_data = []
+        data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
         for i in range(steps):
             start_time = time.time()
-            data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
             stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
 
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
