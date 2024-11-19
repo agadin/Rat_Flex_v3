@@ -27,6 +27,8 @@ try:
     shm = sm.SharedMemory(name=shm_name)
 except FileNotFoundError:
     redis_client.set("shared_memory_error", 1)
+    time.sleep(1)
+    shm = sm.SharedMemory(name=shm_name)
 
 
 def send_protocol_path(protocol_path):
