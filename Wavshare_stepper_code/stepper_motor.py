@@ -10,6 +10,8 @@ import redis
 from force_sensor import ForceSensor
 import struct
 import multiprocessing.shared_memory as sm
+import mmap
+import os
 
 class StepperMotor:
     _instance = None
@@ -52,8 +54,16 @@ class StepperMotor:
         self.fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
 
         # Attach to the existing shared memory
-        shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
-        self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
+        # Create a memory-mapped file
+        self.shm_file = "shared_memory.dat"
+        with open(self.shm_file, "wb") as f:
+            f.write(b'\x00' * self.shm_size)
+
+        self.mm = mmap.mmap(
+            os.open(self.shm_file, os.O_RDWR),
+            self.shm_size,
+            access=mmap.ACCESS_WRITE
+        )
 
 
     def load_calibration(self):
@@ -121,10 +131,13 @@ class StepperMotor:
 
             stop_flag = 0
             try:
-                packed_data = struct.pack(fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
+                # Pack the data
+                packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
 
-            # Write packed data to shared memory
-                self.shm.buf[:len(packed_data)] = packed_data
+                # Write packed data to the memory-mapped file
+                self.mm.seek(0)
+                self.mm.write(packed_data)
+
             except Exception as e:
                 print(f"Error: {e}")
 

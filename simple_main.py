@@ -7,15 +7,18 @@ import numpy as np
 import time
 import struct
 import pandas as pd
+import struct
+import mmap
+import os
+
+# Define the same format and file path used for writing
+fmt = 'iifd'  # Example format: (int, int, float, double)
+shm_file = "shared_memory.dat"
+shm_size = struct.calcsize(fmt)
 
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
-shm_name = 'shared_data'
-shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
-fmt = 'i d d d'  # Format for packing (stop_flag, step_count, current_angle, current_force)
 
-# Create shared memory block
-shm = sm.SharedMemory(name=shm_name)
 
 def send_protocol_path(protocol_path):
     server_address = ('localhost', 8765)  # Server's address and port
@@ -35,13 +38,29 @@ def run_protocol(protocol_path):
     redis_client.set('protocol_trigger', protocol_path)
     print(f"Triggered protocol: {protocol_path}")
 
-def read_shared_memory():
-    try:
-        data = bytes(shm.buf[:struct.calcsize(fmt)])
-        stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
-        return step_count, current_angle, current_force
-    except FileNotFoundError:
-        return None
+def read_shared_memory(new_stop_flag=0):
+    with open(shm_file, "r+b") as f:
+        mm = mmap.mmap(f.fileno(), shm_size, access=mmap.ACCESS_WRITE)
+        try:
+            # Read the entire data block using unpack_from
+            stop_flag, index, current_angle, force = struct.unpack_from(fmt, mm, 0)
+
+            # Print the unpacked values
+            print(f"Before update:")
+            print(f"Stop Flag: {stop_flag}")
+            print(f"Index: {index}")
+            print(f"Current Angle: {current_angle}")
+            print(f"Force: {force}")
+            if new_stop_flag != stop_flag:
+                struct.pack_into('i', mm, 0, new_stop_flag)
+
+                # Read again to confirm the update
+                stop_flag, index, current_angle, force = struct.unpack_from(fmt, mm, 0)
+        except struct.error as e:
+            print(f"Error: {e}")
+            return None
+    return stop_flag, index, current_angle, force
+
 
 if __name__ == "__main__":
     st.title("Stepper Motor Control")
