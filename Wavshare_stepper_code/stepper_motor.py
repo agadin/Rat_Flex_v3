@@ -143,7 +143,7 @@ class StepperMotor:
                 # Write packed data to the memory-mapped file
                 self.mm.seek(0)
                 self.mm.write(packed_data)
-                temp_data.append([stop_flag, i, self.current_angle, float(self.ForceSensor.read_force())])
+                # temp_data.append([stop_flag, i, self.current_angle, float(self.ForceSensor.read_force())])
 
             except Exception as e:
                 print(f"Error: {e}")
