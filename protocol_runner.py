@@ -105,6 +105,7 @@ def start_server():
             print(f"Checking for protocol trigger: {protocol_path}")
             shared_memory_error=redis_client.get("shared_memory_error")
             if shared_memory_error ==1:
+                print("Shared memory error detected. Recreating shared memory.")
                 redis_client.set("shared_memory_error", 0)
                 motor.create_shared_memory()
             if protocol_path:
