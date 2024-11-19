@@ -165,12 +165,13 @@ class StepperMotor:
         temp_data = []
         data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
         for i in range(steps):
-            start_time = time.time()
+            # start_time = time.time()
             stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
             if stop_flag == 1:
                 self.redis_client.set("current_state", "idle")
                 self.redis_client.set("current_direction", "idle")
                 self.redis_client.set("stop_flag", 0)
+                print("Stopping motor button")
                 break
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
@@ -192,8 +193,8 @@ class StepperMotor:
                 print(f"Error: {e}")
 
 
-            end_time = time.time()
-            total_time += (end_time - start_time)
+            # end_time = time.time()
+            # total_time += (end_time - start_time)
 
         # After all data has been appended, update the first column with time values
         start_time = self.read_first_value_in_last_row()
@@ -217,8 +218,8 @@ class StepperMotor:
         self.current_run_data= temp_data
         
         
-        average_time = total_time / iterations
-        self.redis_client.set("average_time", average_time)
+        # average_time = total_time / iterations
+        # self.redis_client.set("average_time", average_time)
         self.current_state = "idle"
         self.current_direction = "idle"
         self.redis_client.set("current_state", self.current_state)
