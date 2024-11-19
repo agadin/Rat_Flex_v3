@@ -103,8 +103,8 @@ class StepperMotor:
             if rows:
                 last_row = rows[-1]
                 if last_row:
-                    return last_row[0]
-        return 0
+                    return float(last_row[0])
+        return float(0)
 
     def calibrate(self):
         self.current_direction = 'calibrating'
