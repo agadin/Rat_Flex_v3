@@ -26,6 +26,7 @@ fmt = 'i d d d'  # Format for packing (stop_flag, step_count, current_angle, cur
 try:
     shm = sm.SharedMemory(name=shm_name)
 except FileNotFoundError:
+    print("Shared memory not found. Creating new shared memory block.")
     redis_client.set("shared_memory_error", 1)
     time.sleep(1)
     shm = sm.SharedMemory(name=shm_name)
