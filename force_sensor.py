@@ -23,7 +23,8 @@ class ForceSensor:
             try:
                 self.ser.write(b'W\r')
                 response = self.ser.readline().decode('utf-8').strip()
-                return response
+                force_out=float(response)+0.96
+                return force_out
             except Exception as e:
                 print(f"Error reading from Port {self.port}")
                 print(e)
