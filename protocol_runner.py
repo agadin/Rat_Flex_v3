@@ -68,6 +68,8 @@ def move_to_angle(angle):
 
 
 def move_to_force(force):
+    global motor
+    motor.move_until_force(0,0.75)
     print(f"Moving to force: {force}")
     time.sleep(1)  # Simulate the action
 

@@ -225,6 +225,7 @@ class StepperMotor:
         self.redis_client.set("current_direction", self.current_direction)
 
     def move_until_force(self, direction, target_force, angle_limit_min=0, angle_limit_max=180):
+        temp_data = []
         if direction not in [0, 180]:
             raise ValueError("Direction must be either 0 or 180 degrees")
 
@@ -235,13 +236,34 @@ class StepperMotor:
 
         angle_increment = 1 / self.step_to_angle_ratio
         angle_increment = angle_increment if self.current_direction == 'forward' else -angle_increment
-
+        data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
         while True:
+            stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
+            if stop_flag == 1:
+                self.redis_client.set("current_state", "idle")
+                self.redis_client.set("current_direction", "idle")
+                self.redis_client.set("stop_flag", 0)
+                print("Stopping motor button")
+                break
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
-            current_force = self.ForceSensor.read_force()
+            self.current_force = self.ForceSensor.read_force()
+            try:
+                # Pack the data
+                # packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
 
-            if current_force >= target_force or self.current_angle <= angle_limit_min or self.current_angle >= angle_limit_max:
+                # Write packed data to the memory-mapped file
+                # self.mm.seek(0)
+                # self.mm.write(packed_data)
+                temp_data.append([i, self.current_angle, float(self.current_force)])
+                packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
+
+                # Write packed data to shared memory
+                self.shm.buf[:len(packed_data)] = packed_data
+            except Exception as e:
+                print(f"Error: {e}")
+
+            if self.current_force >= target_force or self.current_angle <= angle_limit_min or self.current_angle >= angle_limit_max:
                 break
 
         self.current_state = "idle"
