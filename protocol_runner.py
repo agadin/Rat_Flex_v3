@@ -33,8 +33,13 @@ def process_protocol(protocol_path):
             angle = int(command.split(":")[1])
             move_to_angle(angle)
         elif command.startswith("Move_to_force"):
-            force = float(command.split(":")[1])
-            move_to_force(force)
+            params = command.split(":")[1].split(",")
+            direction = int(params[0].strip())
+            max_force = float(params[1].strip())
+            min_angle = int(params[2].strip()) if len(params) > 2 else 0
+            max_angle = int(params[3].strip()) if len(params) > 3 else 180
+            move_to_force(direction, max_force, min_angle, max_angle)
+
         elif command.startswith("calibrate"):
             motor.calibrate()
         elif command.startswith("Move until force or angle"):
@@ -67,9 +72,9 @@ def move_to_angle(angle):
     motor.move_to_angle(angle)
 
 
-def move_to_force(force):
+def move_to_force(direction, max_force, min_angle=0, max_angle=180):
     global motor
-    motor.move_until_force(0,0.75)
+    motor.move_until_force(direction,max_force, min_angle, max_angle)
     print(f"Moving to force: {force}")
     time.sleep(1)  # Simulate the action
 
