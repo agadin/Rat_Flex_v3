@@ -16,12 +16,13 @@ motor = None
 def process_protocol(protocol_path):
     with open(protocol_path, 'r') as file:
         commands = file.readlines()
-
+    step_number = 0
     for command in commands:
         command = command.strip()
         if not command:
             continue
-
+        step_number += 1
+        motor.set_current_step(step_number)
         redis_client.set("current_step", command)
         stop_flag = redis_client.get("stop_flag")
         if stop_flag == "1":
@@ -85,8 +86,8 @@ def wait(wait_time):
     while time.time() < end_time:
         start_time = time.time()
         current_force = motor.ForceSensor.read_force()
-        current_csv_time = current_csv_time + 1
-        temp_data.append([timestep, motor.current_angle, current_force])
+        current_csv_time = current_csv_time + timestep
+        temp_data.append([current_csv_time, motor.current_angle, current_force, motor.current_state, motor.current_direction, motor.return_current_protocol_step])
         elapsed_time = time.time() - start_time
         sleep_time = max(timestep - elapsed_time, 0)
         time.sleep(sleep_time)

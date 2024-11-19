@@ -23,6 +23,7 @@ class StepperMotor:
         return cls._instance
 
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='fullstep', stepdelay=0.0015, calibration_file='calibration.txt', csv_name='data.csv'):
+        self.step_number = None
         self.current_run_data = None
         self.current_force = None
         if not hasattr(self, 'initialized'):  # Ensure __init__ is only called once
@@ -105,6 +106,12 @@ class StepperMotor:
                 if last_row:
                     return float(last_row[0])
         return float(0)
+
+    def current_protocol_step(self, step_number):
+        self.step_number = step_number
+
+    def return_current_protocol_step(self):
+        return self.step_number
 
     def calibrate(self):
         self.current_direction = 'calibrating'
@@ -199,6 +206,7 @@ class StepperMotor:
         for row in temp_data:
             row.append(self.current_state)
             row.append(self.current_direction)
+            row.append(self.step_number)
 
         with open(self.csv_name, 'a', newline='') as csvfile:
 
