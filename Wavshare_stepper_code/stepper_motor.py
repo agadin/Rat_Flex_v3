@@ -23,6 +23,7 @@ class StepperMotor:
         return cls._instance
 
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='fullstep', stepdelay=0.0015, calibration_file='calibration.txt', csv_name='data.csv'):
+        self.current_force = None
         if not hasattr(self, 'initialized'):  # Ensure __init__ is only called once
             self.dir_pin = dir_pin
             self.step_pin = step_pin
@@ -53,7 +54,6 @@ class StepperMotor:
         self.csv_name = csv_name
         self.shm = None
         shm_name = 'shared_data'
-        self.fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
         self.shm_size = struct.calcsize(self.fmt)
 
         # Attach to the existing shared memory
@@ -139,13 +139,16 @@ class StepperMotor:
         angle_increment = 1 / self.step_to_angle_ratio
         angle_increment = angle_increment if self.current_direction == 'forward' else -angle_increment
         batch_size = 100
-        fmt = 'i d d d'
+        fmt = self.fmt
         total_time = 0
         iterations = steps
         stop_flag = 0
         temp_data = []
         for i in range(steps):
             start_time = time.time()
+            data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
+            stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
+
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
             self.current_force= self.ForceSensor.read_force()
@@ -158,12 +161,13 @@ class StepperMotor:
                 # self.mm.write(packed_data)
                 temp_data.append([stop_flag, i, self.current_angle, float(self.current_force)])
                 test= 1
-                packed_data = struct.pack(fmt, stop_flag, i, self.current_angle, float(self.current_force))
+                packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
 
                 # Write packed data to shared memory
                 self.shm.buf[:len(packed_data)] = packed_data
             except Exception as e:
                 print(f"Error: {e}")
+
 
             end_time = time.time()
             total_time += (end_time - start_time)

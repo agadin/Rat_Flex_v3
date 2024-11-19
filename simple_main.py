@@ -12,7 +12,7 @@ import mmap
 import os
 
 # Define the same format and file path used for writing
-fmt = 'iifd'  # Example format: (int, int, float, double)
+fmt = 'i d d d'  # Example format: (int, int, float, double)
 shm_file = "shared_memory.dat"
 shm_size = struct.calcsize(fmt)
 
@@ -80,6 +80,14 @@ def read_shared_memory():
     except FileNotFoundError:
         return None
 
+def send_data_to_shared_memory(stop_flag=1):
+    step_count, current_angle, current_force =read_shared_memory()
+    try:
+        packed_data = struct.pack(fmt, stop_flag, step_count, current_angle, current_force)
+        shm.buf[:len(packed_data)] = packed_data
+    except Exception as e:
+        print(f"Error: {e}")
+
 if __name__ == "__main__":
     st.title("Stepper Motor Control")
 
@@ -134,6 +142,10 @@ if __name__ == "__main__":
             # Update the shared memory display
             shared_memory_placeholder.write(
                 f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}")
+
+            # add button to stop
+            if st.button("Stop"):
+                send_data_to_shared_memory()
             if False:
                 # Create a DataFrame for the line chart
                 plot_data = pd.DataFrame({
