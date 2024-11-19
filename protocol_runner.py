@@ -22,7 +22,7 @@ def process_protocol(protocol_path):
         if not command:
             continue
         step_number += 1
-        motor.set_current_step(step_number)
+        motor.current_protocol_step(step_number)
         redis_client.set("current_step", command)
         stop_flag = redis_client.get("stop_flag")
         if stop_flag == "1":
