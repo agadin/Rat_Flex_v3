@@ -58,7 +58,9 @@ def read_shared_memory(new_stop_flag=0):
                 stop_flag, index, current_angle, force = struct.unpack_from(fmt, mm, 0)
         except struct.error as e:
             print(f"Error: {e}")
-            return None
+            index, current_angle, force = 0, 0, 0
+            return index, current_angle, force
+
     return index, current_angle, force
 
 
@@ -81,6 +83,7 @@ if __name__ == "__main__":
     # Display shared memory data
     st.subheader("Shared Memory Data")
     shared_memory_placeholder = st.empty()
+    average_time_placeholder = st.empty()
 
     # Initialize lists to store data for plotting
     time_data = []
@@ -95,6 +98,9 @@ if __name__ == "__main__":
     # Set up Streamlit's interval behavior
     while True:
         shared_data = read_shared_memory()
+        average_time=redis_client.get("average_time")
+        if average_time is not None:
+            average_time_placeholder.write(f"Average Time: {average_time}")
         if shared_data is not None:
             step_count, current_angle, current_force = shared_data
             current_time = time.time() - start_time

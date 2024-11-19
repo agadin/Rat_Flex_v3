@@ -12,6 +12,7 @@ import struct
 import multiprocessing.shared_memory as sm
 import mmap
 import os
+import csv
 
 class StepperMotor:
     _instance = None
@@ -21,7 +22,7 @@ class StepperMotor:
             cls._instance = super(StepperMotor, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='fullstep', stepdelay=0.0015, calibration_file='calibration.txt'):
+    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='fullstep', stepdelay=0.0015, calibration_file='calibration.txt', csv_name='data.csv'):
         if not hasattr(self, 'initialized'):  # Ensure __init__ is only called once
             self.dir_pin = dir_pin
             self.step_pin = step_pin
@@ -49,6 +50,7 @@ class StepperMotor:
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         self.ForceSensor = ForceSensor()
         self.load_calibration()
+        self.csv_name = csv_name
 
         shm_name = 'shared_data'
         self.fmt = 'i d d d'  # Format for unpacking (stop_flag, step_count, current_angle, current_force)
@@ -127,13 +129,13 @@ class StepperMotor:
         fmt = 'i d d d'
         total_time = 0
         iterations = steps
+        stop_flag = 0
+        temp_data = []
         for i in range(steps):
             start_time = time.time()
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
-
-
-            stop_flag = 0
+            self.current_force= self.ForceSensor.read_force()
             try:
                 # Pack the data
                 packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
@@ -141,14 +143,44 @@ class StepperMotor:
                 # Write packed data to the memory-mapped file
                 self.mm.seek(0)
                 self.mm.write(packed_data)
+                temp_data.append([stop_flag, i, self.current_angle, float(self.ForceSensor.read_force())])
 
             except Exception as e:
                 print(f"Error: {e}")
 
             end_time = time.time()
             total_time += (end_time - start_time)
+        with open(self.csv_name, 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            # Write the data
+            csvwriter.writerows(temp_data)
         average_time = total_time / iterations
         self.redis_client.set("average_time", average_time)
+        self.current_state = "idle"
+        self.current_direction = "idle"
+        self.redis_client.set("current_state", self.current_state)
+        self.redis_client.set("current_direction", self.current_direction)
+
+    def move_until_force(self, direction, target_force, angle_limit_min=0, angle_limit_max=180):
+        if direction not in [0, 180]:
+            raise ValueError("Direction must be either 0 or 180 degrees")
+
+        self.current_direction = 'forward' if direction == 0 else 'backward'
+        self.current_state = "moving"
+        self.redis_client.set("current_state", self.current_state)
+        self.redis_client.set("current_direction", self.current_direction)
+
+        angle_increment = 1 / self.step_to_angle_ratio
+        angle_increment = angle_increment if self.current_direction == 'forward' else -angle_increment
+
+        while True:
+            self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
+            self.current_angle += angle_increment
+            current_force = self.ForceSensor.read_force()
+
+            if current_force >= target_force or self.current_angle <= angle_limit_min or self.current_angle >= angle_limit_max:
+                break
+
         self.current_state = "idle"
         self.current_direction = "idle"
         self.redis_client.set("current_state", self.current_state)
