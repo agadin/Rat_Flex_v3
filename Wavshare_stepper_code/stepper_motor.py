@@ -152,7 +152,7 @@ class StepperMotor:
                 # self.mm.write(packed_data)
                 temp_data.append([stop_flag, i, self.current_angle, float(self.current_force)])
                 test= 1
-                packed_data = struct.pack(fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
+                packed_data = struct.pack(fmt, stop_flag, i, self.current_angle, float(self.current_force))
 
                 # Write packed data to shared memory
                 self.shm.buf[:len(packed_data)] = packed_data
