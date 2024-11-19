@@ -16,6 +16,7 @@ fmt = 'i d d d'  # Example format: (int, int, float, double)
 shm_file = "shared_memory.dat"
 shm_size = struct.calcsize(fmt)
 
+
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 shm_name = 'shared_data'

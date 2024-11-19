@@ -3,9 +3,12 @@ import redis
 import time
 from Wavshare_stepper_code.stepper_motor import StepperMotor
 import socket
+import csv
 
+csv_name='data.csv'
 # Initialize Redis client
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
 
 # Define motor as a global variabl
 motor = None
@@ -46,6 +49,7 @@ def process_protocol(protocol_path):
 
     # end_all_commands()
 
+
 def calibrate():
     motor.calibrate()
 
@@ -74,7 +78,23 @@ def move_until_force_or_angle(force, angle):
 
 def wait(wait_time):
     print(f"Waiting for {wait_time} seconds")
-    time.sleep(wait_time)
+    current_csv_time= motor.read_first_value_in_last_row()
+    timestep= 0.03
+    end_time = time.time() + wait_time
+    temp_data = []
+    while time.time() < end_time:
+        start_time = time.time()
+        current_force = motor.ForceSensor.read_force()
+        current_csv_time = current_csv_time + 1
+        temp_data.append([timestep, motor.current_angle, current_force])
+        elapsed_time = time.time() - start_time
+        sleep_time = max(timestep - elapsed_time)
+        time.sleep(sleep_time)
+
+    with open(csv_name, 'a', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        # Write the data
+        csvwriter.writerows(temp_data)
 
 
 def wait_for_user_input():
@@ -96,7 +116,10 @@ def start_server():
             limit_switch_1=6,
             limit_switch_2=5,
             step_type='fullstep',
-            stepdelay=0.0015
+            stepdelay=0.0015,
+            calibration_file='calibration.txt',
+            csv_name=csv_name
+
         )
         # Connect to Redis server
         while True:
