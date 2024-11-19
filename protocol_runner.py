@@ -87,7 +87,7 @@ def wait(wait_time):
         start_time = time.time()
         current_force = motor.ForceSensor.read_force()
         current_csv_time = current_csv_time + timestep
-        temp_data.append([current_csv_time, motor.current_angle, current_force, motor.current_state, motor.current_direction, motor.return_current_protocol_step])
+        temp_data.append([current_csv_time, motor.current_angle, current_force, motor.current_state, motor.current_direction, motor.return_current_protocol_step()])
         elapsed_time = time.time() - start_time
         sleep_time = max(timestep - elapsed_time, 0)
         time.sleep(sleep_time)
