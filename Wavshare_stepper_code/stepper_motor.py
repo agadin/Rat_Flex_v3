@@ -187,16 +187,22 @@ class StepperMotor:
 
             end_time = time.time()
             total_time += (end_time - start_time)
+
+        # After all data has been appended, update the first column with time values
+        start_time = self.read_first_value_in_last_row()
+        current_time = float(start_time)
+        for row in temp_data:
+            row[0] = current_time
+            current_time += 0.03
+
+        # Add two columns to the end of temp_data filled with current_state and current_direction
+        for row in temp_data:
+            row.append(self.current_state)
+            row.append(self.current_direction)
+
         with open(self.csv_name, 'a', newline='') as csvfile:
-            start_time= self.read_first_value_in_last_row()
-            print(start_time)
-            current_time = float(start_time)
-            for row in temp_data:
-                row[0] = current_time
-                current_time += 0.03
-            # add direction and state
-            temp_data.append([self.current_state, self.current_state, self.current_state])
-            temp_data.append([self.current_direction, self.current_direction, self.current_direction])
+
+
             csvwriter = csv.writer(csvfile)
             # Write the data
             csvwriter.writerows(temp_data)
