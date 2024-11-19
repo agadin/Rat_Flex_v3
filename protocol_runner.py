@@ -88,7 +88,7 @@ def wait(wait_time):
         current_csv_time = current_csv_time + 1
         temp_data.append([timestep, motor.current_angle, current_force])
         elapsed_time = time.time() - start_time
-        sleep_time = max(timestep - elapsed_time)
+        sleep_time = max(timestep - elapsed_time, 0)
         time.sleep(sleep_time)
 
     with open(csv_name, 'a', newline='') as csvfile:
