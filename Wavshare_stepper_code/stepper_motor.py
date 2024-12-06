@@ -173,10 +173,8 @@ class StepperMotor:
         self.steps_per_revolution = steps
         self.step_to_angle_ratio = steps / 180
 
-        if not os.path.exists(self.calibration_file) or os.stat(self.calibration_file).st_size == 0:
-            with open(self.calibration_file, 'w') as file:
-                # Write the header to the file
-                file.write("time,angle,force,state,direction,step\n")
+        with open(self.calibration_file, 'w') as file:
+            file.write("time,angle,force,state,direction,step\n")
 
         # zero out force at each angle
         self.move_to_angle(170, 'calibrate')
