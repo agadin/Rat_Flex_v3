@@ -220,6 +220,7 @@ class StepperMotor:
                 self.redis_client.set("current_state", "idle")
                 self.redis_client.set("current_direction", "idle")
                 self.redis_client.set("stop_flag", 0)
+                stop_flag = 0
                 print("Stopping motor button")
                 break
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
