@@ -10,6 +10,7 @@ import pandas as pd
 import struct
 import mmap
 import os
+import csv
 
 # Define the same format and file path used for writing
 fmt = 'i d d d'  # Example format: (int, int, float, double)
@@ -92,6 +93,33 @@ def send_data_to_shared_memory(stop_flag=1):
     except Exception as e:
         print(f"Error: {e}")
 
+def angle_force_calibration(target, direction):
+    with open('data.csv', 'r', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+
+        # Variables to track the closest match
+        closest_angle = None
+        closest_force = None
+        min_angle_diff = float('inf')
+
+        for row in reader:
+            # Ensure the row direction matches the specified direction
+            if row['direction'] == direction:
+                angle = float(row['angle'])
+                force = float(row['force'])
+                angle_diff = abs(angle - target)
+
+                # Update the closest match if the angle difference is smaller
+                if angle_diff < min_angle_diff:
+                    min_angle_diff = angle_diff
+                    closest_angle = angle
+                    closest_force = force
+
+        # Return the closest force
+        if closest_angle is not None:
+            return closest_force
+        else:
+            raise ValueError(f"No matching data found for direction '{direction}'.")
 if __name__ == "__main__":
     st.title("Stepper Motor Control")
 
@@ -127,26 +155,28 @@ if __name__ == "__main__":
     # Set up Streamlit's interval behavior
     while True:
         shared_data = read_shared_memory()
-        average_time=redis_client.get("average_time")
+        current_direction=redis_client.get("current_direction")
         if average_time is not None:
             average_time_placeholder.write(f"Average Time: {average_time}")
         if shared_data is not None:
             step_count, current_angle, current_force = shared_data
             current_time = time.time() - start_time
 
+            # Need to pass direction? redis
+            zeroed_force= current_force- angle_force_calibration(current_force, current_direction)
             # Append data to lists
             time_data.append(current_time)
             angle_data.append(current_angle)
-            force_data.append(current_force)
+            force_data.append(zeroed_force)
 
             # Add to dot data as well
             dot_time_data.append(current_time)
             dot_angle_data.append(current_angle)
-            dot_force_data.append(current_force)
+            dot_force_data.append(zeroed_force)
 
             # Update the shared memory display
             shared_memory_placeholder.write(
-                f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}")
+                f"Step Count: {step_count}, Current Angle: {current_angle}, Current Zero Force: {zeroed_force}")
 
             # add button to stop
 
