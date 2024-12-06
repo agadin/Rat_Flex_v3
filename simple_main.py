@@ -139,6 +139,7 @@ if __name__ == "__main__":
     # Display shared memory data
     st.subheader("Shared Memory Data")
     shared_memory_placeholder = st.empty()
+    average_time = None
     average_time_placeholder = st.empty()
 
     # Initialize lists to store data for plotting
