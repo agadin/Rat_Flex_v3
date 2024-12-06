@@ -22,6 +22,7 @@ plt.title('Force vs. Time')
 plt.grid(True)
 plt.legend()
 plt.show()
+plt.savefig('img/force_vs_time.png')
 
 # Plot Angle vs. Time
 plt.figure(figsize=(8, 6))
@@ -32,6 +33,7 @@ plt.title('Angle vs. Time')
 plt.grid(True)
 plt.legend()
 plt.show()
+plt.savefig('img/angle_vs_time.png')
 
 # Plot Force vs. Angle
 plt.figure(figsize=(8, 6))
@@ -43,5 +45,6 @@ plt.title("Force vs. Angle", fontsize=14)
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.legend(fontsize=10)
 
+plt.savefig('img/force_vs_angle.png')
 # Display the plot
 plt.show()

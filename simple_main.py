@@ -157,6 +157,8 @@ if __name__ == "__main__":
     while True:
         shared_data = read_shared_memory()
         current_direction=redis_client.get("current_direction")
+        if current_direction is None:
+            current_direction = 'forward'
         if average_time is not None:
             average_time_placeholder.write(f"Average Time: {average_time}")
         if shared_data is not None:

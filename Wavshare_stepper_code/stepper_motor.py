@@ -242,7 +242,7 @@ class StepperMotor:
             # total_time += (end_time - start_time)
 
         # After all data has been appended, update the first column with time values
-        start_time = self.read_first_value_in_last_row(csv_name)
+        start_time = self.read_first_value_in_last_row(save_csv)
         current_time = float(start_time)
         for row in temp_data:
             row[0] = current_time
