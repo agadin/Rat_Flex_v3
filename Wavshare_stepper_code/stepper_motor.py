@@ -57,7 +57,6 @@ class StepperMotor:
         self.motor.SetMicroStep('software', self.step_type)
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         self.ForceSensor = ForceSensor()
-        self.load_calibration()
         self.csv_name = csv_name
         self.shm = None
         shm_name = 'shared_data'
@@ -99,6 +98,10 @@ class StepperMotor:
                         self.steps_per_revolution = int(value)
                     elif key == 'step_to_angle_ratio':
                         self.step_to_angle_ratio = float(value)
+                    else:
+                        self.steps_per_revolution = None
+                        self.step_to_angle_ratio = None
+
         else:
             print(f"Calibration file {self.calibration_file} not found. Please run calibrate() first.")
 
