@@ -16,7 +16,6 @@ import csv
 
 
 #what if I run DRV8825.py and force_sensor.py in their own thread? maybe make two different modes?
-from protocol_runner import csv_name
 
 
 class StepperMotor:

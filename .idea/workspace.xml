@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3d1e1a3a-9498-4134-8874-999583fd15c5" name="Changes" comment="added README.md">
-      <change afterPath="$PROJECT_DIR$/plottertest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Wavshare_stepper_code/stepper_motor.py" beforeDir="false" afterPath="$PROJECT_DIR$/Wavshare_stepper_code/stepper_motor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/simple_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/simple_main.py" afterDir="false" />
-    </list>
+    <list default="true" id="3d1e1a3a-9498-4134-8874-999583fd15c5" name="Changes" comment="calibrate each force v1 (does not render it). Also updated move till force" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -126,15 +121,7 @@
       <workItem from="1732731587259" duration="2659000" />
       <workItem from="1732767470842" duration="24000" />
       <workItem from="1733149393066" duration="3554000" />
-      <workItem from="1733334733166" duration="8060000" />
-    </task>
-    <task id="LOCAL-00069" summary="testing shared memory">
-      <option name="closed" value="true" />
-      <created>1731621644935</created>
-      <option name="number" value="00069" />
-      <option name="presentableId" value="LOCAL-00069" />
-      <option name="project" value="LOCAL" />
-      <updated>1731621644935</updated>
+      <workItem from="1733334733166" duration="8417000" />
     </task>
     <task id="LOCAL-00070" summary="testing shared memory">
       <option name="closed" value="true" />
@@ -520,7 +507,15 @@
       <option name="project" value="LOCAL" />
       <updated>1732060856361</updated>
     </task>
-    <option name="localTasksCounter" value="118" />
+    <task id="LOCAL-00118" summary="calibrate each force v1 (does not render it). Also updated move till force">
+      <option name="closed" value="true" />
+      <created>1733527397712</created>
+      <option name="number" value="00118" />
+      <option name="presentableId" value="LOCAL-00118" />
+      <option name="project" value="LOCAL" />
+      <updated>1733527397712</updated>
+    </task>
+    <option name="localTasksCounter" value="119" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -538,7 +533,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="database test2" />
     <MESSAGE value="database test3" />
     <MESSAGE value="database test4 need to be more specific?" />
     <MESSAGE value="database test5 streamlit test" />
@@ -563,7 +557,8 @@
     <MESSAGE value="trying to get stop button to worl" />
     <MESSAGE value="move till force v1" />
     <MESSAGE value="added README.md" />
-    <option name="LAST_COMMIT_MESSAGE" value="added README.md" />
+    <MESSAGE value="calibrate each force v1 (does not render it). Also updated move till force" />
+    <option name="LAST_COMMIT_MESSAGE" value="calibrate each force v1 (does not render it). Also updated move till force" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Rat_Flex_v3$plottertest.coverage" NAME="plottertest Coverage Results" MODIFIED="1733336013286" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
