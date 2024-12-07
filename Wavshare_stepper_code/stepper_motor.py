@@ -113,7 +113,7 @@ class StepperMotor:
             rows = list(csvreader)
             if rows:
                 last_row = rows[-1]
-                if last_row is not 'time' and last_row is not None:
+                if 'time' not in last_row and last_row is not None:
                     return float(last_row[0])
         return float(0)
 
