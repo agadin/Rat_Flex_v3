@@ -113,7 +113,7 @@ class StepperMotor:
             rows = list(csvreader)
             if rows:
                 last_row = rows[-1]
-                if last_row:
+                if last_row is not 'time' or last_row is not None:
                     return float(last_row[0])
         return float(0)
 
@@ -244,6 +244,10 @@ class StepperMotor:
             # total_time += (end_time - start_time)
 
         # After all data has been appended, update the first column with time values
+        try: # Read the last row of the csv file and get the last time value
+            start_time = self.read_first_value_in_last_row(save_csv)
+        except:
+            start_time = 0
         start_time = self.read_first_value_in_last_row(save_csv)
         current_time = float(start_time)
         for row in temp_data:
