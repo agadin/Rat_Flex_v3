@@ -184,7 +184,8 @@ if __name__ == "__main__":
             current_time = time.time() - start_time
 
             # Need to pass direction? redis
-            zeroed_force= current_force- angle_force_calibration(current_force, current_direction)
+            zeroed_force_calc = angle_force_calibration(current_angle, current_direction)
+            zeroed_force= current_force- zeroed_force_calc
             # Append data to lists
             time_data.append(current_time)
             angle_data.append(current_angle)
@@ -197,7 +198,7 @@ if __name__ == "__main__":
 
             # Update the shared memory display
             shared_memory_placeholder.write(
-                f"Step Count: {step_count}, Current Angle: {current_angle}, Current Zero Force: {zeroed_force}")
+                f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}, Target: {zeroed_force_calc}, Current Zero Force: {zeroed_force}")
 
             # add button to stop
 

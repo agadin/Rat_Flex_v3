@@ -52,6 +52,10 @@ def process_protocol(protocol_path):
             wait(wait_time)
         elif command.startswith("Wait for user input"):
             wait_for_user_input()
+        elif command.startswith("End"):
+            end_loop()
+            break
+
 
     # end_all_commands()
 
@@ -103,6 +107,10 @@ def wait(wait_time):
         # Write the data
         csvwriter.writerows(temp_data)
 
+def end_loop():
+    global motor
+    motor.cleanup()
+    print("Ending Protocol")
 
 def wait_for_user_input():
     print("Waiting for user input")
