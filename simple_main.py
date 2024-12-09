@@ -97,29 +97,45 @@ def angle_force_calibration(target, direction):
     with open('calibration.csv', 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
 
-        # Variables to track the closest match
-        closest_angle = None
-        closest_force = None
-        min_angle_diff = float('inf')
+        # Variables to track the closest matches
+        closest_angle_forward = None
+        closest_force_forward = None
+        min_angle_diff_forward = float('inf')
+
+        closest_angle_backward = None
+        closest_force_backward = None
+        min_angle_diff_backward = float('inf')
 
         for row in reader:
-            # Ensure the row direction matches the specified direction
-            if row['direction'] == direction:
-                angle = float(row['angle'])
-                force = float(row['force'])
-                angle_diff = abs(angle - target)
+            angle = float(row['angle'])
+            force = float(row['force'])
+            angle_diff = abs(angle - target)
 
-                # Update the closest match if the angle difference is smaller
-                if angle_diff < min_angle_diff:
-                    min_angle_diff = angle_diff
-                    closest_angle = angle
-                    closest_force = force
+            if direction == 'idle':
+                if row['direction'] == 'forward' and angle_diff < min_angle_diff_forward:
+                    min_angle_diff_forward = angle_diff
+                    closest_angle_forward = angle
+                    closest_force_forward = force
+                elif row['direction'] == 'backward' and angle_diff < min_angle_diff_backward:
+                    min_angle_diff_backward = angle_diff
+                    closest_angle_backward = angle
+                    closest_force_backward = force
+            else:
+                if row['direction'] == direction and angle_diff < min_angle_diff_forward:
+                    min_angle_diff_forward = angle_diff
+                    closest_angle_forward = angle
+                    closest_force_forward = force
 
-        # Return the closest force
-        if closest_angle is not None:
-            return closest_force
+        if direction == 'idle':
+            if closest_angle_forward is not None and closest_angle_backward is not None:
+                return (closest_force_forward + closest_force_backward) / 2
+            else:
+                raise ValueError("No matching data found for both forward and backward directions.")
         else:
-            raise ValueError(f"No matching data found for direction '{direction}'.")
+            if closest_angle_forward is not None:
+                return closest_force_forward
+            else:
+                raise ValueError(f"No matching data found for direction '{direction}'.")
 if __name__ == "__main__":
     st.title("Stepper Motor Control")
 
