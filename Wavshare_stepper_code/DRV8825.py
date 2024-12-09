@@ -93,12 +93,13 @@ class DRV8825:
             if (Dir == 'forward' and not self.digital_read(self.limit_switch_1)) or \
                (Dir == 'backward' and not self.digital_read(self.limit_switch_2)):
                 print("Limit switch triggered, stopping motor")
-                break
+                return 1
 
             self.digital_write(self.step_pin, 1)
             time.sleep(stepdelay)
             self.digital_write(self.step_pin, 0)
-            time.sleep(stepdelay)
+            if steps == 1:
+                time.sleep(stepdelay)
 
     def cleanup(self):
         lgpio.gpiochip_close(self.chip)

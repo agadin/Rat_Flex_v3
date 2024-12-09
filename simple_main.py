@@ -120,6 +120,8 @@ def angle_force_calibration(target, direction):
                     min_angle_diff_backward = angle_diff
                     closest_angle_backward = angle
                     closest_force_backward = force
+            elif direction == 'calibrating':
+                return 0
             else:
                 if row['direction'] == direction and angle_diff < min_angle_diff_forward:
                     min_angle_diff_forward = angle_diff

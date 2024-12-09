@@ -210,21 +210,23 @@ class StepperMotor:
         iterations = steps
         stop_flag = 0
         temp_data = []
+        stop_flag_motor = 0
         data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
         for i in range(steps):
             # start_time = time.time()
             stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
-            if stop_flag == 1:
+            if stop_flag == 1 or stop_flag_motor == 1:
                 self.redis_client.set("current_state", "idle")
                 self.redis_client.set("current_direction", "idle")
                 self.redis_client.set("stop_flag", 0)
                 stop_flag = 0
+                stop_flag_motor = 0
                 packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
                 self.shm.buf[:len(packed_data)] = packed_data
 
                 print("Stopping motor button")
                 break
-            self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
+            stop_flag_motor = self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
             self.current_force= self.ForceSensor.read_force()
             try:
