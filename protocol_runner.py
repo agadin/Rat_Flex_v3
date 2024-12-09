@@ -124,7 +124,7 @@ def start_server():
             limit_switch_2=5,
             step_type='fullstep',
             stepdelay=0.0015,
-            calibration_file='calibration.txt',
+            calibration_file='calibration.csv',
             csv_name=csv_name
 
         )

@@ -94,7 +94,7 @@ def send_data_to_shared_memory(stop_flag=1):
         print(f"Error: {e}")
 
 def angle_force_calibration(target, direction):
-    with open('data.csv', 'r', newline='') as csvfile:
+    with open('calibration.cvs', 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
 
         # Variables to track the closest match
