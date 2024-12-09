@@ -83,11 +83,11 @@ class StepperMotor:
             self.shm.close()
             self.shm.unlink()
             time.sleep(0.2)
-            shm_name = 'shared_data'
-            shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
-            self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
         except Exception as e:
             print(f"Error closing shared memory: {e}")
+        shm_name = 'shared_data'
+        shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
+        self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
 
     def load_calibration(self):
         if os.path.exists(self.calibration_file):
