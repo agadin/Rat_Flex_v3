@@ -219,6 +219,9 @@ class StepperMotor:
                 self.redis_client.set("current_direction", "idle")
                 self.redis_client.set("stop_flag", 0)
                 stop_flag = 0
+                packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
+                self.shm.buf[:len(packed_data)] = packed_data
+
                 print("Stopping motor button")
                 break
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
