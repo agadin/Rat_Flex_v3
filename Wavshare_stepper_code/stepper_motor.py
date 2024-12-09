@@ -26,7 +26,7 @@ class StepperMotor:
             cls._instance = super(StepperMotor, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='fullstep', stepdelay=0.0015, calibration_file='calibration.txt', csv_name='data.csv'):
+    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='fullstep', stepdelay=0.0015, calibration_file='calibration.cvs', csv_name='data.csv'):
         self.target_force = None
         self.step_number = None
         self.current_run_data = None
@@ -78,16 +78,16 @@ class StepperMotor:
 
 
     def create_shared_memory(self):
-        try:
-            if hasattr(self, 'shm') and self.shm is not None:
-                self.shm.close()
-                self.shm.unlink()
-        except Exception as e:
-            print(f"Error: {e}")
 
-        shm_name = 'shared_data'
-        shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
-        self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
+        try:
+            self.shm.close()
+            self.shm.unlink()
+            time.sleep(0.2)
+            shm_name = 'shared_data'
+            shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
+            self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
+        except Exception as e:
+            print(f"Error closing shared memory: {e}")
 
     def load_calibration(self):
         if os.path.exists(self.calibration_file):
