@@ -287,73 +287,73 @@ class App(ctk.CTk):
             widget.destroy()
 
         # Initialize variables
-        angle_data = []
-        force_data = []
-        time_data = []
+        self.angle_data = []
+        self.force_data = []
+        self.time_data = []
 
         # Create a new Matplotlib figure
-        fig, ax = plt.subplots()
-        canvas = FigureCanvasTkAgg(fig, master=self.graph_frame)
-        canvas_widget = canvas.get_tk_widget()
-        canvas_widget.pack(expand=True, fill="both")
+        self.fig, self.ax = plt.subplots()
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
+        self.canvas_widget = self.canvas.get_tk_widget()
+        self.canvas_widget.pack(expand=True, fill="both")
 
         def fetch_data():
             # Read shared data for live updates
             shared_data = read_shared_memory()
             if shared_data:
                 _, angle, force = shared_data
-                time_data.append(time.time())
-                angle_data.append(angle)
-                force_data.append(force)
+                self.time_data.append(time.time())
+                self.angle_data.append(angle)
+                self.force_data.append(force)
 
                 # Keep only the last 30 seconds for "Simple" mode
                 if mode == "Simple":
                     current_time = time.time()
-                    valid_indices = [i for i, t in enumerate(time_data) if current_time - t <= 30]
-                    time_data[:] = [time_data[i] for i in valid_indices]
-                    angle_data[:] = [angle_data[i] for i in valid_indices]
-                    force_data[:] = [force_data[i] for i in valid_indices]
+                    valid_indices = [i for i, t in enumerate(self.time_data) if current_time - t <= 30]
+                    self.time_data[:] = [self.time_data[i] for i in valid_indices]
+                    self.angle_data[:] = [self.angle_data[i] for i in valid_indices]
+                    self.force_data[:] = [self.force_data[i] for i in valid_indices]
 
                 # Limit angle to 0-180 degrees and force to -15 to 1.5 N
                 if mode in ["Angle v Force", "All"]:
-                    ax.set_xlim(0, 180)
-                    ax.set_ylim(-15, 1.5)
+                    self.ax.set_xlim(0, 180)
+                    self.ax.set_ylim(-15, 1.5)
 
                 # Plot data based on selected mode
-                ax.clear()
+                self.ax.clear()
                 if mode == "Angle v Force":
-                    ax.plot(angle_data, force_data, label="Angle vs Force")
-                    ax.set_xlabel("Angle (degrees)")
-                    ax.set_ylabel("Force (N)")
+                    self.ax.plot(self.angle_data, self.force_data, label="Angle vs Force")
+                    self.ax.set_xlabel("Angle (degrees)")
+                    self.ax.set_ylabel("Force (N)")
                 elif mode == "Simple":
-                    ax.plot(time_data, angle_data, label="Angle vs Time")
-                    ax.plot(time_data, force_data, label="Force vs Time")
-                    ax.set_xlabel("Time (s)")
-                    ax.legend()
+                    self.ax.plot(self.time_data, self.angle_data, label="Angle vs Time")
+                    self.ax.plot(self.time_data, self.force_data, label="Force vs Time")
+                    self.ax.set_xlabel("Time (s)")
+                    self.ax.legend()
                 elif mode == "All":
                     # Create subplots for all graphs
-                    fig.clear()
-                    axes = fig.subplots(3, 1)
-                    axes[0].plot(time_data, angle_data, label="Angle vs Time")
+                    self.fig.clear()
+                    axes = self.fig.subplots(3, 1)
+                    axes[0].plot(self.time_data, self.angle_data, label="Angle vs Time")
                     axes[0].set_ylabel("Angle (degrees)")
                     axes[0].legend()
 
-                    axes[1].plot(time_data, force_data, label="Force vs Time")
+                    axes[1].plot(self.time_data, self.force_data, label="Force vs Time")
                     axes[1].set_ylabel("Force (N)")
                     axes[1].legend()
 
-                    axes[2].plot(angle_data, force_data, label="Angle vs Force")
+                    axes[2].plot(self.angle_data, self.force_data, label="Angle vs Force")
                     axes[2].set_xlabel("Angle (degrees)")
                     axes[2].set_ylabel("Force (N)")
                     axes[2].legend()
 
-                canvas.draw()
+                self.canvas.draw()
 
         # Start a periodic update of the graph
         def update_loop():
             fetch_data()
             if self.running:
-                self.graph_frame.after(100, update_loop)  # Update every 100ms
+                self.graph_frame.after(200, update_loop)  # Update every 500ms
 
         update_loop()
 
