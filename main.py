@@ -179,6 +179,7 @@ class App(ctk.CTk):
 
         self.segmented_button = ctk.CTkSegmentedButton(self.main_frame, values=["Angle v Force", "Simple", "All"], command=self.update_graph_view)
         self.segmented_button.set("Angle v Force")  # Set default selection
+        self.update_graph_view("Angle v Force")
         self.segmented_button.pack(pady=10)
 
         # Placeholder for graphs
