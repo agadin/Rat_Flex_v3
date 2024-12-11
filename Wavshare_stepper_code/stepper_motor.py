@@ -28,6 +28,7 @@ class StepperMotor:
         return cls._instance
 
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='halfstep', stepdelay=0.0015, calibration_file='calibration.cvs', csv_name='data.csv'):
+        self.raw_force = None
         self.processed_calibration = None
         self.target_force = None
         self.step_number = None
@@ -266,7 +267,9 @@ class StepperMotor:
                 break
             stop_flag_motor = self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
-            self.current_force= self.ForceSensor.read_force()
+            self.raw_force = self.ForceSensor.read_force()
+            self.current_force = float(self.raw_force) - self.find_closest_force_optimized(self.current_angle, self.current_direction)
+
             try:
                 # Pack the data
                 #packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
@@ -274,7 +277,7 @@ class StepperMotor:
                 # Write packed data to the memory-mapped file
                 #self.mm.seek(0)
                 # self.mm.write(packed_data)
-                temp_data.append([i, self.current_angle, float(self.current_force)])
+                temp_data.append([i, self.current_angle, float(self.current_force), self.raw_force])
                 packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
 
                 # Write packed data to shared memory
@@ -287,10 +290,6 @@ class StepperMotor:
             # total_time += (end_time - start_time)
 
         # After all data has been appended, update the first column with time values
-        try: # Read the last row of the csv file and get the last time value
-            start_time = self.read_first_value_in_last_row(save_csv)
-        except:
-            start_time = 0
         start_time = self.read_first_value_in_last_row(save_csv)
         current_time = float(start_time)
         for row in temp_data:
@@ -319,6 +318,7 @@ class StepperMotor:
 
     def move_until_force(self, direction, target_force, angle_limit_min=0, angle_limit_max=180):
         temp_data = []
+        raw_force=[]
         if direction not in [0, 180]:
             raise ValueError("Direction must be either 0 or 180 degrees")
 
@@ -344,7 +344,8 @@ class StepperMotor:
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
             zero_force= self.find_closest_force_optimized(self.current_angle, self.current_direction)
-            self.current_force = float(self.ForceSensor.read_force())- zero_force
+            self.raw_force= float(self.ForceSensor.read_force())
+            self.current_force = float(self.raw_force)- zero_force
             try:
                 # Pack the data
                 # packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
@@ -352,7 +353,7 @@ class StepperMotor:
                 # Write packed data to the memory-mapped file
                 # self.mm.seek(0)
                 # self.mm.write(packed_data)
-                temp_data.append([i, self.current_angle, float(self.current_force)])
+                temp_data.append([i, self.current_angle, float(self.current_force), self.raw_force])
                 packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
 
                 # Write packed data to shared memory
@@ -367,6 +368,24 @@ class StepperMotor:
                     (self.current_angle <= angle_limit_min and self.current_direction == 'backward') or \
                     (self.current_angle >= angle_limit_max and self.current_direction == 'forward'):
                     break
+
+        start_time = self.read_first_value_in_last_row(self.csv_name)
+        current_time = float(start_time)
+        for row in temp_data:
+            row[0] = current_time
+            current_time += 0.03
+
+        for row in temp_data:
+            row.append(self.current_state)
+            row.append(self.current_direction)
+            row.append(self.step_number)
+
+
+        with open(self.csv_name, 'a', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            # Write the data
+            csvwriter.writerows(temp_data)
+        self.current_run_data= temp_data
 
         self.current_state = "idle"
         self.current_direction = "idle"

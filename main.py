@@ -305,7 +305,7 @@ class App(ctk.CTk):
                 self.force_special.append(force)
 
                 # Cap the data lists at (60 / self.poll_rate)
-                max_length = int(60 / self.poll_rate)
+                max_length = int(30 / self.poll_rate)
                 if len(self.time_data) > max_length:
                     self.time_data.pop(0)
                     self.angle_data.pop(0)
