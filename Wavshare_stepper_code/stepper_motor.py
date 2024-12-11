@@ -321,13 +321,13 @@ class StepperMotor:
             except Exception as e:
                 print(f"Error: {e}")
 
-            if i > 10 and \
-                    abs(self.current_force) >= self.target_force and \
-                    ((self.current_direction == 'backward' and self.current_force < 0) or
-                     (self.current_direction == 'forward' and self.current_force > 0)) and \
-                    (self.current_angle >= angle_limit_min and self.current_direction == 'backward') and \
-                    (self.current_angle <= angle_limit_max and self.current_direction == 'forward'):
-                break
+            if i > 10:
+                if  abs(self.current_force) >= self.target_force and \
+                    ((self.current_direction == 'backward' and self.current_force > 0) or
+                     (self.current_direction == 'forward' and self.current_force < 0)) or \
+                    (self.current_angle <= angle_limit_min and self.current_direction == 'backward') or \
+                    (self.current_angle >= angle_limit_max and self.current_direction == 'forward'):
+                    break
 
         self.current_state = "idle"
         self.current_direction = "idle"
