@@ -54,7 +54,7 @@ class StepperMotor:
         self.stepdelay = stepdelay
         self.current_state = "idle"
         self.current_direction = "idle"
-        self.motor.SetMicroStep('software', self.step_type)
+        self.motor.SetMicroStep('softward', self.step_type)
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         self.ForceSensor = ForceSensor()
         self.csv_name = csv_name
