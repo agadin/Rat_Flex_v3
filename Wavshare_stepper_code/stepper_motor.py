@@ -51,10 +51,9 @@ class StepperMotor:
         self.current_angle = 0
         self.calibration_file = calibration_file
         self.step_type = step_type
-        self.stepdelay = stepdelay
         self.current_state = "idle"
         self.current_direction = "idle"
-        self.motor.SetMicroStep('softward', self.step_type)
+        self.motor.SetMicroStep('softward', 'halfstep')
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         self.ForceSensor = ForceSensor()
         self.csv_name = csv_name
@@ -160,6 +159,7 @@ class StepperMotor:
         self.redis_client.set("current_direction", self.current_direction)
 
         self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
+        time.sleep(self.stepdelay)
         while self.motor.limit_switch_1_state:
             self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
             time.sleep(self.stepdelay)
