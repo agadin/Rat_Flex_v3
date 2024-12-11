@@ -9,6 +9,8 @@ import struct
 import csv
 from collections import defaultdict
 from threading import Thread
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Initialize CustomTkinter
 ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
@@ -136,8 +138,30 @@ class App(ctk.CTk):
         self.protocol_name_label = ctk.CTkLabel(self.main_frame, text="Current Protocol: None", anchor="w")
         self.protocol_name_label.pack(pady=10, padx=20, anchor="w")
 
-        self.status_label = ctk.CTkLabel(self.main_frame, text="Steps: -, Angle: -, Force: -", font=("Arial", 12, "bold"))
-        self.status_label.pack(pady=10, padx=20)
+        display_frame = ctk.CTkFrame(self.main_frame)
+        display_frame.pack(pady=20)
+
+        # Style for all three displays
+        display_style = {
+            "width": 200,
+            "height": 100,
+            "corner_radius": 20,
+            "fg_color": "lightblue",
+            "text_color": "black",
+            "font": ("Arial", 24, "bold"),
+        }
+
+        # Create and pack step count display
+        self.step_display = ctk.CTkLabel(display_frame, text="Steps: N/A", **display_style)
+        self.step_display.grid(row=0, column=0, padx=10, pady=10)
+
+        # Create and pack angle display
+        self.angle_display = ctk.CTkLabel(display_frame, text="Angle: N/A", **display_style)
+        self.angle_display.grid(row=0, column=1, padx=10, pady=10)
+
+        # Create and pack force display
+        self.force_display = ctk.CTkLabel(display_frame, text="Force: N/A", **display_style)
+        self.force_display.grid(row=0, column=2, padx=10, pady=10)
 
         self.segmented_button = ctk.CTkSegmentedButton(self.main_frame, values=["Angle v Force", "Simple", "All"], command=self.update_graph_view)
         self.segmented_button.pack(pady=10)
@@ -196,14 +220,121 @@ class App(ctk.CTk):
             shared_data = read_shared_memory()
             if shared_data:
                 step_count, current_angle, current_force = shared_data
-                if self.shared_memory_display.winfo_exists():  # Check if the widget still exists
-                    self.shared_memory_display.configure(
-                        text=f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}"
-                    )
+
+                # Update individual displays if widgets exist
+                if self.step_display.winfo_exists():
+                    self.step_display.configure(text=f"{step_count}")
+                if self.angle_display.winfo_exists():
+                    self.angle_display.configure(text=f"{current_angle:.1f}°")
+                if self.force_display.winfo_exists():
+                    self.force_display.configure(text=f"{current_force:.2f} N")
             else:
-                if self.shared_memory_display.winfo_exists():  # Check if the widget still exists
-                    self.shared_memory_display.configure(text="Shared memory not available.")
+                # Handle shared memory not available case
+                if self.step_display.winfo_exists():
+                    self.step_display.configure(text="N/A")
+                if self.angle_display.winfo_exists():
+                    self.angle_display.configure(text="N/A")
+                if self.force_display.winfo_exists():
+                    self.force_display.configure(text="N/A")
+
             time.sleep(0.1)
+
+    def update_calibrate_button(self):
+        while self.running:
+            try:
+                calibration_level = int(redis_client.get("calibration_Level") or 0)
+
+                if calibration_level == 0:
+                    self.calibrate_button.configure(fg_color="red")
+                elif calibration_level == 1:
+                    self.calibrate_button.configure(fg_color="yellow")
+                elif calibration_level == 2:
+                    self.calibrate_button.configure(fg_color="green")
+                else:
+                    self.calibrate_button.configure(fg_color="gray")  # Default color for unknown states
+
+            except Exception as e:
+                print(f"Error updating Calibrate button: {e}")
+                self.calibrate_button.configure(fg_color="gray")  # Fallback color in case of error
+
+            time.sleep(0.5)  # Adjust the refresh rate as needed
+
+
+    def update_graph_view(self, mode):
+        # Clear the current graph frame
+        for widget in self.graph_frame.winfo_children():
+            widget.destroy()
+
+        # Initialize variables
+        angle_data = []
+        force_data = []
+        time_data = []
+
+        # Create a new Matplotlib figure
+        fig, ax = plt.subplots()
+        canvas = FigureCanvasTkAgg(fig, master=self.graph_frame)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(expand=True, fill="both")
+
+        def fetch_data():
+            # Read shared data for live updates
+            shared_data = read_shared_memory()
+            if shared_data:
+                _, angle, force = shared_data
+                time_data.append(time.time())
+                angle_data.append(angle)
+                force_data.append(force)
+
+                # Keep only the last 30 seconds for "Simple" mode
+                if mode == "Simple":
+                    current_time = time.time()
+                    valid_indices = [i for i, t in enumerate(time_data) if current_time - t <= 30]
+                    time_data[:] = [time_data[i] for i in valid_indices]
+                    angle_data[:] = [angle_data[i] for i in valid_indices]
+                    force_data[:] = [force_data[i] for i in valid_indices]
+
+                # Limit angle to 0-180 degrees and force to -15 to 1.5 N
+                if mode in ["Angle v Force", "All"]:
+                    ax.set_xlim(0, 180)
+                    ax.set_ylim(-15, 1.5)
+
+                # Plot data based on selected mode
+                ax.clear()
+                if mode == "Angle v Force":
+                    ax.plot(angle_data, force_data, label="Angle vs Force")
+                    ax.set_xlabel("Angle (degrees)")
+                    ax.set_ylabel("Force (N)")
+                elif mode == "Simple":
+                    ax.plot(time_data, angle_data, label="Angle vs Time")
+                    ax.plot(time_data, force_data, label="Force vs Time")
+                    ax.set_xlabel("Time (s)")
+                    ax.legend()
+                elif mode == "All":
+                    # Create subplots for all graphs
+                    fig.clear()
+                    axes = fig.subplots(3, 1)
+                    axes[0].plot(time_data, angle_data, label="Angle vs Time")
+                    axes[0].set_ylabel("Angle (degrees)")
+                    axes[0].legend()
+
+                    axes[1].plot(time_data, force_data, label="Force vs Time")
+                    axes[1].set_ylabel("Force (N)")
+                    axes[1].legend()
+
+                    axes[2].plot(angle_data, force_data, label="Angle vs Force")
+                    axes[2].set_xlabel("Angle (degrees)")
+                    axes[2].set_ylabel("Force (N)")
+                    axes[2].legend()
+
+                canvas.draw()
+
+        # Start a periodic update of the graph
+        def update_loop():
+            fetch_data()
+            if self.running:
+                self.graph_frame.after(100, update_loop)  # Update every 100ms
+
+        update_loop()
 
     def on_closing(self):
         self.running = False
