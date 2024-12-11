@@ -141,13 +141,7 @@ class App(ctk.CTk):
         self.clear_content_frame()
         ctk.CTkLabel(self.content_frame, text="Inspector - Data Viewer").pack(pady=10)
 
-        try:
-            with open("data.csv", "r") as file:
-                data = file.readlines()
-                for line in data:
-                    ctk.CTkLabel(self.content_frame, text=line.strip()).pack(anchor="w")
-        except FileNotFoundError:
-            ctk.CTkLabel(self.content_frame, text="data.csv not found.").pack(pady=10)
+        ctk.CTkLabel(self.content_frame, text="Inspector (Coming Soon)").pack(pady=20)
 
     def show_settings(self):
         self.clear_content_frame()
