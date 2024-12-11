@@ -275,14 +275,7 @@ class App(ctk.CTk):
 
 
         # Clear the graph by redrawing it with empty data
-        self.graph_frame.destroy()
 
-        fig, ax = plt.subplots()
-
-        canvas = FigureCanvasTkAgg(fig, master=self.graph_frame)
-        canvas_widget = canvas.get_tk_widget()
-        canvas_widget.pack(expand=True, fill="both")
-        canvas.draw()
 
     def update_graph_view(self, mode):
         # Clear the current graph frame
