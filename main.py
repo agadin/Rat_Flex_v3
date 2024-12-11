@@ -15,7 +15,6 @@ ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
 ctk.set_default_color_theme("blue")
 
 # Shared memory and Redis configuration
-
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 shm_name = 'shared_data'
 fmt = 'i d d d'  # Format for shared memory (stop_flag, step_count, current_angle, current_force)
@@ -75,16 +74,12 @@ class App(ctk.CTk):
         self.nav_frame.pack(fill="x", pady=5)
 
         self.home_button = ctk.CTkButton(self.nav_frame, text="Home", command=self.show_home)
-        self.home_button.pack(side="left", padx=5)
-
         self.protocol_builder_button = ctk.CTkButton(self.nav_frame, text="Protocol Builder", command=self.show_protocol_builder)
-        self.protocol_builder_button.pack(side="left", padx=5)
-
         self.inspector_button = ctk.CTkButton(self.nav_frame, text="Inspector", command=self.show_inspector)
-        self.inspector_button.pack(side="left", padx=5)
-
         self.settings_button = ctk.CTkButton(self.nav_frame, text="Settings", command=self.show_settings)
-        self.settings_button.pack(side="left", padx=5)
+
+        for btn in (self.home_button, self.protocol_builder_button, self.inspector_button, self.settings_button):
+            btn.pack(side="left", padx=20, expand=True)
 
         # Main content frame
         self.content_frame = ctk.CTkFrame(self)
@@ -104,34 +99,62 @@ class App(ctk.CTk):
     def show_home(self):
         self.clear_content_frame()
 
-        # Home content
-        self.protocol_label = ctk.CTkLabel(self.content_frame, text="Select a Protocol:")
+        # Sidebar
+        self.sidebar_frame = ctk.CTkFrame(self.content_frame, width=200)
+        self.sidebar_frame.pack(side="left", fill="y", padx=10)
+
+        # Calibrate button
+        self.calibrate_button = ctk.CTkButton(self.sidebar_frame, text="Calibrate", command=self.run_calibration)
+        self.calibrate_button.pack(pady=10)
+
+        # Protocol selector
+        self.protocol_label = ctk.CTkLabel(self.sidebar_frame, text="Select a Protocol:")
         self.protocol_label.pack(pady=10)
 
         self.protocol_folder = './protocols'
         self.protocol_files = [f for f in os.listdir(self.protocol_folder) if os.path.isfile(os.path.join(self.protocol_folder, f))]
         self.protocol_var = ctk.StringVar(value=self.protocol_files[0])
 
-        self.protocol_dropdown = ctk.CTkComboBox(self.content_frame, values=self.protocol_files, variable=self.protocol_var)
+        self.protocol_dropdown = ctk.CTkComboBox(self.sidebar_frame, values=self.protocol_files, variable=self.protocol_var)
         self.protocol_dropdown.pack(pady=10)
 
-        self.run_button = ctk.CTkButton(self.content_frame, text="Run Protocol", command=self.run_protocol)
+        self.run_button = ctk.CTkButton(self.sidebar_frame, text="Run Protocol", command=self.run_protocol)
         self.run_button.pack(pady=10)
 
-        self.shared_memory_label = ctk.CTkLabel(self.content_frame, text="Shared Memory Data")
-        self.shared_memory_label.pack(pady=10)
-
-        self.shared_memory_display = ctk.CTkLabel(self.content_frame, text="Waiting for data...")
-        self.shared_memory_display.pack(pady=10)
-
-        self.stop_button = ctk.CTkButton(self.content_frame, text="Stop", command=self.stop_protocol)
+        # Stop button
+        self.stop_button = ctk.CTkButton(self.sidebar_frame, text="Stop", command=self.stop_protocol)
         self.stop_button.pack(pady=10)
 
-        # Start background update thread
-        if not hasattr(self, 'update_thread'):
-            self.running = True
-            self.update_thread = Thread(target=self.update_shared_memory)
-            self.update_thread.start()
+        # Light/Dark mode toggle
+        self.mode_toggle = ctk.CTkSwitch(self.sidebar_frame, text="Light/Dark Mode", command=self.toggle_mode)
+        self.mode_toggle.pack(pady=10)
+
+        # Main content area
+        self.main_frame = ctk.CTkFrame(self.content_frame)
+        self.main_frame.pack(side="left", expand=True, fill="both", padx=10)
+
+        self.protocol_name_label = ctk.CTkLabel(self.main_frame, text="Current Protocol: None", anchor="w")
+        self.protocol_name_label.pack(pady=10, padx=20, anchor="w")
+
+        self.status_label = ctk.CTkLabel(self.main_frame, text="Steps: -, Angle: -, Force: -", font=("Arial", 12, "bold"))
+        self.status_label.pack(pady=10, padx=20)
+
+        self.segmented_button = ctk.CTkSegmentedButton(self.main_frame, values=["Angle v Force", "Simple", "All"], command=self.update_graph_view)
+        self.segmented_button.pack(pady=10)
+
+        # Placeholder for graphs
+        self.graph_frame = ctk.CTkFrame(self.main_frame)
+        self.graph_frame.pack(expand=True, fill="both", pady=10)
+
+        self.clear_button = ctk.CTkButton(self.main_frame, text="Clear", command=self.clear_graphs)
+        self.clear_button.pack(pady=10)
+
+        # Start background threads
+        self.running = True
+        self.update_thread = Thread(target=self.update_shared_memory)
+        self.calibration_thread = Thread(target=self.update_calibrate_button)
+        self.update_thread.start()
+        self.calibration_thread.start()
 
     def show_protocol_builder(self):
         self.clear_content_frame()
@@ -141,7 +164,13 @@ class App(ctk.CTk):
         self.clear_content_frame()
         ctk.CTkLabel(self.content_frame, text="Inspector - Data Viewer").pack(pady=10)
 
-        ctk.CTkLabel(self.content_frame, text="Inspector (Coming Soon)").pack(pady=20)
+        try:
+            with open("data.csv", "r") as file:
+                data = file.readlines()
+                for line in data:
+                    ctk.CTkLabel(self.content_frame, text=line.strip()).pack(anchor="w")
+        except FileNotFoundError:
+            ctk.CTkLabel(self.content_frame, text="data.csv not found.").pack(pady=10)
 
     def show_settings(self):
         self.clear_content_frame()
@@ -152,10 +181,15 @@ class App(ctk.CTk):
         protocol_path = os.path.join(self.protocol_folder, selected_protocol)
         run_protocol(protocol_path)
         print(f"Running protocol: {selected_protocol}")
+        self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
 
     def stop_protocol(self):
         send_data_to_shared_memory(stop_flag=0)
         print("Protocol stopped.")
+
+    def toggle_mode(self):
+        mode = "Light" if ctk.get_appearance_mode() == "Dark" else "Dark"
+        ctk.set_appearance_mode(mode)
 
     def update_shared_memory(self):
         while self.running:

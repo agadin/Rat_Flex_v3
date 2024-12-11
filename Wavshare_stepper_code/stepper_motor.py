@@ -161,6 +161,7 @@ class StepperMotor:
             }
         self.processed_calibration= preprocessed
 
+
     def get_closest_binary(self,processed_calibration_loc, angle):
         """
         Use binary search to find the closest angle and its force.
@@ -221,8 +222,7 @@ class StepperMotor:
         self.move_to_angle(90)
         self.redis_client.set("Calibrated",1)
         self.preprocess_data()
-        print(self.processed_calibration)
-        print(self.processed_calibration['forward']['angles'])
+
 
     def move_to_angle(self, angle, target_file=None):
         if self.step_to_angle_ratio is None:
@@ -383,6 +383,15 @@ class StepperMotor:
         time.sleep(1)
         self.motor.TurnStep(Dir='backward', steps=200, stepdelay=0.0015)
         time.sleep(1)
+
+    def check_if_calibrated(self):
+        if self.step_to_angle_ratio is not None and self.processed_calibration is not None:
+            return 2
+        elif self.step_to_angle_ratio is not None:
+            return 1
+        else:
+            return 0
+
     def cleanup(self):
         self.motor.Stop()
         self.motor.cleanup()
