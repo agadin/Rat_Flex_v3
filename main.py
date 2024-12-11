@@ -74,7 +74,7 @@ class App(ctk.CTk):
 
         # Window configuration
         self.title("Stepper Motor Control")
-        self.geometry("800x600")
+        self.geometry("1920x1080")
 
         # Top navigation bar
         self.nav_frame = ctk.CTkFrame(self)
