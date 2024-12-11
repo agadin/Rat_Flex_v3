@@ -15,6 +15,7 @@ ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
 ctk.set_default_color_theme("blue")
 
 # Shared memory and Redis configuration
+
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 shm_name = 'shared_data'
 fmt = 'i d d d'  # Format for shared memory (stop_flag, step_count, current_angle, current_force)
@@ -167,11 +168,13 @@ class App(ctk.CTk):
             shared_data = read_shared_memory()
             if shared_data:
                 step_count, current_angle, current_force = shared_data
-                self.shared_memory_display.configure(
-                    text=f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}"
-                )
+                if self.shared_memory_display.winfo_exists():  # Check if the widget still exists
+                    self.shared_memory_display.configure(
+                        text=f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}"
+                    )
             else:
-                self.shared_memory_display.configure(text="Shared memory not available.")
+                if self.shared_memory_display.winfo_exists():  # Check if the widget still exists
+                    self.shared_memory_display.configure(text="Shared memory not available.")
             time.sleep(0.1)
 
     def on_closing(self):
