@@ -183,7 +183,6 @@ class App(ctk.CTk):
 
         # Placeholder for graphs
         self.graph_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        self.update_graph_view("Angle v Force")  # Initialize with default view
         self.graph_frame.pack(expand=True, fill="both", pady=10)
 
         self.clear_button = ctk.CTkButton(self.main_frame, text="Clear", command=self.clear_graphs)
@@ -196,6 +195,7 @@ class App(ctk.CTk):
         self.update_thread.start()
         self.calibration_thread.start()
 
+        self.update_graph_view("Angle v Force")  # Initialize with default view
 
     def show_protocol_builder(self):
         self.clear_content_frame()
