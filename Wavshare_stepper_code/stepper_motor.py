@@ -26,7 +26,7 @@ class StepperMotor:
             cls._instance = super(StepperMotor, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='fullstep', stepdelay=0.0015, calibration_file='calibration.cvs', csv_name='data.csv'):
+    def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='halfstep', stepdelay=0.0015, calibration_file='calibration.cvs', csv_name='data.csv'):
         self.target_force = None
         self.step_number = None
         self.current_run_data = None

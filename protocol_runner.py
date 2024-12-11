@@ -130,7 +130,7 @@ def start_server():
             mode_pins=(16, 17, 20),
             limit_switch_1=6,
             limit_switch_2=5,
-            step_type='fullstep',
+            step_type='halfstep',
             stepdelay=0.0015,
             calibration_file='calibration.csv',
             csv_name=csv_name
