@@ -213,9 +213,9 @@ if __name__ == "__main__":
             step_count, current_angle, current_force = shared_data
             current_time = time.time() - start_time
 
-            # Need to pass direction? redis
             if preprocessed_data is not None:
                 zeroed_force_calc= find_closest_force_optimized(preprocessed_data, current_angle, current_direction)
+                print(f"Zeroed force calculated: {zeroed_force_calc}")
             else:
                 zeroed_force_calc=0
 
