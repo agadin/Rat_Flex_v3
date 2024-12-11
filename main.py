@@ -272,10 +272,10 @@ class App(ctk.CTk):
         self.force_data = []
 
         # Clear the graph by redrawing it with empty data
-        for widget in self.graph_frame.winfo_children():
-            widget.destroy()
+        self.graph_frame.destroy()
 
         fig, ax = plt.subplots()
+
         canvas = FigureCanvasTkAgg(fig, master=self.graph_frame)
         canvas_widget = canvas.get_tk_widget()
         canvas_widget.pack(expand=True, fill="both")
@@ -323,11 +323,19 @@ class App(ctk.CTk):
                 self.ax.clear()
                 if mode == "Angle v Force":
                     self.ax.plot(self.angle_data, self.force_data, label="Angle vs Force")
+                    self.ax.set_xlim(0, 180)
+                    self.ax.set_ylim(-1.75, 1.75)
                     self.ax.set_xlabel("Angle (degrees)")
                     self.ax.set_ylabel("Force (N)")
                 elif mode == "Simple":
-                    self.ax.plot(self.time_data, self.angle_data, label="Angle vs Time")
-                    self.ax.plot(self.time_data, self.force_data, label="Force vs Time")
+                    current_time = time.time()
+                    valid_indices = [i for i, t in enumerate(self.time_data) if current_time - t <= 30]
+                    filtered_time_data = [self.time_data[i] for i in valid_indices]
+                    filtered_angle_data = [self.angle_data[i] for i in valid_indices]
+                    filtered_force_data = [self.force_data[i] for i in valid_indices]
+
+                    self.ax.plot(filtered_time_data, filtered_angle_data, label="Angle vs Time")
+                    self.ax.plot(filtered_time_data, filtered_force_data, label="Force vs Time")
                     self.ax.set_xlabel("Time (s)")
                     self.ax.legend()
                 elif mode == "All":
