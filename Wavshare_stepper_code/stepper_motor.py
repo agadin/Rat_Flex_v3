@@ -161,11 +161,11 @@ class StepperMotor:
             }
         self.processed_calibration= preprocessed
 
-    def get_closest_binary(self,angle):
+    def get_closest_binary(self,processed_calibration_loc, angle):
         """
         Use binary search to find the closest angle and its force.
         """
-        angles = self.processed_calibration['angles']
+        angles = processed_calibration_loc['angles']
         idx = bisect.bisect_left(angles, angle)
         if idx == 0:
             closest_angle = angles[0]
@@ -175,16 +175,16 @@ class StepperMotor:
             before = angles[idx - 1]
             after = angles[idx]
             closest_angle = before if abs(before - angle) <= abs(after - angle) else after
-        return self.processed_calibration['forces'][closest_angle]
+        return processed_calibration_loc['forces'][closest_angle]
 
     def find_closest_force_optimized(self, target_angle, direction):
         """
         Optimized version of find_closest_force using binary search.
         """
         if direction == 'forward':
-            return self.get_closest_binary(target_angle)
+            return self.get_closest_binary(self.processed_calibration['forward'], target_angle)
         else:
-            return self.get_closest_binary(target_angle)
+            return self.get_closest_binary(self.processed_calibration['backward'], target_angle)
     def calibrate(self):
         self.current_direction = 'calibrating'
         self.current_state = 'calibrating'
