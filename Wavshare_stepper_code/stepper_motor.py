@@ -174,7 +174,7 @@ class StepperMotor:
         self.step_to_angle_ratio = steps / 180
 
         with open(self.calibration_file, 'w') as file:
-            file.write("time,angle,force,state,direction,step\n")
+            file.write("\n")
 
         # zero out force at each angle
         self.move_to_angle(170, 'calibrate')
@@ -185,7 +185,7 @@ class StepperMotor:
         self.redis_client.set("step_to_angle_ratio", self.step_to_angle_ratio)
 
         self.move_to_angle(90)
-
+        self.redis_client.set("Calibrated",1)
     def move_to_angle(self, angle, target_file=None):
         if self.step_to_angle_ratio is None:
             raise Exception("Motor not calibrated. Please run calibrate() first.")

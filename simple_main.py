@@ -11,6 +11,8 @@ import struct
 import mmap
 import os
 import csv
+from collections import defaultdict
+
 
 # Define the same format and file path used for writing
 fmt = 'i d d d'  # Example format: (int, int, float, double)
@@ -93,51 +95,70 @@ def send_data_to_shared_memory(stop_flag=1):
     except Exception as e:
         print(f"Error: {e}")
 
-def angle_force_calibration(target, direction):
-    with open('calibration.csv', 'r', newline='') as csvfile:
+import bisect
+
+def preprocess_data(calibration_data):
+    """
+    Preprocess the calibration data to allow fast nearest neighbor lookups.
+    """
+    preprocessed = {}
+    for direction, angles_forces in calibration_data.items():
+        sorted_angles = sorted(angles_forces.keys())
+        preprocessed[direction] = {
+            'angles': sorted_angles,
+            'forces': {angle: angles_forces[angle] for angle in sorted_angles}
+        }
+    return preprocessed
+
+def get_closest_binary(preprocessed_data, angle):
+    """
+    Use binary search to find the closest angle and its force.
+    """
+    angles = preprocessed_data['angles']
+    idx = bisect.bisect_left(angles, angle)
+    if idx == 0:
+        closest_angle = angles[0]
+    elif idx == len(angles):
+        closest_angle = angles[-1]
+    else:
+        before = angles[idx - 1]
+        after = angles[idx]
+        closest_angle = before if abs(before - angle) <= abs(after - angle) else after
+    return preprocessed_data['forces'][closest_angle]
+
+def find_closest_force_optimized(preprocessed_data, target_angle, direction):
+    """
+    Optimized version of find_closest_force using binary search.
+    """
+    if direction == 'forward':
+        return get_closest_binary(preprocessed_data['forward'], target_angle)
+    else:
+        return get_closest_binary(preprocessed_data['backward'], target_angle)
+
+def read_calibration_data(file_path):
+    """
+    Reads calibration data from a CSV file and formats it for quick lookups.
+
+    Args:
+        file_path (str): Path to the calibration CSV file.
+
+    Returns:
+        dict: A nested dictionary where the outer keys are directions (forward/backward),
+              the inner keys are angles, and the values are corresponding forces.
+    """
+    calibration_data = defaultdict(dict)
+
+    with open(file_path, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
-
-        # Variables to track the closest matches
-        closest_angle_forward = None
-        closest_force_forward = None
-        min_angle_diff_forward = float('inf')
-
-        closest_angle_backward = None
-        closest_force_backward = None
-        min_angle_diff_backward = float('inf')
-
         for row in reader:
             angle = float(row['angle'])
             force = float(row['force'])
-            angle_diff = abs(angle - target)
+            direction = row['direction'].strip().lower()
 
-            if direction == 'idle':
-                if row['direction'] == 'forward' and angle_diff < min_angle_diff_forward:
-                    min_angle_diff_forward = angle_diff
-                    closest_angle_forward = angle
-                    closest_force_forward = force
-                elif row['direction'] == 'backward' and angle_diff < min_angle_diff_backward:
-                    min_angle_diff_backward = angle_diff
-                    closest_angle_backward = angle
-                    closest_force_backward = force
-            elif direction == 'calibrating':
-                return 0
-            else:
-                if row['direction'] == direction and angle_diff < min_angle_diff_forward:
-                    min_angle_diff_forward = angle_diff
-                    closest_angle_forward = angle
-                    closest_force_forward = force
+            calibration_data[direction][angle] = force
 
-        if direction == 'idle':
-            if closest_angle_forward is not None and closest_angle_backward is not None:
-                return (closest_force_forward + closest_force_backward) / 2
-            else:
-                raise ValueError("No matching data found for both forward and backward directions.")
-        else:
-            if closest_angle_forward is not None:
-                return closest_force_forward
-            else:
-                raise ValueError(f"No matching data found for direction '{direction}'.")
+    return calibration_data
+
 if __name__ == "__main__":
     st.title("Stepper Motor Control")
 
@@ -175,6 +196,12 @@ if __name__ == "__main__":
     while True:
         shared_data = read_shared_memory()
         current_direction=redis_client.get("current_direction")
+        calibration = redis_client.get("Calibrated")
+        if calibration == "1":
+            redis_client.set("Calibrated", 0)
+            file_path = 'calibration.csv'
+            calibration_data = read_calibration_data(file_path)
+            preprocessed_data = preprocess_data(calibration_data)
         if current_direction is None:
             current_direction = 'forward'
         if average_time is not None:
@@ -184,7 +211,11 @@ if __name__ == "__main__":
             current_time = time.time() - start_time
 
             # Need to pass direction? redis
-            zeroed_force_calc = angle_force_calibration(current_angle, current_direction)
+            if preprocessed_data is not None:
+                zeroed_force_calc= find_closest_force_optimized(preprocessed_data, current_angle, current_direction)
+            else:
+                zeroed_force_calc=0
+
             zeroed_force= current_force- zeroed_force_calc
             # Append data to lists
             time_data.append(current_time)
