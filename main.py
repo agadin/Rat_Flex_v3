@@ -76,6 +76,10 @@ class App(ctk.CTk):
         self.angle_special = []
         self.force_special = []
         self.poll_rate = 0.2
+        self.time_data = []
+        self.angle_data = []
+        self.force_data = []
+
 
         # Window configuration
         self.title("Stepper Motor Control")
@@ -287,7 +291,9 @@ class App(ctk.CTk):
         # Reset the data lists
         self.angle_special = []
         self.force_special = []
-
+        self.time_data = []
+        self.angle_data = []
+        self.force_data = []
 
         # Clear the graph by redrawing it with empty data
 
