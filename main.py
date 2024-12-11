@@ -267,9 +267,9 @@ class App(ctk.CTk):
 
     def clear_graphs(self):
         # Reset the data lists
-        self.time_data = []
-        self.angle_data = []
-        self.force_data = []
+        self.angle_special = []
+        self.force_special = []
+
 
         # Clear the graph by redrawing it with empty data
         self.graph_frame.destroy()
@@ -282,6 +282,7 @@ class App(ctk.CTk):
         canvas.draw()
 
     def update_graph_view(self, mode):
+
         # Clear the current graph frame
         for widget in self.graph_frame.winfo_children():
             widget.destroy()
@@ -290,6 +291,8 @@ class App(ctk.CTk):
         self.angle_data = []
         self.force_data = []
         self.time_data = []
+        self.angle_special = []
+        self.force_special = []
 
         # Create a new Matplotlib figure
         self.fig, self.ax = plt.subplots()
@@ -305,18 +308,24 @@ class App(ctk.CTk):
                 self.time_data.append(time.time())
                 self.angle_data.append(angle)
                 self.force_data.append(force)
+                self.angle_special(angle)
+                self.force_special(force)
+
+                # Cap the data lists at (60 / self.poll_rate)
+                max_length = int(60 / self.poll_rate)
+                if len(self.time_data) > max_length:
+                    self.time_data.pop(0)
+                    self.angle_data.pop(0)
+                    self.force_data.pop(0)
 
                 # Keep only the last 30 seconds for "Simple" mode
 
                 # Limit angle to 0-180 degrees and force to -15 to 1.5 N
-                if mode in ["Angle v Force", "All"]:
-                    self.ax.set_xlim(0, 180)
-                    self.ax.set_ylim(-15, 1.5)
 
                 # Plot data based on selected mode
                 self.ax.clear()
                 if mode == "Angle v Force":
-                    self.ax.plot(self.angle_data, self.force_data, label="Angle vs Force")
+                    self.ax.plot(self.angle_special, self.force_special, label="Angle vs Force")
                     self.ax.set_xlim(0, 180)
                     self.ax.set_ylim(-1.75, 1.75)
                     self.ax.set_xlabel("Angle (degrees)")
@@ -339,7 +348,7 @@ class App(ctk.CTk):
 
                     # Large plot on the left column
                     ax0 = self.fig.add_subplot(gs[:, 0])
-                    ax0.plot(self.angle_data, self.force_data, label="Angle vs Force", color='blue')
+                    ax0.plot(self.angle_special, self.force_special, label="Angle vs Force", color='blue')
                     ax0.set_xlabel("Angle (degrees)")
                     ax0.set_ylabel("Force (N)")
                     ax0.set_xlim(0, 180)
@@ -364,10 +373,11 @@ class App(ctk.CTk):
                 self.canvas.draw()
 
         # Start a periodic update of the graph
+        self.poll_rate = 0.2
         def update_loop():
             fetch_data()
             if self.running:
-                self.graph_frame.after(200, update_loop)  # Update every 500ms
+                self.graph_frame.after(int(self.poll_rate*1000), update_loop)  # Update every 500ms
 
         update_loop()
 
