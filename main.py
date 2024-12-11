@@ -82,7 +82,7 @@ class App(ctk.CTk):
         self.geometry("1920x1080")
 
         # Top navigation bar
-        self.nav_frame = ctk.CTkFrame(self, bg="transparent")
+        self.nav_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.nav_frame.pack(fill="x", pady=5)
 
         self.home_button = ctk.CTkButton(self.nav_frame, text="Home", command=self.show_home)
@@ -94,7 +94,7 @@ class App(ctk.CTk):
             btn.pack(side="left", padx=20, expand=True)
 
         # Main content frame
-        self.content_frame = ctk.CTkFrame(self, bg="transparent")
+        self.content_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.content_frame.pack(expand=True, fill="both", pady=10)
 
         self.home_frame = None
@@ -142,13 +142,13 @@ class App(ctk.CTk):
         self.mode_toggle.pack(pady=10)
 
         # Main content area
-        self.main_frame = ctk.CTkFrame(self.content_frame, bg="transparent")
+        self.main_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
         self.main_frame.pack(side="left", expand=True, fill="both", padx=10)
 
         self.protocol_name_label = ctk.CTkLabel(self.main_frame, text="Current Protocol: None", anchor="w", font=("Arial", 20, "bold"))
         self.protocol_name_label.pack(pady=10, padx=20, anchor="w")
 
-        display_frame = ctk.CTkFrame(self.main_frame, bg="transparent")
+        display_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         display_frame.pack(pady=20)
 
         # Style for all three displays
@@ -178,7 +178,7 @@ class App(ctk.CTk):
         self.segmented_button.pack(pady=10)
 
         # Placeholder for graphs
-        self.graph_frame = ctk.CTkFrame(self.main_frame, bg="transparent")
+        self.graph_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.graph_frame.pack(expand=True, fill="both", pady=10)
 
         self.clear_button = ctk.CTkButton(self.main_frame, text="Clear", command=self.clear_graphs)
