@@ -222,7 +222,8 @@ class StepperMotor:
         self.redis_client.set("Calibrated",1)
         self.preprocess_data()
         print(self.processed_calibration)
-        print(self.processed_calibration['angles'])
+        print(self.processed_calibration['forward']['angles'])
+
     def move_to_angle(self, angle, target_file=None):
         if self.step_to_angle_ratio is None:
             raise Exception("Motor not calibrated. Please run calibrate() first.")
