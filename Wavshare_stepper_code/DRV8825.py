@@ -98,7 +98,7 @@ class DRV8825:
             self.digital_write(self.step_pin, 1)
             time.sleep(stepdelay)
             self.digital_write(self.step_pin, 0)
-            if steps == 1:
+            if steps != 1:
                 time.sleep(stepdelay)
 
     def cleanup(self):
