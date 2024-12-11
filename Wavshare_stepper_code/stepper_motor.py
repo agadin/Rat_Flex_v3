@@ -220,9 +220,10 @@ class StepperMotor:
         self.redis_client.set("current_direction", "idle")
         self.redis_client.set("step_to_angle_ratio", self.step_to_angle_ratio)
 
+        self.preprocess_data()
         self.move_to_angle(90)
         self.redis_client.set("Calibrated",1)
-        self.preprocess_data()
+
 
 
     def move_to_angle(self, angle, target_file=None):
