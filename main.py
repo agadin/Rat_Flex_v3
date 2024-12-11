@@ -307,12 +307,6 @@ class App(ctk.CTk):
                 self.force_data.append(force)
 
                 # Keep only the last 30 seconds for "Simple" mode
-                if mode == "Simple":
-                    current_time = time.time()
-                    valid_indices = [i for i, t in enumerate(self.time_data) if current_time - t <= 30]
-                    self.time_data[:] = [self.time_data[i] for i in valid_indices]
-                    self.angle_data[:] = [self.angle_data[i] for i in valid_indices]
-                    self.force_data[:] = [self.force_data[i] for i in valid_indices]
 
                 # Limit angle to 0-180 degrees and force to -15 to 1.5 N
                 if mode in ["Angle v Force", "All"]:
@@ -341,19 +335,31 @@ class App(ctk.CTk):
                 elif mode == "All":
                     # Create subplots for all graphs
                     self.fig.clear()
-                    axes = self.fig.subplots(3, 1)
-                    axes[0].plot(self.time_data, self.angle_data, label="Angle vs Time")
-                    axes[0].set_ylabel("Angle (degrees)")
-                    axes[0].legend()
+                    gs = self.fig.add_gridspec(2, 2)
 
-                    axes[1].plot(self.time_data, self.force_data, label="Force vs Time")
-                    axes[1].set_ylabel("Force (N)")
-                    axes[1].legend()
+                    # Large plot on the left column
+                    ax0 = self.fig.add_subplot(gs[:, 0])
+                    ax0.plot(self.angle_data, self.force_data, label="Angle vs Force", color='blue')
+                    ax0.set_xlabel("Angle (degrees)")
+                    ax0.set_ylabel("Force (N)")
+                    ax0.set_xlim(0, 180)
+                    ax0.set_ylim(-1.75, 1.75)
+                    ax0.legend()
 
-                    axes[2].plot(self.angle_data, self.force_data, label="Angle vs Force")
-                    axes[2].set_xlabel("Angle (degrees)")
-                    axes[2].set_ylabel("Force (N)")
-                    axes[2].legend()
+                    # Top right plot
+                    ax1 = self.fig.add_subplot(gs[0, 1])
+                    ax1.plot(self.time_data, self.angle_data, label="Angle vs Time", color='green')
+                    ax1.set_ylabel("Angle (degrees)")
+                    ax1.legend()
+
+                    # Bottom right plot
+                    ax2 = self.fig.add_subplot(gs[1, 1])
+                    ax2.plot(self.time_data, self.force_data, label="Force vs Time", color='red')
+                    ax2.set_xlabel("Time (s)")
+                    ax2.set_ylabel("Force (N)")
+                    ax2.legend()
+
+                    self.canvas.draw()
 
                 self.canvas.draw()
 
