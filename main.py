@@ -282,7 +282,6 @@ class App(ctk.CTk):
         canvas.draw()
 
     def update_graph_view(self, mode):
-
         # Clear the current graph frame
         for widget in self.graph_frame.winfo_children():
             widget.destroy()
@@ -317,10 +316,6 @@ class App(ctk.CTk):
                     self.time_data.pop(0)
                     self.angle_data.pop(0)
                     self.force_data.pop(0)
-
-                # Keep only the last 30 seconds for "Simple" mode
-
-                # Limit angle to 0-180 degrees and force to -15 to 1.5 N
 
                 # Plot data based on selected mode
                 self.ax.clear()
@@ -368,16 +363,18 @@ class App(ctk.CTk):
                     ax2.set_ylabel("Force (N)")
                     ax2.legend()
 
-                    self.canvas.draw()
-
                 self.canvas.draw()
 
         # Start a periodic update of the graph
         self.poll_rate = 0.2
+        if hasattr(self, 'update_loop_id'):
+            self.graph_frame.after_cancel(self.update_loop_id)
+
+
         def update_loop():
             fetch_data()
             if self.running:
-                self.graph_frame.after(int(self.poll_rate*1000), update_loop)  # Update every 500ms
+                self.update_loop_id = self.graph_frame.after(int(self.poll_rate * 1000), update_loop)
 
         update_loop()
 
