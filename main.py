@@ -72,6 +72,9 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # Stationary variables
+        self.angle_special = []
+        self.force_special = []
         # Window configuration
         self.title("Stepper Motor Control")
         self.geometry("1920x1080")
@@ -290,8 +293,6 @@ class App(ctk.CTk):
         self.angle_data = []
         self.force_data = []
         self.time_data = []
-        self.angle_special = []
-        self.force_special = []
 
         # Create a new Matplotlib figure
         self.fig, self.ax = plt.subplots()
