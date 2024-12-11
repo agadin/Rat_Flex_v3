@@ -13,7 +13,8 @@ import multiprocessing.shared_memory as sm
 import mmap
 import os
 import csv
-
+from collections import defaultdict
+import bisect
 
 #what if I run DRV8825.py and force_sensor.py in their own thread? maybe make two different modes?
 
@@ -27,6 +28,7 @@ class StepperMotor:
         return cls._instance
 
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='halfstep', stepdelay=0.0015, calibration_file='calibration.cvs', csv_name='data.csv'):
+        self.processed_calibration = None
         self.target_force = None
         self.step_number = None
         self.current_run_data = None
@@ -122,35 +124,67 @@ class StepperMotor:
     def return_current_protocol_step(self):
         return self.step_number
 
-    def angle_force_calibration(self, target, direction):
-        with open(self.calibration_file, 'r', newline='') as csvfile:
+    def read_calibration_data(self):
+        """
+        Reads calibration data from a CSV file and formats it for quick lookups.
+
+        Args:
+            file_path (str): Path to the calibration CSV file.
+
+        Returns:
+            dict: A nested dictionary where the outer keys are directions (forward/backward),
+                  the inner keys are angles, and the values are corresponding forces.
+        """
+        calibration_data = defaultdict(dict)
+
+        with open(self.calibration_file, 'r') as csvfile:
             reader = csv.DictReader(csvfile)
-
-            # Variables to track the closest match
-            closest_angle = None
-            closest_force = None
-            min_angle_diff = float('inf')
-
             for row in reader:
-                # Ensure the row direction matches the specified direction
-                if row['direction'] == direction:
-                    angle = float(row['angle'])
-                    force = float(row['force'])
-                    angle_diff = abs(angle - target)
+                angle = float(row['angle'])
+                force = float(row['force'])
+                direction = row['direction'].strip().lower()
 
-                    # Update the closest match if the angle difference is smaller
-                    if angle_diff < min_angle_diff:
-                        min_angle_diff = angle_diff
-                        closest_angle = angle
-                        closest_force = force
+                calibration_data[direction][angle] = force
+        return calibration_data
 
-            # Return the closest force
-            if closest_angle is not None:
-                return closest_force
-            else:
-                raise ValueError(f"No matching data found for direction '{direction}'.")
+    def preprocess_data(self):
+        """
+        Preprocess the calibration data to allow fast nearest neighbor lookups.
+        """
+        calibration_data= self.read_calibration_data()
+        preprocessed = {}
+        for direction, angles_forces in calibration_data.items():
+            sorted_angles = sorted(angles_forces.keys())
+            preprocessed[direction] = {
+                'angles': sorted_angles,
+                'forces': {angle: angles_forces[angle] for angle in sorted_angles}
+            }
+        self.processed_calibration= preprocessed
 
+    def get_closest_binary(self,angle):
+        """
+        Use binary search to find the closest angle and its force.
+        """
+        angles = self.processed_calibration['angles']
+        idx = bisect.bisect_left(angles, angle)
+        if idx == 0:
+            closest_angle = angles[0]
+        elif idx == len(angles):
+            closest_angle = angles[-1]
+        else:
+            before = angles[idx - 1]
+            after = angles[idx]
+            closest_angle = before if abs(before - angle) <= abs(after - angle) else after
+        return self.processed_calibration['forces'][closest_angle]
 
+    def find_closest_force_optimized(self, target_angle, direction):
+        """
+        Optimized version of find_closest_force using binary search.
+        """
+        if direction == 'forward':
+            return self.get_closest_binary(target_angle)
+        else:
+            return self.get_closest_binary(target_angle)
     def calibrate(self):
         self.current_direction = 'calibrating'
         self.current_state = 'calibrating'
@@ -305,7 +339,8 @@ class StepperMotor:
                 break
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
-            self.current_force = float(self.ForceSensor.read_force())
+            zero_force= self.find_closest_force_optimized(self.current_angle, self.current_direction)
+            self.current_force = float(self.ForceSensor.read_force())- zero_force
             try:
                 # Pack the data
                 # packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
