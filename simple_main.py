@@ -204,6 +204,7 @@ if __name__ == "__main__":
             file_path = 'calibration.csv'
             calibration_data = read_calibration_data(file_path)
             preprocessed_data = preprocess_data(calibration_data)
+            print("Calibration data loaded.")
         if current_direction is None:
             current_direction = 'forward'
         if average_time is not None:
