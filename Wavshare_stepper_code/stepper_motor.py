@@ -268,7 +268,12 @@ class StepperMotor:
             stop_flag_motor = self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
             self.raw_force = self.ForceSensor.read_force()
-            self.current_force = float(self.raw_force) - self.find_closest_force_optimized(self.current_angle, self.current_direction)
+            if save_csv==self.calibration_file:
+                self.current_force = float(self.raw_force)
+                temp_data.append([i, self.current_angle, float(self.current_force)])
+            else:
+                self.current_force = float(self.raw_force) - self.find_closest_force_optimized(self.current_angle, self.current_direction)
+                temp_data.append([i, self.current_angle, float(self.current_force), self.raw_force])
 
             try:
                 # Pack the data
@@ -277,7 +282,6 @@ class StepperMotor:
                 # Write packed data to the memory-mapped file
                 #self.mm.seek(0)
                 # self.mm.write(packed_data)
-                temp_data.append([i, self.current_angle, float(self.current_force), self.raw_force])
                 packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
 
                 # Write packed data to shared memory
