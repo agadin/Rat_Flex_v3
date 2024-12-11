@@ -75,12 +75,14 @@ class App(ctk.CTk):
         # Stationary variables
         self.angle_special = []
         self.force_special = []
+        self.poll_rate = 0.2
+
         # Window configuration
         self.title("Stepper Motor Control")
         self.geometry("1920x1080")
 
         # Top navigation bar
-        self.nav_frame = ctk.CTkFrame(self)
+        self.nav_frame = ctk.CTkFrame(self, bg="transparent")
         self.nav_frame.pack(fill="x", pady=5)
 
         self.home_button = ctk.CTkButton(self.nav_frame, text="Home", command=self.show_home)
@@ -92,7 +94,7 @@ class App(ctk.CTk):
             btn.pack(side="left", padx=20, expand=True)
 
         # Main content frame
-        self.content_frame = ctk.CTkFrame(self)
+        self.content_frame = ctk.CTkFrame(self, bg="transparent")
         self.content_frame.pack(expand=True, fill="both", pady=10)
 
         self.home_frame = None
@@ -140,23 +142,23 @@ class App(ctk.CTk):
         self.mode_toggle.pack(pady=10)
 
         # Main content area
-        self.main_frame = ctk.CTkFrame(self.content_frame)
+        self.main_frame = ctk.CTkFrame(self.content_frame, bg="transparent")
         self.main_frame.pack(side="left", expand=True, fill="both", padx=10)
 
-        self.protocol_name_label = ctk.CTkLabel(self.main_frame, text="Current Protocol: None", anchor="w")
+        self.protocol_name_label = ctk.CTkLabel(self.main_frame, text="Current Protocol: None", anchor="w", font=("Arial", 20, "bold"))
         self.protocol_name_label.pack(pady=10, padx=20, anchor="w")
 
-        display_frame = ctk.CTkFrame(self.main_frame)
+        display_frame = ctk.CTkFrame(self.main_frame, bg="transparent")
         display_frame.pack(pady=20)
 
         # Style for all three displays
         display_style = {
-            "width": 200,
-            "height": 100,
+            "width": 300,
+            "height": 150,
             "corner_radius": 20,
             "fg_color": "lightblue",
             "text_color": "black",
-            "font": ("Arial", 24, "bold"),
+            "font": ("Arial", 30, "bold"),
         }
 
         # Create and pack step count display
@@ -172,10 +174,11 @@ class App(ctk.CTk):
         self.force_display.grid(row=0, column=2, padx=10, pady=10)
 
         self.segmented_button = ctk.CTkSegmentedButton(self.main_frame, values=["Angle v Force", "Simple", "All"], command=self.update_graph_view)
+        self.segmented_button.set("Angle v Force")  # Set default selection
         self.segmented_button.pack(pady=10)
 
         # Placeholder for graphs
-        self.graph_frame = ctk.CTkFrame(self.main_frame)
+        self.graph_frame = ctk.CTkFrame(self.main_frame, bg="transparent")
         self.graph_frame.pack(expand=True, fill="both", pady=10)
 
         self.clear_button = ctk.CTkButton(self.main_frame, text="Clear", command=self.clear_graphs)
@@ -229,6 +232,18 @@ class App(ctk.CTk):
             shared_data = read_shared_memory()
             if shared_data:
                 step_count, current_angle, current_force = shared_data
+                self.angle_special.append(current_angle)
+                self.force_special.append(current_force)
+                self.time_data.append(time.time())
+                self.angle_data.append(current_angle)
+                self.force_data.append(current_force)
+
+                # Cap the data lists at (60 / self.poll_rate)
+                max_length = int(30 / self.poll_rate)
+                if len(self.time_data) > max_length:
+                    self.time_data.pop(0)
+                    self.angle_data.pop(0)
+                    self.force_data.pop(0)
 
                 # Update individual displays if widgets exist
                 if self.step_display.winfo_exists():
@@ -297,19 +312,6 @@ class App(ctk.CTk):
             # Read shared data for live updates
             shared_data = read_shared_memory()
             if shared_data:
-                _, angle, force = shared_data
-                self.time_data.append(time.time())
-                self.angle_data.append(angle)
-                self.force_data.append(force)
-                self.angle_special.append(angle)
-                self.force_special.append(force)
-
-                # Cap the data lists at (60 / self.poll_rate)
-                max_length = int(30 / self.poll_rate)
-                if len(self.time_data) > max_length:
-                    self.time_data.pop(0)
-                    self.angle_data.pop(0)
-                    self.force_data.pop(0)
 
                 # Plot data based on selected mode
                 self.ax.clear()
@@ -360,7 +362,6 @@ class App(ctk.CTk):
                 self.canvas.draw()
 
         # Start a periodic update of the graph
-        self.poll_rate = 0.2
         if hasattr(self, 'update_loop_id'):
             self.graph_frame.after_cancel(self.update_loop_id)
 
