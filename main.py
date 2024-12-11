@@ -63,6 +63,11 @@ def read_calibration_data(file_path):
             calibration_data[direction][angle] = force
     return calibration_data
 
+
+def run_calibration():
+    redis_client.set('protocol_trigger', "./protocols/calibrate_protocol.txt")
+
+
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -106,7 +111,7 @@ class App(ctk.CTk):
         self.sidebar_frame.pack(side="left", fill="y", padx=10)
 
         # Calibrate button
-        self.calibrate_button = ctk.CTkButton(self.sidebar_frame, text="Calibrate", command=self.run_calibration)
+        self.calibrate_button = ctk.CTkButton(self.sidebar_frame, text="Calibrate", command=run_calibration)
         self.calibrate_button.pack(pady=10)
 
         # Protocol selector
@@ -179,6 +184,7 @@ class App(ctk.CTk):
         self.calibration_thread = Thread(target=self.update_calibrate_button)
         self.update_thread.start()
         self.calibration_thread.start()
+
 
     def show_protocol_builder(self):
         self.clear_content_frame()
