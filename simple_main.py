@@ -193,6 +193,7 @@ if __name__ == "__main__":
     if st.button("Stop", key="stop_button"):
         send_data_to_shared_memory()
     # Set up Streamlit's interval behavior
+    preprocessed_data = None
     while True:
         shared_data = read_shared_memory()
         current_direction=redis_client.get("current_direction")
