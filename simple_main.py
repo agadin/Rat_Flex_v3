@@ -13,6 +13,7 @@ import os
 import csv
 from collections import defaultdict
 
+from PIL.ImageCms import Direction
 
 # Define the same format and file path used for writing
 fmt = 'i d d d'  # Example format: (int, int, float, double)
@@ -230,7 +231,7 @@ if __name__ == "__main__":
 
             # Update the shared memory display
             shared_memory_placeholder.write(
-                f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}, Target: {zeroed_force_calc}, Current Zero Force: {zeroed_force}")
+                f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}, Target: {zeroed_force_calc}, Current Zero Force: {zeroed_force}, Current Direction: {current_direction}")
 
             # add button to stop
 
