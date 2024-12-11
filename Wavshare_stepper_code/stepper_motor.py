@@ -338,9 +338,11 @@ class StepperMotor:
         return self.ForceSensor.read_force()
 
     def test_motor(self):
-        self.motor.TurnStep(Dir='forward', steps=200, stepdelay=0.0015)
+        for i in range(100):
+            self.motor.TurnStep(Dir='forward', steps=1, stepdelay=0.0015)
+            time.sleep(0.0015)
         time.sleep(1)
-        self.motor.TurnStep(Dir='backward', steps=1000, stepdelay=0.0015)
+        self.motor.TurnStep(Dir='backward', steps=200, stepdelay=0.0015)
         time.sleep(1)
     def cleanup(self):
         self.motor.Stop()
