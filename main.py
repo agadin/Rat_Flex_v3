@@ -308,8 +308,8 @@ class App(ctk.CTk):
                 self.time_data.append(time.time())
                 self.angle_data.append(angle)
                 self.force_data.append(force)
-                self.angle_special(angle)
-                self.force_special(force)
+                self.angle_special.append(angle)
+                self.force_special.append(force)
 
                 # Cap the data lists at (60 / self.poll_rate)
                 max_length = int(60 / self.poll_rate)
