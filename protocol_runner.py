@@ -137,6 +137,7 @@ def start_server():
 
         )
         # Connect to Redis server
+        motor.test_motor()
         while True:
             # Check for a value in the Redis key
             protocol_path = redis_client.get("protocol_trigger")
