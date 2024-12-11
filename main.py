@@ -65,7 +65,7 @@ def read_calibration_data(file_path):
 
 
 def run_calibration():
-    redis_client.set('protocol_trigger', "./protocols/calibrate_protocol.txt")
+    redis_client.set('protocol_trigger', "./protocols/ calibrate_protocol.txt")
 
 
 class App(ctk.CTk):
