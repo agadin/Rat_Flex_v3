@@ -174,7 +174,7 @@ class StepperMotor:
         self.step_to_angle_ratio = steps / 180
 
         with open(self.calibration_file, 'w') as file:
-            file.write("\n")
+            file.write("time,angle,force,state,direction,step\n")
 
         # zero out force at each angle
         self.move_to_angle(170, 'calibrate')
