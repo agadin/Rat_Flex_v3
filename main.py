@@ -1,153 +1,131 @@
-from Wavshare_stepper_code.stepper_motor import StepperMotor
-import time
-import queue
-import streamlit as st
-import asyncio
-from database_websocket_client import DatabaseWebSocketClient
+import customtkinter as ctk
+import socket
+import os
 import redis
-# Command queue to manage motor actions
-command_queue = queue.Queue()
+import multiprocessing.shared_memory as sm
+import numpy as np
+import time
+import struct
+import csv
+from collections import defaultdict
+from threading import Thread
 
-# Function to continuously process commands in a separate thread
-async def motor_worker(motor, redis_client):
-    while True:
-        command = command_queue.get()  # Block until a new command is available
-        if command == "calibrate":
-            await motor.calibrate()
-        elif command.startswith("move"):
-            # Extract angle from the command
-            angle = int(command.split(":")[1])
-            await motor.move_to_angle(angle)
-        await asyncio.sleep(0.1)
+# Initialize CustomTkinter
+ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
+ctk.set_default_color_theme("blue")
 
-def get_current_state_from_db(db_client):
-    """Fetch the current state of the motor from the WebSocket-based MySQL database."""
-    response = False #await db_client.send_db_command("get_motor_state")
-    if response and "data" in response:
-        data = response["data"]
-        return {
-            'current_angle': data.get("current_angle", 0),
-            'current_direction': data.get("current_direction", "idle"),
-            'motor_state': data.get("current_state", "idle"),
-            'angle_to_step_ratio': data.get("angle_to_step_ratio", 1.0)
-        }
-    else:
+# Shared memory and Redis configuration
+redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+shm_name = 'shared_data'
+fmt = 'i d d d'  # Format for shared memory (stop_flag, step_count, current_angle, current_force)
+shm_size = struct.calcsize(fmt)
+
+# Try to access shared memory
+try:
+    shm = sm.SharedMemory(name=shm_name)
+except FileNotFoundError:
+    print("Shared memory not found. Creating new shared memory block.")
+    redis_client.set("shared_memory_error", 1)
+    time.sleep(1)
+    shm = sm.SharedMemory(name=shm_name)
+
+def read_shared_memory():
+    try:
+        data = bytes(shm.buf[:struct.calcsize(fmt)])
+        stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
+        return step_count, current_angle, current_force
+    except Exception as e:
+        print(f"Error reading shared memory: {e}")
         return None
 
-# Function to display the current angle
-async def display_current_state(redis_client):
-    # Create placeholders for the values to update dynamically
-    angle_placeholder = st.empty()
-    direction_placeholder = st.empty()
-    motor_state_placeholder = st.empty()
-    ratio_placeholder = st.empty()
-    current_state = {
-        'current_angle': 0,
-        'current_direction': 'idle',
-        'current_state': 'idle',
-        'angle_to_step_ratio': 1.0
-    }
-    while True:
-        # current_state = await get_current_state_from_db(db_client)  # Fetch the current state from the database
-        current_direction = redis_client.get("current_direction")
-        if current_direction is not None:
-            current_state['current_direction'] = current_direction
-        else:
-            current_state['current_direction'] = 'unknown'
-
-        current_angle = redis_client.get("current_angle")
-        if current_angle is not None:
-            current_state['current_angle'] = current_angle
-        else:
-            current_state['current_angle'] = 0
-
-        current_state_value = redis_client.get("current_state")
-        if current_state_value is not None:
-            current_state['current_state'] = current_state_value
-        else:
-            current_state['current_state'] = 'unknown'
-
-        angle_to_step_ratio = redis_client.get("angle_to_step_ratio")
-        if angle_to_step_ratio is not None:
-            current_state['angle_to_step_ratio'] = angle_to_step_ratio
-        else:
-            current_state['angle_to_step_ratio'] = 1.0
-
-        if current_state:
-            # Update the placeholders with the new values
-            angle_placeholder.metric("Current Angle", f"{current_state['current_angle']}°")
-            direction_placeholder.metric("Current Direction", current_state['current_direction'])
-            motor_state_placeholder.metric("Motor State", current_state['current_state'])
-            ratio_placeholder.metric("Angle to Step Ratio", current_state['angle_to_step_ratio'])
-
-        time.sleep(1)  # Update every second
-
-def test_websocket_connection(db_client):
-    """Test the WebSocket connection."""
-    # TODO: add a check for mySQL connection
-
+def send_data_to_shared_memory(stop_flag=1):
+    step_count, current_angle, current_force = read_shared_memory()
     try:
-        response = db_client.send_db_command("get_motor_state")
-        if response and response.get("status") == "success":
-            return "WebSocket connection successful!"
-        else:
-            return "WebSocket connection failed: Unexpected response."
+        packed_data = struct.pack(fmt, stop_flag, step_count, current_angle, current_force)
+        shm.buf[:len(packed_data)] = packed_data
     except Exception as e:
-        return f"WebSocket connection failed: {e}"
+        print(f"Error writing to shared memory: {e}")
 
-async def main():
-    # Initialize the WebSocket client
-    db_client = DatabaseWebSocketClient()
-    redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-    # Initialize the stepper motor
-    motor = StepperMotor(dir_pin=13, step_pin=19, enable_pin=12, mode_pins=(16, 17, 20), limit_switch_1=5, limit_switch_2=6, step_type='fullstep', stepdelay=0.003)
+def run_protocol(protocol_path):
+    redis_client.set('protocol_trigger', protocol_path)
+    print(f"Triggered protocol: {protocol_path}")
 
-    # Start the motor worker coroutine
-    motor_worker_task = asyncio.create_task(motor_worker(motor, db_client))
+def read_calibration_data(file_path):
+    calibration_data = defaultdict(dict)
+    with open(file_path, 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            angle = float(row['angle'])
+            force = float(row['force'])
+            direction = row['direction'].strip().lower()
+            calibration_data[direction][angle] = force
+    return calibration_data
 
-    # Streamlit user interface
-    st.title("Stepper Motor Control Panel")
+class App(ctk.CTk):
+    def __init__(self):
+        super().__init__()
 
-    # Test WebSocket Connection Dropdown
-    debug_option = st.selectbox("Debug: Test WebSocket Connection", ["Select an option", "Test WebSocket Connection"])
+        # Window configuration
+        self.title("Stepper Motor Control")
+        self.geometry("800x600")
 
-    if debug_option == "Test WebSocket Connection":
-        connection_status = redis_client.ping()
-        st.write(connection_status)
+        # Protocol selection
+        self.protocol_label = ctk.CTkLabel(self, text="Select a Protocol:")
+        self.protocol_label.pack(pady=10)
 
-    if 'calibrate' not in st.session_state:
-        st.session_state.calibrate = False
-    if 'angle' not in st.session_state:
-        st.session_state.angle = 0
+        self.protocol_folder = './protocols'
+        self.protocol_files = [f for f in os.listdir(self.protocol_folder) if os.path.isfile(os.path.join(self.protocol_folder, f))]
+        self.protocol_var = ctk.StringVar(value=self.protocol_files[0])
 
-    # Display the current angle
-    angle_display = st.empty()
-    with angle_display:
-        st.metric("Current Angle", f"{st.session_state.angle} degrees")
+        self.protocol_dropdown = ctk.CTkComboBox(self, values=self.protocol_files, variable=self.protocol_var)
+        self.protocol_dropdown.pack(pady=10)
 
-    # Buttons for calibration and moving to a specified angle
-    if st.button("Calibrate Motor"):
-        command_queue.put("calibrate")  # Send calibration command to the motor worker
-        st.write("Calibration in progress...")
+        self.run_button = ctk.CTkButton(self, text="Run Protocol", command=self.run_protocol)
+        self.run_button.pack(pady=10)
 
-    angle_input = st.number_input("Enter target angle", min_value=0, max_value=180, value=90, step=1)
-    if st.button("Move Motor to Angle"):
-        command_queue.put(f"move:{angle_input}")  # Send move command to the motor worker
-        st.write(f"Motor moved to {angle_input} degrees")
+        # Shared memory display
+        self.shared_memory_label = ctk.CTkLabel(self, text="Shared Memory Data")
+        self.shared_memory_label.pack(pady=10)
 
-    # Add Stop Motor button
-    if st.button("Stop Motor"):
-        redis_client.set("stop_flag", 1)
-        st.write("Motor stopped.")
+        self.shared_memory_display = ctk.CTkLabel(self, text="Waiting for data...")
+        self.shared_memory_display.pack(pady=10)
 
-    # Continuously display the current angle
-    await display_current_state(redis_client)
+        self.stop_button = ctk.CTkButton(self, text="Stop", command=self.stop_protocol)
+        self.stop_button.pack(pady=10)
 
-    # Wait for the motor worker task to finish
-    await motor_worker_task
+        # Start background update thread
+        self.running = True
+        self.update_thread = Thread(target=self.update_shared_memory)
+        self.update_thread.start()
 
-    # Close the WebSocket connection when done
-    # await db_client.close()
+    def run_protocol(self):
+        selected_protocol = self.protocol_var.get()
+        protocol_path = os.path.join(self.protocol_folder, selected_protocol)
+        run_protocol(protocol_path)
+        print(f"Running protocol: {selected_protocol}")
 
-if __name__ == '__main__':
-    asyncio.run(main())
+    def stop_protocol(self):
+        send_data_to_shared_memory(stop_flag=0)
+        print("Protocol stopped.")
+
+    def update_shared_memory(self):
+        while self.running:
+            shared_data = read_shared_memory()
+            if shared_data:
+                step_count, current_angle, current_force = shared_data
+                self.shared_memory_display.configure(
+                    text=f"Step Count: {step_count}, Current Angle: {current_angle}, Current Force: {current_force}"
+                )
+            else:
+                self.shared_memory_display.configure(text="Shared memory not available.")
+            time.sleep(0.1)
+
+    def on_closing(self):
+        self.running = False
+        self.update_thread.join()
+        self.destroy()
+
+if __name__ == "__main__":
+    app = App()
+    app.protocol("WM_DELETE_WINDOW", app.on_closing)
+    app.mainloop()
