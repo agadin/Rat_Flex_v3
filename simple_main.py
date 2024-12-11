@@ -215,7 +215,6 @@ if __name__ == "__main__":
 
             if preprocessed_data is not None:
                 zeroed_force_calc= find_closest_force_optimized(preprocessed_data, current_angle, current_direction)
-                print(f"Zeroed force calculated: {zeroed_force_calc}")
             else:
                 zeroed_force_calc=0
 
