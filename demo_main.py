@@ -13,42 +13,28 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import Canvas, Frame, Scrollbar
 
-
-# Initialize CustomTkinter
-ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
-ctk.set_default_color_theme("blue")
-
-# Shared memory and Redis configuration
-redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-shm_name = 'shared_data'
-fmt = 'i d d d'
-shm_size = struct.calcsize(fmt)
-
-# Try to access shared memory
-try:
-    shm = sm.SharedMemory(name=shm_name)
-except FileNotFoundError:
-    print("Shared memory not found. Creating new shared memory block.")
-    redis_client.set("shared_memory_error", 1)
-    time.sleep(1)
-    shm = sm.SharedMemory(name=shm_name)
-
 def read_shared_memory():
     try:
-        data = bytes(shm.buf[:struct.calcsize(fmt)])
-        stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
+
+
+        step_count= 1
+        current_angle= 10
+        current_force= 0.1
         return step_count, current_angle, current_force
     except Exception as e:
         print(f"Error reading shared memory: {e}")
         return None
 
 def send_data_to_shared_memory(stop_flag=1):
-    step_count, current_angle, current_force = read_shared_memory()
     try:
-        packed_data = struct.pack(fmt, stop_flag, step_count, current_angle, current_force)
-        shm.buf[:len(packed_data)] = packed_data
+        # Create shared memory
+        shm = sm.SharedMemory(create=True, size=1024)
+        data = np.array([stop_flag], dtype=np.int32)
+        data_view = data.view(np.uint8)
+        shm.buf[:data_view.nbytes] = data_view
+        print(f"Data sent to shared memory: {stop_flag}")
     except Exception as e:
-        print(f"Error writing to shared memory: {e}")
+        print(f"Error sending data to shared memory: {e}")
 
 def run_protocol(protocol_path):
     redis_client.set('protocol_trigger', protocol_path)
@@ -67,12 +53,13 @@ def read_calibration_data(file_path):
 
 
 def run_calibration():
-    redis_client.set('protocol_trigger', "./protocols/ calibrate_protocol.txt")
+    print("Running calibration...")
 
 
 class App(ctk.CTk):
-    def __init__(self):
+    def __init__(self, demo_mode=True):
         super().__init__()
+        self.demo_mode = demo_mode
 
         # Stationary variables
         self.angle_special = []
@@ -81,7 +68,6 @@ class App(ctk.CTk):
         self.time_data = []
         self.angle_data = []
         self.force_data = []
-
 
         # Window configuration
         self.title("Stepper Motor Control")
@@ -121,26 +107,46 @@ class App(ctk.CTk):
         self.sidebar_frame = ctk.CTkFrame(self.content_frame, width=200)
         self.sidebar_frame.pack(side="left", fill="y", padx=10)
 
-        # Calibrate button
-        self.calibrate_button = ctk.CTkButton(self.sidebar_frame, text="Calibrate", command=run_calibration)
+        # Demo mode label
+        if self.demo_mode:
+            demo_label = ctk.CTkLabel(self.sidebar_frame, text="Demo Mode Active", font=("Arial", 14, "bold"))
+            demo_label.pack(pady=10)
+
+        # Calibrate button (disabled in demo mode)
+        self.calibrate_button = ctk.CTkButton(
+            self.sidebar_frame,
+            text="Calibrate",
+            command=lambda: print("Calibration disabled in demo mode") if self.demo_mode else run_calibration,
+            state="disabled" if self.demo_mode else "normal"
+        )
         self.calibrate_button.pack(pady=10)
 
         # Protocol selector
         self.protocol_label = ctk.CTkLabel(self.sidebar_frame, text="Select a Protocol:")
         self.protocol_label.pack(pady=10)
 
-        self.protocol_folder = './protocols'
-        self.protocol_files = [f for f in os.listdir(self.protocol_folder) if os.path.isfile(os.path.join(self.protocol_folder, f))]
-        self.protocol_var = ctk.StringVar(value=self.protocol_files[0])
+        self.protocol_var = ctk.StringVar(value="Demo Protocol" if self.demo_mode else "None")
 
-        self.protocol_dropdown = ctk.CTkComboBox(self.sidebar_frame, values=self.protocol_files, variable=self.protocol_var)
+        self.protocol_dropdown = ctk.CTkComboBox(
+            self.sidebar_frame,
+            values=["Demo Protocol"] if self.demo_mode else [],
+            variable=self.protocol_var
+        )
         self.protocol_dropdown.pack(pady=10)
 
-        self.run_button = ctk.CTkButton(self.sidebar_frame, text="Run Protocol", command=self.run_protocol)
+        self.run_button = ctk.CTkButton(
+            self.sidebar_frame,
+            text="Run Protocol",
+            command=lambda: print("Protocol run simulation in demo mode") if self.demo_mode else self.run_protocol,
+        )
         self.run_button.pack(pady=10)
 
-        # Stop button
-        self.stop_button = ctk.CTkButton(self.sidebar_frame, text="Stop", command=self.stop_protocol)
+        # Stop button (placeholder in demo mode)
+        self.stop_button = ctk.CTkButton(
+            self.sidebar_frame,
+            text="Stop",
+            command=lambda: print("Stopping simulation in demo mode") if self.demo_mode else self.stop_protocol,
+        )
         self.stop_button.pack(pady=10)
 
         # Light/Dark mode toggle
@@ -190,80 +196,11 @@ class App(ctk.CTk):
         self.clear_button = ctk.CTkButton(self.main_frame, text="Clear", command=self.clear_graphs)
         self.clear_button.pack(pady=10)
 
-        # Start background threads
-        self.running = True
-        self.update_thread = Thread(target=self.update_shared_memory)
-        self.calibration_thread = Thread(target=self.update_calibrate_button)
-        self.update_thread.start()
-        self.calibration_thread.start()
-
-        self.update_graph_view("Angle v Force")  # Initialize with default view
-
-        self.create_protocol_steps_section()
-
-    def create_protocol_steps_section(self):
-        self.protocol_steps_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        self.protocol_steps_frame.pack(expand=True, fill="both", pady=10)
-
-        self.protocol_steps_canvas = Canvas(self.protocol_steps_frame)
-        self.protocol_steps_scrollbar = Scrollbar(self.protocol_steps_frame, orient="vertical", command=self.protocol_steps_canvas.yview)
-        self.protocol_steps_container = Frame(self.protocol_steps_canvas)
-
-        self.protocol_steps_container.bind(
-            "<Configure>",
-            lambda e: self.protocol_steps_canvas.configure(
-                scrollregion=self.protocol_steps_canvas.bbox("all")
-            )
-        )
-
-        self.protocol_steps_canvas.create_window((0, 0), window=self.protocol_steps_container, anchor="nw")
-        self.protocol_steps_canvas.configure(yscrollcommand=self.protocol_steps_scrollbar.set)
-
-        self.protocol_steps_canvas.pack(side="left", fill="both", expand=True)
-        self.protocol_steps_scrollbar.pack(side="right", fill="y")
-
-        self.update_protocol_steps()
-
-    def update_protocol_steps(self):
-        current_step = redis_client.get("current_step")
-        if current_step:
-            protocol_path = redis_client.get("protocol_trigger")
-            if protocol_path:
-                with open(protocol_path, 'r') as file:
-                    commands = file.readlines()
-                for step_number, command in enumerate(commands, start=1):
-                    self.create_step_box(step_number, command.strip())
-        else:
-            placeholder_label = ctk.CTkLabel(self.protocol_steps_container, text="No active protocol", font=("Arial", 16))
-            placeholder_label.pack(pady=10)
-
-    def create_step_box(self, step_number, command):
-        step_frame = ctk.CTkFrame(self.protocol_steps_container, corner_radius=10, fg_color="lightblue")
-        step_frame.pack(fill="x", pady=5, padx=10)
-
-        step_number_label = ctk.CTkLabel(step_frame, text=f"Step {step_number}", font=("Arial", 14))
-        step_number_label.pack(side="left", padx=10)
-
-        command_label = ctk.CTkLabel(step_frame, text=command, font=("Arial", 14))
-        command_label.pack(side="left", expand=True)
-
-        timer_label = ctk.CTkLabel(step_frame, text="00:00", font=("Arial", 14))
-        timer_label.pack(side="right", padx=10)
-
-        self.update_timer(timer_label, step_number)
-
-    def update_timer(self, timer_label, step_number):
-        def update():
-            current_step = redis_client.get("current_step")
-            if current_step and int(current_step.split()[1]) == step_number:
-                elapsed_time = int(time.time() - start_time)
-                minutes, seconds = divmod(elapsed_time, 60)
-                timer_label.configure(text=f"{minutes:02}:{seconds:02}")
-            self.after(1000, update)
-
-        start_time = time.time()
-        update()
-
+        # In demo mode, use dummy data for steps
+        if self.demo_mode:
+            self.step_display.configure(text="Steps: 100")
+            self.angle_display.configure(text="Angle: 45.0°")
+            self.force_display.configure(text="Force: 10.5N")
     def show_protocol_builder(self):
         self.clear_content_frame()
         ctk.CTkLabel(self.content_frame, text="Protocol Builder (Coming Soon)").pack(pady=20)
@@ -285,87 +222,15 @@ class App(ctk.CTk):
         ctk.CTkLabel(self.content_frame, text="Settings (Coming Soon)").pack(pady=20)
 
     def run_protocol(self):
-        selected_protocol = self.protocol_var.get()
-        protocol_path = os.path.join(self.protocol_folder, selected_protocol)
+        protocol_path = self.protocol_var.get()
         run_protocol(protocol_path)
-        print(f"Running protocol: {selected_protocol}")
-        self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
 
     def stop_protocol(self):
-        send_data_to_shared_memory(stop_flag=0)
-        print("Protocol stopped.")
+        send_data_to_shared_memory(stop_flag=1)
 
     def toggle_mode(self):
-        mode = "Light" if ctk.get_appearance_mode() == "Dark" else "Dark"
-        ctk.set_appearance_mode(mode)
-
-    def update_shared_memory(self):
-        while self.running:
-            shared_data = read_shared_memory()
-            if shared_data:
-                step_count, current_angle, current_force = shared_data
-                self.angle_special.append(current_angle)
-                self.force_special.append(current_force)
-                self.time_data.append(time.time())
-                self.angle_data.append(current_angle)
-                self.force_data.append(current_force)
-
-                # Cap the data lists at (60 / self.poll_rate)
-                max_length = int(30 / self.poll_rate)
-                if len(self.time_data) > max_length:
-                    self.time_data.pop(0)
-                    self.angle_data.pop(0)
-                    self.force_data.pop(0)
-
-                # Update individual displays if widgets exist
-                if self.step_display.winfo_exists():
-                    self.step_display.configure(text=f"{step_count}")
-                if self.angle_display.winfo_exists():
-                    self.angle_display.configure(text=f"{current_angle:.1f}°")
-                if self.force_display.winfo_exists():
-                    self.force_display.configure(text=f"{current_force:.2f} N")
-            else:
-                # Handle shared memory not available case
-                if self.step_display.winfo_exists():
-                    self.step_display.configure(text="N/A")
-                if self.angle_display.winfo_exists():
-                    self.angle_display.configure(text="N/A")
-                if self.force_display.winfo_exists():
-                    self.force_display.configure(text="N/A")
-
-            time.sleep(0.1)
-
-    def update_calibrate_button(self):
-        while self.running:
-            try:
-                calibration_level = int(redis_client.get("calibration_Level") or 0)
-
-                if calibration_level == 0:
-                    self.calibrate_button.configure(fg_color="red")
-                elif calibration_level == 1:
-                    self.calibrate_button.configure(fg_color="yellow")
-                elif calibration_level == 2:
-                    self.calibrate_button.configure(fg_color="green")
-                else:
-                    self.calibrate_button.configure(fg_color="gray")  # Default color for unknown states
-
-            except Exception as e:
-                print(f"Error updating Calibrate button: {e}")
-                self.calibrate_button.configure(fg_color="gray")  # Fallback color in case of error
-
-            time.sleep(0.5)  # Adjust the refresh rate as needed
-
-    def clear_graphs(self):
-        # Reset the data lists
-        self.angle_special = []
-        self.force_special = []
-        self.time_data = []
-        self.angle_data = []
-        self.force_data = []
-
-        # Clear the graph by redrawing it with empty data
-
-
+        mode = ctk.get_appearance_mode()
+        ctk.set_appearance_mode("Light" if mode == "Dark" else "Dark")
     def update_graph_view(self, mode):
         # Clear the current graph frame
         for widget in self.graph_frame.winfo_children():
@@ -446,14 +311,17 @@ class App(ctk.CTk):
                 self.update_loop_id = self.graph_frame.after(int(self.poll_rate * 1000), update_loop)
 
         update_loop()
+    def clear_graphs(self):
+        # Reset the data lists
+        self.angle_special = []
+        self.force_special = []
+        self.time_data = []
+        self.angle_data = []
+        self.force_data = []
 
-    def on_closing(self):
-        self.running = False
-        if hasattr(self, 'update_thread'):
-            self.update_thread.join()
-        self.destroy()
+        # Clear the graph by redrawing it with empty data
 
+# Start the application
 if __name__ == "__main__":
-    app = App()
-    app.protocol("WM_DELETE_WINDOW", app.on_closing)
+    app = App(demo_mode=True)  # Enable demo mode
     app.mainloop()

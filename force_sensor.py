@@ -23,7 +23,7 @@ class ForceSensor:
             try:
                 self.ser.write(b'W\r')
                 response = self.ser.readline().decode('utf-8').strip()
-                force_out=float(response)+0.96
+                force_out=float(response)+0.96 #add idle calibration value
                 return force_out
             except Exception as e:
                 print(f"Error reading from Port {self.port}")

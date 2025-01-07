@@ -1,11 +1,9 @@
-import multiprocessing.shared_memory as shared_memory
 import multiprocessing
 import numpy as np
 from Wavshare_stepper_code.DRV8825 import DRV8825, setup_gpio
 import time
 import os
 import json
-from database_websocket_client import DatabaseWebSocketClient
 import redis
 from force_sensor import ForceSensor
 import struct
@@ -28,6 +26,7 @@ class StepperMotor:
         return cls._instance
 
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='halfstep', stepdelay=0.0015, calibration_file='calibration.cvs', csv_name='data.csv'):
+        self.idle_force = None
         self.raw_force = None
         self.processed_calibration = None
         self.target_force = None
@@ -91,8 +90,10 @@ class StepperMotor:
         shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
         self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
 
-    def load_calibration(self):
-        if os.path.exists(self.calibration_file):
+    def load_calibration(self, path = None):
+        if path is None:
+            path = self.calibration_file
+        if os.path.exists(path):
             with open(self.calibration_file, 'r') as file:
                 for line in file:
                     key, value = line.strip().split(': ')
@@ -103,9 +104,10 @@ class StepperMotor:
                     else:
                         self.steps_per_revolution = None
                         self.step_to_angle_ratio = None
-
+            self.preprocess_data()
         else:
             print(f"Calibration file {self.calibration_file} not found. Please run calibrate() first.")
+
 
     def read_first_value_in_last_row(self, save_csv=None):
         if save_csv is None:
@@ -126,16 +128,6 @@ class StepperMotor:
         return self.step_number
 
     def read_calibration_data(self):
-        """
-        Reads calibration data from a CSV file and formats it for quick lookups.
-
-        Args:
-            file_path (str): Path to the calibration CSV file.
-
-        Returns:
-            dict: A nested dictionary where the outer keys are directions (forward/backward),
-                  the inner keys are angles, and the values are corresponding forces.
-        """
         calibration_data = defaultdict(dict)
 
         with open(self.calibration_file, 'r') as csvfile:
@@ -194,6 +186,13 @@ class StepperMotor:
         self.redis_client.set("current_state", self.current_state)
         self.redis_client.set("current_direction", self.current_direction)
 
+        # calulcate idle force over 5 seconds at a rate of 30Hz. take caverage of all values
+        idle_all = []
+        for i in range(150):
+            idle_all.append(self.ForceSensor.read_force())
+            time.sleep(0.03)
+        self.idle_force = sum(idle_all) / len(idle_all)
+        
         self.motor.TurnStep(Dir='forward', steps=1, stepdelay=self.stepdelay)
         time.sleep(self.stepdelay)
         while self.motor.limit_switch_1_state:
@@ -224,7 +223,8 @@ class StepperMotor:
         self.move_to_angle(90)
         self.redis_client.set("Calibrated",1)
 
-
+    def return_idle_force(self):
+        return self.idle_force
 
     def move_to_angle(self, angle, target_file=None):
         if self.step_to_angle_ratio is None:
@@ -296,12 +296,12 @@ class StepperMotor:
 
         # After all data has been appended, update the first column with time values
         start_time = self.read_first_value_in_last_row(save_csv)
-        current_time = float(start_time)
+        current_time = float(start_time) + 0.03
         for row in temp_data:
             row[0] = current_time
             current_time += 0.03
 
-        # Add two columns to the end of temp_data filled with current_state and current_direction
+        # Add two columns to the end of temp_data fill ed with current_state and current_direction
         for row in temp_data:
             row.append(self.current_state)
             row.append(self.current_direction)
@@ -375,7 +375,7 @@ class StepperMotor:
                     break
 
         start_time = self.read_first_value_in_last_row(self.csv_name)
-        current_time = float(start_time)
+        current_time = float(start_time)+0.03
         for row in temp_data:
             row[0] = current_time
             current_time += 0.03
