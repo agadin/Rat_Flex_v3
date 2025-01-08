@@ -46,14 +46,14 @@ def create_folder_with_files(provided_name=None, special=False):
     # Copy and rename `calibrate.txt`
     # copy everything into folder
 
-    if os.path.exists('calibrate.txt'):
+    if os.path.exists('calibration.txt'):
         if provided_name is not None:
             shutil.copy('calibrate.txt', folder_name)
         else:
-            shutil.copy('calibrate.txt', 'calibrate.txt')
+            shutil.copy('calibrate.txt', 'calibration.txt')
 
     else:
-        print("Error: `calibrate.txt` not found.")
+        print("Error: `calibration.txt` not found.")
 
     with open('data.csv', 'r') as file:
         reader = csv.reader(file)
@@ -147,6 +147,7 @@ def process_protocol(protocol_path):
         commands = file.readlines()
         step_number = 0
         data_saved = False
+        folder_name = f"data_{time.strftime('%Y%m%d_%H%M%S')}"
     for command in commands:
         command = command.strip()
         if not command:
@@ -217,13 +218,11 @@ def process_protocol(protocol_path):
                 file_path = file_path + "calibration.txt"
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"Calibration file not found: {file_path}")
-
-
             motor.load_calibration(file_path)
         elif command.startswith("Save_as"):
             folder_name = command.split(":")[1].strip()
-            data_saved = create_folder_with_files(folder_name, True)
         elif command.startswith("calibrate"):
+            data_saved = True
             motor.calibrate()
         elif command.startswith("wait"):
             wait_time = int(command.split(":")[1])
@@ -236,7 +235,6 @@ def process_protocol(protocol_path):
 
         if not data_saved:
             # Set the name to the current date and time
-            folder_name = f"data_{time.strftime('%Y%m%d_%H%M%S')}"
             data_saved = create_folder_with_files(folder_name)
 
 
