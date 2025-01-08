@@ -25,15 +25,16 @@ def create_folder_with_files(provided_name=None, special=False):
         animal_id = "0000"
 
     timestamp = datetime.now().strftime("%Y%m%d")
-    trial_number= 1
-    original_folder_name = f"{timestamp}-{animal_id}-{trial_number}"
+    trial_number = 1
+
+    original_folder_name = f"{timestamp}-{animal_id}-{trial_number:02d}"
 
     folder_name= original_folder_name
 
     if os.path.exists(original_folder_name):
         while os.path.exists(folder_name):
             trial_number += 1
-            folder_name = f"{original_folder_name}-{trial_number}"
+            folder_name = f"{original_folder_name}-{animal_id}-{trial_number:02d}"
     else:
         folder_name = original_folder_name
 
