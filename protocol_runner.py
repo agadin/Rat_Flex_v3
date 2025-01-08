@@ -15,23 +15,43 @@ csv_name='data.csv'
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 motor = None
 
-def create_folder_with_files(folder_name, special=False):
+def create_folder_with_files(provided_name=None, special=False):
     # Create the folder
-    original_folder_name = folder_name
+    try:
+        animal_id = redis_client.get("animal_ID")
+        if animal_id is None:
+            animal_id = "0000"
+    except redis.RedisError:
+        animal_id = "0000"
 
-    if os.path.exists(folder_name):
-        if special:
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            folder_name = f"{original_folder_name}-{timestamp}"
-        else:
-            counter = 1
-            while os.path.exists(folder_name):
-                folder_name = f"{original_folder_name}-{counter}"
-                counter += 1
+    timestamp = datetime.now().strftime("%Y%m%d")
+    trial_number= 1
+    original_folder_name = f"{timestamp}-{animal_id}-{trial_number}"
 
+    folder_name= original_folder_name
+
+    if os.path.exists(original_folder_name):
+        while os.path.exists(folder_name):
+            trial_number += 1
+            folder_name = f"{original_folder_name}-{trial_number}"
+    else:
+        folder_name = original_folder_name
+
+    # create the folder
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+    else:
+        print(f"Error: Folder '{folder_name}' already exists.")
+        redis_client.set("Error_code","10")
     # Copy and rename `calibrate.txt`
+    # copy everything into folder
+
     if os.path.exists('calibrate.txt'):
-        shutil.copy('calibrate.txt', folder_name)
+        if provided_name is not None:
+            shutil.copy('calibrate.txt', folder_name)
+        else:
+            shutil.copy('calibrate.txt', 'calibrate.txt')
+
     else:
         print("Error: `calibrate.txt` not found.")
 
