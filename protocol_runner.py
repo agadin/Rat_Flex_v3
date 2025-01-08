@@ -48,9 +48,9 @@ def create_folder_with_files(provided_name=None, special=False):
 
     if os.path.exists('calibration.txt'):
         if provided_name is not None:
-            shutil.copy('calibrate.txt', folder_name)
+            shutil.copy('calibration.txt', os.path.join(folder_name, f"{provided_name}.txt"))
         else:
-            shutil.copy('calibrate.txt', 'calibration.txt')
+            shutil.copy('calibration.txt', os.path.join(folder_name, 'calibration.txt'))
 
     else:
         print("Error: `calibration.txt` not found.")
