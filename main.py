@@ -293,7 +293,7 @@ class App(ctk.CTk):
 
         self.update_graph_view("Angle v Force")  # Initialize with default view
 
-        print( "protocol: ", self.protocol_var)
+        print( "protocol: ", self.protocol_var.get())
         self.protocol_viewer = ProtocolViewer(
             self.main_frame,
             protocol_folder=self.protocol_folder,
@@ -303,7 +303,7 @@ class App(ctk.CTk):
         self.protocol_viewer.pack(fill="both", expand=True, pady=10)
 
         # Trace for protocol_var to update ProtocolViewer when protocol changes
-        self.protocol_var.trace("w", lambda *args: self.protocol_viewer.load_protocol(self.protocol_var))
+        self.protocol_var.trace("w", lambda *args: self.protocol_viewer.load_protocol(self.protocol_var.get()))
 
 
     def create_step_box(self, step_number, command):
