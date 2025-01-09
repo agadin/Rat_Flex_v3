@@ -325,6 +325,7 @@ class StepperMotor:
     def move_until_force(self, direction, target_force, angle_limit_min=0, angle_limit_max=180):
         temp_data = []
         raw_force=[]
+        print("direction: ", direction)
         if direction not in [0, 180]:
             raise ValueError("Direction must be either 0 or 180 degrees")
 
