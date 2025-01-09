@@ -295,20 +295,26 @@ class App(ctk.CTk):
 
         print( "protocol: ", self.protocol_var.get())
 
-        Thread(target=self.initialize_protocol_viewer).start()
+        self.initialize_protocol_viewer()
 
     def initialize_protocol_viewer(self):
+        # Initialize ProtocolViewer directly
         self.protocol_viewer = ProtocolViewer(
             self.main_frame,
             protocol_folder=self.protocol_folder,
             protocol_var=self.protocol_var,
-            redis_client=redis_client
+            redis_client=self.redis_client
         )
         self.protocol_viewer.pack(fill="both", expand=True, pady=10)
 
         # Trace for protocol_var to update ProtocolViewer when protocol changes
-        self.protocol_var.trace("w", lambda *args: Thread(target=self.protocol_viewer.load_protocol,
-                                                          args=(self.protocol_var.get(),)).start())
+        self.protocol_var.trace("w", self.update_protocol_viewer)
+
+    def update_protocol_viewer(self, *args):
+        # Update the protocol viewer synchronously when protocol_var changes
+        protocol_name = self.protocol_var.get()
+        print(f"Updating ProtocolViewer with: {protocol_name}")  # Debug print
+        self.protocol_viewer.load_protocol(protocol_name)
 
     def create_step_box(self, step_number, command):
         step_frame = ctk.CTkFrame(self.protocol_steps_container, corner_radius=10, fg_color="lightblue")
