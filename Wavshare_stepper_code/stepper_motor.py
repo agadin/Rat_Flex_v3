@@ -81,7 +81,6 @@ class StepperMotor:
     def create_shared_memory(self):
 
         try:
-            if self.shm is not None:
                 self.shm.close()
                 self.shm.unlink()
                 time.sleep(0.2)
