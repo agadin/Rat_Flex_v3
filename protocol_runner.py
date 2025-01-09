@@ -397,7 +397,9 @@ def start_server():
                 redis_client.set("protocol_trigger", "")  # Clear the trigger after processing
                 print(f"Found protocol path: {protocol_path}")
                 process_protocol(protocol_path)
+            redis_client.set("current_protocol_out", "")
             time.sleep(1)  # Wait for 1 second before checking again
+
 
 if __name__ == "__main__":
     start_server()

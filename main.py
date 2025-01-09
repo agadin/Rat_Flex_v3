@@ -288,7 +288,7 @@ class App(ctk.CTk):
     def run_protocol(self):
         selected_protocol = self.protocol_var.get()
         current_protocol = redis_client.get("current_protocol_out")
-
+        print(f"Selected protocol: {selected_protocol}, Current protocol: {current_protocol}")
         if selected_protocol == current_protocol:
             def on_confirm():
                 run_protocol(protocol_path)
