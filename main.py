@@ -93,7 +93,7 @@ class ProtocolViewer(ctk.CTkFrame):
         # Dynamically update current step opacity
         self.update_current_step()
 
-    def load_protocol(self):
+    def load_protocol(self, protocol_var):
         # Clear existing steps
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
@@ -101,7 +101,7 @@ class ProtocolViewer(ctk.CTkFrame):
         self.protocol_steps = []
 
         # Get the protocol path
-        protocol_path = os.path.join(self.protocol_folder, self.protocol_var.get())
+        protocol_path = os.path.join(self.protocol_folder, protocol_var)
 
         # Read and parse the protocol
         if os.path.exists(protocol_path):
@@ -295,15 +295,16 @@ class App(ctk.CTk):
         self.update_graph_view("Angle v Force")  # Initialize with default view
 
         print(self.protocol_var)
-        # Add Protocol Viewer below the Clear button
         self.protocol_viewer = ProtocolViewer(
             self.main_frame,
             protocol_folder=self.protocol_folder,
             protocol_var=self.protocol_var,
-            redis_client= redis_client
+            redis_client=self.redis_client
         )
-
         self.protocol_viewer.pack(fill="both", expand=True, pady=10)
+
+        # Trace for protocol_var to update ProtocolViewer when protocol changes
+        self.protocol_var.trace("w", lambda *args: self.protocol_viewer.load_protocol(self.protocol_var))
 
 
     def create_step_box(self, step_number, command):
