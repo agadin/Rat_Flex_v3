@@ -32,10 +32,6 @@ except FileNotFoundError:
     redis_client.set("shared_memory_error", 1)
     time.sleep(1)
     # remove shared_memory.dat file if it exists
-    try:
-        os.remove('shared_memory.dat')
-    except FileNotFoundError:
-        pass
     print("Shared memory not found. Creating new shared memory block.")
     redis_client.set("shared_memory_error", 1)
     time.sleep(1)
