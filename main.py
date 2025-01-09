@@ -381,7 +381,7 @@ class App(ctk.CTk):
         ctk.set_appearance_mode(mode)
 
     def update_shared_memory(self):
-        def update():
+        while self.running:
             shared_data = read_shared_memory()
             if shared_data:
                 step_count, current_angle, current_force = shared_data
@@ -414,12 +414,10 @@ class App(ctk.CTk):
                 if self.force_display.winfo_exists():
                     self.force_display.configure(text="N/A")
 
-            self.after(100, update)
-
-        self.after(100, update)
+            time.sleep(0.1)
 
     def update_calibrate_button(self):
-        def update():
+        while self.running:
             try:
                 calibration_level = int(redis_client.get("calibration_Level") or 0)
 
@@ -436,9 +434,7 @@ class App(ctk.CTk):
                 print(f"Error updating Calibrate button: {e}")
                 self.calibrate_button.configure(fg_color="gray")  # Fallback color in case of error
 
-            self.after(500, update)  # Adjust the refresh rate as needed
-
-        self.after(500, update)
+            time.sleep(0.5)  # Adjust the refresh rate as needed
 
     def clear_graphs(self):
         # Reset the data lists
