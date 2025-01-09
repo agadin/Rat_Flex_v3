@@ -303,7 +303,7 @@ class App(ctk.CTk):
             self.main_frame,
             protocol_folder=self.protocol_folder,
             protocol_var=self.protocol_var,
-            redis_client=self.redis_client
+            redis_client= redis_client
         )
         self.protocol_viewer.pack(fill="both", expand=True, pady=10)
 
