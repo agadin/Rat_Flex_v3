@@ -88,13 +88,33 @@ def create_folder_with_files(provided_name=None, special=False):
 
 def string_to_value_checker(string_input, type_s="int"):
     try:
-        # Try to convert the input directly to an integer
+        # Try to convert the input directly to an integer or float
         if type_s == "float":
             return float(string_input)
         else:
             return int(string_input)
     except ValueError:
-        # If conversion fails, check if it's a string and look up in Redis
+        # Check for open parenthesis to handle special calculations
+        if string_input.startswith("(") and string_input.endswith(")"):
+            inner_expr = string_input[1:-1]  # Extract content inside parentheses
+            # Define angle_value from Redis
+            angle_value = redis_client.get("angle_value")
+            if angle_value is None:
+                raise ValueError("Variable 'angle_value' not found in Redis.")
+            angle_value = float(angle_value)  # Convert to float for calculations
+
+            # Replace 'angle_value' with its value in the expression
+            expr_with_value = inner_expr.replace("angle_value", str(angle_value))
+            try:
+                # Evaluate the expression and return the result
+                result = eval(expr_with_value)
+                if type_s == "float":
+                    return float(result)
+                else:
+                    return int(result)
+            except Exception as e:
+                raise ValueError(f"Invalid expression in input: {string_input}. Error: {e}")
+        # If no parentheses, check if it's a variable and look up in Redis
         angle_value = redis_client.get(string_input)
         if angle_value is None:
             raise ValueError(f"Variable '{string_input}' not found in Redis.")
@@ -144,11 +164,14 @@ def calculate_metric(metric, protocol_step):
         raise ValueError(f"Unknown metric: {metric}")
 
 def process_protocol(protocol_path):
+    protocol_filename = os.path.basename(protocol_path)
+    redis_client.set("current_protocol_out", protocol_filename)
     with open(protocol_path, 'r') as file:
         commands = file.readlines()
         step_number = 0
         data_saved = False
         folder_name = f"data_{time.strftime('%Y%m%d_%H%M%S')}"
+
     for command in commands:
         command = command.strip()
         if not command:
@@ -204,6 +227,7 @@ def process_protocol(protocol_path):
                 index += 1
 
             # Execute the command
+            print(f"Moving to force: {max_force} in direction: {direction}")
             move_to_force(direction, max_force, min_angle, max_angle)
 
             if metrics:
@@ -242,7 +266,7 @@ def process_protocol(protocol_path):
 
 
     # end_all_commands()
-
+    redis_client.set("current_protocol_out", "")
 # Add save as file name ability
 
 def calibrate():

@@ -67,7 +67,8 @@ def read_calibration_data(file_path):
 
 
 def run_calibration():
-    redis_client.set('protocol_trigger', "./protocols/ calibrate_protocol.txt")
+    app.protocol_var.set("calibrate_protocol.txt")
+    app.run_protocol()
 
 
 class App(ctk.CTk):
@@ -123,11 +124,11 @@ class App(ctk.CTk):
 
         # Calibrate button
         self.calibrate_button = ctk.CTkButton(self.sidebar_frame, text="Calibrate", command=run_calibration)
-        self.calibrate_button.pack(pady=10)
+        self.calibrate_button.pack(pady=10, padx=10)
 
         # Protocol selector
         self.protocol_label = ctk.CTkLabel(self.sidebar_frame, text="Select a Protocol:")
-        self.protocol_label.pack(pady=10)
+        self.protocol_label.pack(pady=10, padx=10)
 
         self.protocol_folder = './protocols'
         self.protocol_files = [f for f in os.listdir(self.protocol_folder) if os.path.isfile(os.path.join(self.protocol_folder, f))]
@@ -286,10 +287,37 @@ class App(ctk.CTk):
 
     def run_protocol(self):
         selected_protocol = self.protocol_var.get()
-        protocol_path = os.path.join(self.protocol_folder, selected_protocol)
-        run_protocol(protocol_path)
-        print(f"Running protocol: {selected_protocol}")
-        self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
+        current_protocol = redis_client.get("current_protocol_out")
+
+        if selected_protocol == current_protocol:
+            def on_confirm():
+                run_protocol(protocol_path)
+                print(f"Running protocol again: {selected_protocol}")
+                self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
+                confirm_popup.destroy()
+
+            def on_cancel():
+                confirm_popup.destroy()
+
+            confirm_popup = ctk.CTk()
+            confirm_popup.title("Confirm Protocol Run")
+
+            label = ctk.CTkLabel(confirm_popup,
+                                 text="The selected protocol is already running. Do you want to run it again?")
+            label.pack(pady=10)
+
+            confirm_button = ctk.CTkButton(confirm_popup, text="Yes", command=on_confirm)
+            confirm_button.pack(side="left", padx=10, pady=10)
+
+            cancel_button = ctk.CTkButton(confirm_popup, text="No", command=on_cancel)
+            cancel_button.pack(side="right", padx=10, pady=10)
+
+            confirm_popup.mainloop()
+        else:
+            protocol_path = os.path.join(self.protocol_folder, selected_protocol)
+            run_protocol(protocol_path)
+            print(f"Running protocol: {selected_protocol}")
+            self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
 
     def stop_protocol(self):
         send_data_to_shared_memory(stop_flag=0)
