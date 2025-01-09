@@ -142,9 +142,7 @@ class StepperMotor:
         return calibration_data
 
     def preprocess_data(self):
-        """
-        Preprocess the calibration data to allow fast nearest neighbor lookups.
-        """
+
         calibration_data= self.read_calibration_data()
         preprocessed = {}
         for direction, angles_forces in calibration_data.items():
