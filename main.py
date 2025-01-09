@@ -256,7 +256,7 @@ class App(ctk.CTk):
                     step_frame,
                     text="",
                     variable=checkbox_var,
-                    command=lambda num=step_num: self.redis_client.set(f"checkedbox_{num}", int(checkbox_var.get()))
+                    command=lambda num=step_num: redis_client.set(f"checkedbox_{num}", int(checkbox_var.get()))
                 )
                 checkbox.grid(row=0, column=2, padx=5, pady=5)
 
@@ -273,7 +273,7 @@ class App(ctk.CTk):
     def update_protocol_opacity(self, protocol_frame):
         """Update opacity of the protocol steps dynamically."""
         try:
-            current_step = self.redis_client.get("current_step")
+            current_step = redis_client.get("current_step")
             current_step = int(current_step) if current_step else None
         except (ValueError, TypeError):
             current_step = None
