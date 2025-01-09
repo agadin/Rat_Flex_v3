@@ -294,6 +294,7 @@ class App(ctk.CTk):
 
         self.update_graph_view("Angle v Force")  # Initialize with default view
 
+        print(self.protocol_var)
         # Add Protocol Viewer below the Clear button
         self.protocol_viewer = ProtocolViewer(
             self.main_frame,
@@ -301,6 +302,7 @@ class App(ctk.CTk):
             protocol_var=self.protocol_var,
             redis_client= redis_client
         )
+
         self.protocol_viewer.pack(fill="both", expand=True, pady=10)
 
 
