@@ -31,10 +31,10 @@ def create_folder_with_files(provided_name=None, special=False):
 
     folder_name= original_folder_name
 
-    if os.path.exists(original_folder_name):
+    if os.path.exists(f"{timestamp}_{animal_id}_{trial_number:02d}"):
         while os.path.exists(folder_name):
             trial_number += 1
-            folder_name = f"{original_folder_name}_{animal_id}_{trial_number:02d}"
+            folder_name = f"{timestamp}_{animal_id}_{trial_number:02d}"
     else:
         folder_name = original_folder_name
 
@@ -49,8 +49,6 @@ def create_folder_with_files(provided_name=None, special=False):
 
     if os.path.exists('calibration.txt'):
         if provided_name is not None:
-            shutil.copy('calibration.txt', os.path.join(folder_name, f"{provided_name}.txt"))
-        else:
             shutil.copy('calibration.txt', os.path.join(folder_name, 'calibration.txt'))
 
     else:
@@ -69,7 +67,10 @@ def create_folder_with_files(provided_name=None, special=False):
     data_csv_path = 'data.csv'
     renamed_csv_path = os.path.join(folder_name, f"{folder_name}.csv")
     if os.path.exists(data_csv_path):
-        shutil.copy(data_csv_path, renamed_csv_path)
+        if provided_name is not None:
+            shutil.copy(data_csv_path, os.path.join(folder_name, f"{provided_name}.txt"))
+        else:
+            shutil.copy(data_csv_path, os.path.join(folder_name, 'calibration.txt'))
     else:
         print("Error: `data.csv` not found.")
 
@@ -98,13 +99,13 @@ def string_to_value_checker(string_input, type_s="int"):
         if string_input.startswith("(") and string_input.endswith(")"):
             inner_expr = string_input[1:-1]  # Extract content inside parentheses
             # Define angle_value from Redis
-            angle_value = redis_client.get("angle_value")
+            angle_value = redis_client.get(inner_expr)
             if angle_value is None:
                 raise ValueError("Variable 'angle_value' not found in Redis.")
             angle_value = float(angle_value)  # Convert to float for calculations
 
             # Replace 'angle_value' with its value in the expression
-            expr_with_value = inner_expr.replace("angle_value", str(angle_value))
+            expr_with_value = inner_expr.replace(string_input, str(angle_value))
             try:
                 # Evaluate the expression and return the result
                 result = eval(expr_with_value)
@@ -118,6 +119,13 @@ def string_to_value_checker(string_input, type_s="int"):
         angle_value = redis_client.get(string_input)
         if angle_value is None:
             raise ValueError(f"Variable '{string_input}' not found in Redis.")
+        elif isinstance(angle_value, str):
+            cycle_count = 0
+            while isinstance(angle_value, str) and cycle_count < 10:
+                angle_value = redis_client.get(angle_value)
+                cycle_count += 1
+            if isinstance(angle_value, str):
+                raise ValueError(f"Value for '{string_input}' in Redis is not a valid number after 10 cycles.")
         try:
             if type_s == "float":
                 return float(angle_value)
@@ -170,7 +178,7 @@ def process_protocol(protocol_path):
         commands = file.readlines()
         step_number = 0
         data_saved = False
-        folder_name = f"data_{time.strftime('%Y%m%d_%H%M%S')}"
+        folder_name = None
 
     for command in commands:
         command = command.strip()
@@ -245,12 +253,23 @@ def process_protocol(protocol_path):
                 raise FileNotFoundError(f"Calibration file not found: {file_path}")
             motor.load_calibration(file_path)
         elif command.startswith("Save_as"):
-            folder_name = command.split(":")[1].strip()
+            save_as_string = command.split(":")[1].strip()
+            #check if save_as_string is in redis_client.get(save_as_string) if it is not then make folder_name equal to it
+            if redis_client.get(save_as_string) is None:
+                folder_name = save_as_string
+            elif redis_client.get(save_as_string) and len(
+                    redis_client.get(save_as_string).replace(' ', '')) == 4 and redis_client.get(
+                    save_as_string).replace(' ', '').isdigit():
+                animal_id= redis_client.get(save_as_string).replace(' ', '')
+                redis_client.set("animal_ID", animal_id)
+                folder_name = animal_id
+            elif redis_client.get(save_as_string) is not None:
+                folder_name = redis_client.get(save_as_string)
         elif command.startswith("calibrate"):
             data_saved = True
             motor.calibrate()
         elif command.startswith("wait"):
-            wait_time = int(command.split(":")[1])
+            wait_time = string_to_value_checker(command.split(":")[1])
             wait(wait_time)
         elif command.startswith("Wait_for_user_input"):
             wait_for_user_input(command)
@@ -267,6 +286,7 @@ def process_protocol(protocol_path):
 
     # end_all_commands()
     redis_client.set("current_protocol_out", "")
+    redis_client.set("current_step", "")
 # Add save as file name ability
 
 def calibrate():
@@ -297,6 +317,7 @@ def move_until_force_or_angle(force, angle):
 
 
 def wait(wait_time):
+
     print(f"Waiting for {wait_time} seconds")
     current_csv_time= motor.read_first_value_in_last_row()
     timestep= 0.03
