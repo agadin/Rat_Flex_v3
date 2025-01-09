@@ -363,7 +363,6 @@ def start_server():
             protocol_path = redis_client.get("protocol_trigger")
             print(f"Checking for protocol trigger: {protocol_path}")
             shared_memory_error=redis_client.get("shared_memory_error")
-            print(f"Checking for shared memory error: {shared_memory_error}")
             redis_client.set("calibration_Level",motor.check_if_calibrated())
 
             if shared_memory_error == "1":

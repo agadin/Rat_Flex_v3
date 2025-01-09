@@ -81,9 +81,10 @@ class StepperMotor:
     def create_shared_memory(self):
 
         try:
-            self.shm.close()
-            self.shm.unlink()
-            time.sleep(0.2)
+            if self.shm is not None:
+                self.shm.close()
+                self.shm.unlink()
+                time.sleep(0.2)
         except Exception as e:
             print(f"Error closing shared memory: {e}")
         shm_name = 'shared_data'
