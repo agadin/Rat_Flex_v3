@@ -31,14 +31,7 @@ except FileNotFoundError:
     print("Shared memory not found. Creating new shared memory block.")
     redis_client.set("shared_memory_error", 1)
     time.sleep(1)
-    # remove shared_memory.dat file if it exists
-    print("Shared memory not found. Creating new shared memory block.")
-    redis_client.set("shared_memory_error", 1)
-    time.sleep(1)
     shm = sm.SharedMemory(name=shm_name)
-
-# success message
-print("Shared memory block connected to successfully.")
 
 def read_shared_memory():
     try:
@@ -83,6 +76,93 @@ import customtkinter as ctk
 from tkinter import Scrollbar
 from tkinter import Frame
 
+
+class ProtocolViewer(ctk.CTkFrame):
+    def __init__(self, master, protocol_folder, protocol_var, redis_client, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+
+        self.protocol_folder = protocol_folder
+        self.protocol_var = protocol_var
+        self.redis_client = redis_client
+
+        self.protocol_steps = []  # List of parsed protocol steps
+        self.step_widgets = []  # References to step widgets for updating opacity
+
+        self.scrollable_frame = ctk.CTkScrollableFrame(self, width=400, height=600)
+        self.scrollable_frame.pack(fill="both", expand=True)
+
+        # Dynamically update current step opacity
+        self.update_current_step()
+
+    def load_protocol(self):
+        # Clear existing steps
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+        self.step_widgets = []
+        self.protocol_steps = []
+
+        # Get the protocol path
+        protocol_path = os.path.join(self.protocol_folder, self.protocol_var.get())
+
+        # Read and parse the protocol
+        if os.path.exists(protocol_path):
+            with open(protocol_path, "r") as f:
+                lines = f.readlines()
+
+            for i, line in enumerate(lines):
+                step_num = i + 1
+                step_details = self.parse_step(line.strip())
+                self.protocol_steps.append((step_num, *step_details))
+                self.create_step_widget(step_num, *step_details)
+
+    def parse_step(self, line):
+        """Parse a protocol step from the line."""
+        if ":" in line:
+            step_name, details = line.split(":", 1)
+        else:
+            step_name, details = line, ""
+        return step_name, details.strip()
+
+    def create_step_widget(self, step_num, step_name, details):
+        """Create a rounded box for a protocol step."""
+        frame = ctk.CTkFrame(self.scrollable_frame, corner_radius=10)
+        frame.pack(fill="x", padx=5, pady=5)
+
+        # Step number
+        step_num_label = ctk.CTkLabel(frame, text=f"Step {step_num}", width=10)
+        step_num_label.grid(row=0, column=0, padx=5, pady=5)
+
+        # Step name and details
+        step_name_label = ctk.CTkLabel(frame, text=f"{step_name}: {details}", anchor="w")
+        step_name_label.grid(row=0, column=1, sticky="w", padx=5, pady=5)
+
+        # Checkbox
+        checkbox_var = ctk.BooleanVar(value=True)
+        checkbox = ctk.CTkCheckBox(
+            frame,
+            text="",
+            variable=checkbox_var,
+            command=lambda: self.redis_client.set(f"checkedbox_{step_num}", int(checkbox_var.get()))
+        )
+        checkbox.grid(row=0, column=2, padx=5, pady=5)
+
+        self.step_widgets.append((frame, step_num))
+
+    def update_current_step(self):
+        """Update opacity dynamically based on the current step."""
+        try:
+            current_step = self.redis_client.get("current_step")
+            current_step = int(current_step) if current_step else None
+        except (ValueError, TypeError):
+            current_step = None
+
+        for frame, step_num in self.step_widgets:
+            if current_step == step_num:
+                frame.configure(opacity=0.9)
+            else:
+                frame.configure(opacity=0.6)
+
+        self.after(500, self.update_current_step)  # Check every 500ms
 
 
 
@@ -152,9 +232,6 @@ class App(ctk.CTk):
         self.protocol_dropdown = ctk.CTkComboBox(self.sidebar_frame, values=self.protocol_files, variable=self.protocol_var)
         self.protocol_dropdown.pack(pady=10)
 
-        # Add trace to reload protocol viewer on protocol change
-        self.protocol_var.trace("w", lambda *args: self.create_protocol_viewer())
-
         self.run_button = ctk.CTkButton(self.sidebar_frame, text="Run Protocol", command=self.run_protocol)
         self.run_button.pack(pady=10)
 
@@ -219,75 +296,13 @@ class App(ctk.CTk):
         self.update_graph_view("Angle v Force")  # Initialize with default view
 
         # Add Protocol Viewer below the Clear button
-        self.create_protocol_viewer()
-
-    def create_protocol_viewer(self):
-        """Create or update the scrollable protocol viewer."""
-        # Clear existing protocol viewer if it exists
-        if hasattr(self, "protocol_frame") and self.protocol_frame.winfo_exists():
-            self.protocol_frame.destroy()
-
-        # Create a new protocol viewer
-        self.protocol_frame = ctk.CTkScrollableFrame(self.main_frame, width=400, height=600)
-        self.protocol_frame.pack(fill="both", expand=True, pady=10)
-
-        protocol_path = os.path.join(self.protocol_folder, self.protocol_var.get())
-        if os.path.exists(protocol_path):
-            with open(protocol_path, "r") as f:
-                lines = f.readlines()
-
-            for i, line in enumerate(lines):
-                step_num = i + 1
-                step_details = self.parse_step(line.strip())
-
-                # Create frame for each protocol step
-                step_frame = ctk.CTkFrame(self.protocol_frame, corner_radius=10)
-                step_frame.pack(fill="x", padx=5, pady=5)
-
-                # Step number label
-                step_num_label = ctk.CTkLabel(step_frame, text=f"Step {step_num}", width=10)
-                step_num_label.grid(row=0, column=0, padx=5, pady=5)
-
-                # Step name and details
-                step_name_label = ctk.CTkLabel(step_frame, text=f"{step_details[0]}: {step_details[1]}", anchor="w")
-                step_name_label.grid(row=0, column=1, sticky="w", padx=5, pady=5)
-
-                # Checkbox
-                checkbox_var = ctk.BooleanVar(value=True)
-                checkbox = ctk.CTkCheckBox(
-                    step_frame,
-                    text="",
-                    variable=checkbox_var,
-                    command=lambda num=step_num: redis_client.set(f"checkedbox_{num}", int(checkbox_var.get()))
-                )
-                checkbox.grid(row=0, column=2, padx=5, pady=5)
-
-        self.update_protocol_opacity(self.protocol_frame)
-
-    def parse_step(self, line):
-        """Parse a protocol step from a line."""
-        if ":" in line:
-            step_name, details = line.split(":", 1)
-        else:
-            step_name, details = line, ""
-        return step_name.strip(), details.strip()
-
-    def update_protocol_opacity(self, protocol_frame):
-        """Update opacity of the protocol steps dynamically."""
-        try:
-            current_step = redis_client.get("current_step")
-            current_step = int(current_step) if current_step else None
-        except (ValueError, TypeError):
-            current_step = None
-
-        for step_frame in protocol_frame.winfo_children():
-            step_num = int(step_frame.winfo_name().split("_")[-1])
-            if current_step == step_num:
-                step_frame.configure(opacity=0.9)
-            else:
-                step_frame.configure(opacity=0.6)
-
-        self.after(500, lambda: self.update_protocol_opacity(protocol_frame))
+        self.protocol_viewer = ProtocolViewer(
+            self.main_frame,
+            protocol_folder=self.protocol_folder,
+            protocol_var=self.protocol_var,
+            redis_client= redis_client
+        )
+        self.protocol_viewer.pack(fill="both", expand=True, pady=10)
 
 
     def create_step_box(self, step_number, command):
