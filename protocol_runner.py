@@ -287,7 +287,7 @@ def move_to_angle(angle):
 
 def move_to_force(direction, max_force, min_angle=0, max_angle=180):
     global motor
-    motor.move_until_force(direction,max_force, min_angle, max_angle)
+    motor.move_until_force(int(direction),max_force, min_angle, max_angle)
     time.sleep(1)  # Simulate the action
 
 
