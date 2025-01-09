@@ -82,7 +82,6 @@ class ProtocolViewer(ctk.CTkFrame):
 
         self.protocol_folder = protocol_folder
         self.protocol_var = protocol_var
-        self.redis_client = redis_client
 
         self.protocol_steps = []  # List of parsed protocol steps
         self.step_widgets = []  # References to step widgets for updating opacity
@@ -299,7 +298,7 @@ class App(ctk.CTk):
             self.main_frame,
             protocol_folder=self.protocol_folder,
             protocol_var=self.protocol_var,
-            redis_client=self.redis_client
+            redis_client=redis_client
         )
         self.protocol_viewer.pack(fill="both", expand=True, pady=10)
 
