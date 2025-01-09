@@ -293,7 +293,7 @@ class App(ctk.CTk):
 
         self.update_graph_view("Angle v Force")  # Initialize with default view
 
-        print(self.protocol_var)
+        print( "protocol: ", self.protocol_var)
         self.protocol_viewer = ProtocolViewer(
             self.main_frame,
             protocol_folder=self.protocol_folder,
