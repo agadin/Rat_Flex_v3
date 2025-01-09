@@ -36,6 +36,9 @@ except FileNotFoundError:
         os.remove('shared_memory.dat')
     except FileNotFoundError:
         pass
+    print("Shared memory not found. Creating new shared memory block.")
+    redis_client.set("shared_memory_error", 1)
+    time.sleep(1)
     shm = sm.SharedMemory(name=shm_name)
 
 def read_shared_memory():
