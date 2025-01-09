@@ -188,7 +188,7 @@ class StepperMotor:
 
         # calulcate idle force over 5 seconds at a rate of 30Hz. take caverage of all values
         idle_all = []
-        for i in range(150):
+        for i in range(50):
             idle_all.append(self.ForceSensor.read_force())
             time.sleep(0.03)
         self.idle_force = sum(idle_all) / len(idle_all)
