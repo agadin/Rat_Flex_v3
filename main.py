@@ -303,7 +303,7 @@ class App(ctk.CTk):
         self.protocol_viewer.pack(fill="both", expand=True, pady=10)
 
         # Trace for protocol_var to update ProtocolViewer when protocol changes
-        # self.protocol_var.trace("w", lambda *args: self.protocol_viewer.load_protocol(self.protocol_var.get()))
+        self.protocol_var.trace("w", lambda *args: Thread(target=self.protocol_viewer.load_protocol, args=(self.protocol_var.get(),)).start())
 
 
     def create_step_box(self, step_number, command):
