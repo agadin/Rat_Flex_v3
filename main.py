@@ -1,5 +1,6 @@
+import shutil
+import seaborn as sns
 import customtkinter as ctk
-import socket
 import os
 import redis
 import multiprocessing.shared_memory as sm
@@ -11,7 +12,11 @@ from collections import defaultdict
 from threading import Thread
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from tkinter import Canvas, Frame, Scrollbar
+from tkinter import Canvas, Frame, Scrollbar, filedialog
+import imageio
+from PIL import Image, ImageTk
+from tkinter import StringVar
+import pandas as pd
 
 # Initialize CustomTkinter
 ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
@@ -71,7 +76,6 @@ def run_calibration():
 
 
 import os
-import customtkinter as ctk
 from tkinter import Scrollbar
 from tkinter import Frame
 
@@ -168,6 +172,8 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        self.show_boot_animation()
+
         # Stationary variables
         self.angle_special = []
         self.force_special = []
@@ -203,6 +209,40 @@ class App(ctk.CTk):
         self.settings_frame = None
 
         self.show_home()
+
+    def show_boot_animation(self):
+        video_label = ctk.CTkLabel(self)
+        video_label.pack(expand=True, fill="both")
+
+        setup_status = StringVar()
+        setup_status.set("Initializing...")
+
+        def play_video():
+            video_path = "./img/bootup-1.mp4"
+            video = imageio.get_reader(video_path)
+
+            for frame in video:
+                image = Image.fromarray(frame)
+                image = ImageTk.PhotoImage(image)
+                video_label.configure(image=image)
+                video_label.image = image
+                self.update()
+                time.sleep(1 / video.get_meta_data()["fps"])
+
+            video_label.destroy()
+
+        self.after(0, play_video)
+
+        # Overlay text
+        overlay_text = ctk.CTkLabel(self, textvariable=setup_status, font=("Arial", 24), fg_color="transparent")
+        overlay_text.place(relx=0.5, rely=0.5, anchor="center")
+
+        # Simulate setup steps
+        setup_steps = ["Creating shared memory...", "Connecting to Redis...", "Loading configurations..."]
+        for step in setup_steps:
+            setup_status.set(step)
+            self.update()
+            time.sleep(2)  # Simulate time taken for each step
 
     def clear_content_frame(self):
         for widget in self.content_frame.winfo_children():
@@ -347,17 +387,310 @@ class App(ctk.CTk):
         self.clear_content_frame()
         ctk.CTkLabel(self.content_frame, text="Protocol Builder (Coming Soon)").pack(pady=20)
 
-    def show_inspector(self):
-        self.clear_content_frame()
-        ctk.CTkLabel(self.content_frame, text="Inspector - Data Viewer").pack(pady=10)
+    def get_trials(self):
+        data_dir = "./data"
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+        return [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))] or [
+            "No Trials Found"]
 
-        try:
-            with open("data.csv", "r") as file:
-                data = file.readlines()
-                for line in data:
-                    ctk.CTkLabel(self.content_frame, text=line.strip()).pack(anchor="w")
-        except FileNotFoundError:
-            ctk.CTkLabel(self.content_frame, text="data.csv not found.").pack(pady=10)
+    def no_trials_popup(self):
+        # Create a popup window
+        popup = ctk.CTkToplevel(self)
+        popup.title("No Trials Found")
+        popup.geometry("400x200")
+
+        label = ctk.CTkLabel(popup, text="No trials found. What would you like to do?", font=("Arial", 14))
+        label.pack(pady=20)
+
+        # Return to Home Page button
+        return_button = ctk.CTkButton(popup, text="Return to Home Page",
+                                      command=lambda: [popup.destroy(), self.show_home()])
+        return_button.pack(pady=10)
+
+        # Upload Data button
+        upload_button = ctk.CTkButton(popup, text="Upload Data", command=lambda: [popup.destroy(), self.upload_csv()])
+        upload_button.pack(pady=10)
+
+    import shutil
+
+    def upload_csv(self):
+        # Open file browser to select a CSV file
+        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        if not file_path:
+            return  # User canceled the file dialog
+
+        # Create the imported folder inside the data directory
+        imported_folder = os.path.join("./data", "imported")
+        if not os.path.exists(imported_folder):
+            os.makedirs(imported_folder)
+
+        # Clear out the imported folder
+        for file in os.listdir(imported_folder):
+            file_path_to_remove = os.path.join(imported_folder, file)
+            os.remove(file_path_to_remove)
+
+        # Copy the selected CSV file into the imported folder
+        new_file_path = os.path.join(imported_folder, os.path.basename(file_path))
+        shutil.copy(file_path, new_file_path)
+
+        # Set the dropdown to "imported"
+        self.trial_dropdown.set("imported")
+        self.load_trial("imported")
+
+    def load_trial(self, selected_trial):
+        if selected_trial == "No Trials Found":
+            ctk.messagebox.showwarning("Warning", "No trials found. Please run a protocol or upload manually.")
+            return
+        trial_path = os.path.join("./data", selected_trial)
+        csv_file = next((f for f in os.listdir(trial_path) if f.endswith('.csv')), None)
+        if not csv_file:
+            ctk.messagebox.showerror("Error", "CSV file not found in the selected trial folder.")
+            return
+        headers = ['Time', 'Angle', 'Force', 'raw_Force', 'Motor_State', 'Direction', 'Protocol_Step']
+
+        data = pd.read_csv('data.csv', header=None, names=headers, na_filter=False)
+
+        # if there are any 6 column rows, we will need to adjust the raw_Force values
+
+        if data['Protocol_Step'].str.len().eq(0).any():
+            # Identify rows with 6 or 7 columns
+            data['Row_Type'] = data['Protocol_Step'].apply(lambda x: '6_column' if x == '' else '7_column')
+
+            # Convert 'Force' and 'raw_Force' to numeric
+            data['Force'] = pd.to_numeric(data['Force'], errors='coerce')
+            data['raw_Force'] = pd.to_numeric(data['raw_Force'], errors='coerce')
+
+            # Function to adjust the 6-column rows
+            def fix_data_rows(data):
+                fixed_data = []
+                last_diff = 0  # Difference between Force and raw_Force for the last 7-column row
+
+                for _, row in data.iterrows():
+                    if row['Row_Type'] == '7_column':
+                        # Update the difference for 7-column rows
+                        last_diff = row['raw_Force'] - row['Force']
+                        fixed_data.append(row)
+                    elif row['Row_Type'] == '6_column':
+                        # Adjust the 6-column row
+                        new_row = row.copy()
+                        # Insert the adjusted raw_Force value
+                        new_row['raw_Force'] = new_row['Force'] + last_diff
+                        fixed_data.append(new_row)
+
+                return pd.DataFrame(fixed_data)
+
+            # Function to fix rows with missing columns
+            def fix_rows(data):
+                fixed_data = []
+                for _, row in data.iterrows():
+                    if row['Row_Type'] == '6_column':
+                        new_row = row.copy()
+                        new_row['Protocol_Step'] = new_row['Direction']
+                        new_row['Direction'] = new_row['Motor_State']
+                        fixed_data.append(new_row)
+                    else:
+                        fixed_data.append(row)
+                return pd.DataFrame(fixed_data)
+
+            # Fix the data
+            fixed_data = fix_data_rows(data)
+            fixed_data = fix_rows(fixed_data)
+
+            # Save the fixed data to a new CSV file
+            fixed_data.to_csv('fixed_data.csv', index=False)
+        else:
+            fixed_data = data
+
+        self.data = fixed_data
+        self.display_metadata(selected_trial)
+        self.plot_figures()
+
+    def display_metadata(self, folder_name):
+        parts = folder_name.split("_")
+        if len(parts) >= 4:
+            timestamp, provided_name, animal_id, trial_number = parts[0], parts[1], parts[2], parts[3]
+            metadata = f"Timestamp: {timestamp}\nProvided Name: {provided_name}\nAnimal ID: {animal_id}\nTrial Number: {trial_number}"
+        else:
+            metadata = "Invalid folder name format."
+        self.metadata_label.configure(text=metadata)
+
+    def add_plot(self, fig, row, col):
+        canvas = FigureCanvasTkAgg(fig, self.canvas_frame)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+        canvas.draw()
+
+    def plot_figures(self):
+        # Clear previous plots
+        for widget in self.canvas_frame.winfo_children():
+            widget.destroy()
+
+        if self.data is not None:
+            angle = self.data['Angle']
+            force = self.data['Force']
+            raw_force = self.data['raw_Force']
+            protocol_step = pd.to_numeric(self.data['Protocol_Step'], errors='coerce')
+
+            # Create a list of figures and titles
+            figures = []
+
+            # Plot 1: Angle vs. Force
+            fig1, ax1 = plt.subplots(figsize=(5, 4))
+            ax1.plot(angle, force, label='Force', marker='o', linestyle='-', color='b')
+            ax1.set_title('Angle vs. Force', fontsize=12)
+            ax1.set_xlabel('Angle (degrees)', fontsize=10)
+            ax1.set_ylabel('Force (N)', fontsize=10)
+            ax1.legend(fontsize=8)
+            ax1.grid(True)
+            figures.append(fig1)
+
+            # Plot 2: Angle vs. Force and raw_Force
+            fig2, ax2 = plt.subplots(figsize=(5, 4))
+            ax2.plot(angle, force, label='Force', marker='o', linestyle='-', color='b')
+            ax2.plot(angle, raw_force, label='raw_Force', marker='x', linestyle='--', color='r')
+            ax2.set_title('Angle vs. Force and raw_Force', fontsize=12)
+            ax2.set_xlabel('Angle (degrees)', fontsize=10)
+            ax2.set_ylabel('Force (N)', fontsize=10)
+            ax2.legend(fontsize=8)
+            ax2.grid(True)
+            figures.append(fig2)
+
+            # Plot 3: Angle vs. Force with Protocol_Step 1 in red
+            fig3, ax3 = plt.subplots(figsize=(5, 4))
+            ax3.plot(angle[protocol_step == 1], force[protocol_step == 1], color='red', marker='o',
+                     label='Protocol_Step 1', zorder=2)
+            ax3.plot(angle[protocol_step != 1], force[protocol_step != 1], color='blue', marker='o',
+                     label='Other Protocol_Steps', zorder=1)
+            ax3.set_title('Angle vs. Force', fontsize=12)
+            ax3.set_xlabel('Angle (degrees)', fontsize=10)
+            ax3.set_ylabel('Force (N)', fontsize=10)
+            ax3.legend(fontsize=8)
+            ax3.grid(True)
+            figures.append(fig3)
+
+            # Plot 4: Bar graph of Protocol_Step counts
+            filtered_data = self.data[(protocol_step != 1) & (protocol_step % 2 != 0)]
+            protocol_counts = filtered_data['Protocol_Step'].value_counts().sort_index()
+            fig4, ax4 = plt.subplots(figsize=(5, 4))
+            protocol_counts.plot(kind='bar', ax=ax4, color='green', edgecolor='black')
+            ax4.set_title('Count of Rows for Odd Protocol_Steps', fontsize=12)
+            ax4.set_xlabel('Protocol_Step', fontsize=10)
+            ax4.set_ylabel('Count', fontsize=10)
+            ax4.grid(axis='y', linestyle='--', alpha=0.7)
+            figures.append(fig4)
+
+            # Plot 5: Heatmap of Force vs. Angle
+            fig5, ax5 = plt.subplots(figsize=(5, 4))
+            heatmap_data = self.data.pivot_table(values='Force', index='Angle', aggfunc='mean')
+            sns.heatmap(heatmap_data, cmap='coolwarm', cbar_kws={'label': 'Force (N)'}, ax=ax5)
+            ax5.set_title('Heatmap of Force vs. Angle', fontsize=12)
+            figures.append(fig5)
+
+            # Plot 6: Histogram of Angles
+            fig6, ax6 = plt.subplots(figsize=(5, 4))
+            ax6.hist(angle, bins=30, color='skyblue', edgecolor='black')
+            ax6.set_title('Histogram of Angles', fontsize=12)
+            ax6.set_xlabel('Angle (degrees)', fontsize=10)
+            ax6.set_ylabel('Frequency', fontsize=10)
+            ax6.grid(axis='y', linestyle='--', alpha=0.7)
+            figures.append(fig6)
+
+            # Display the plots in a 3x2 grid
+            for i, fig in enumerate(figures):
+                row = i // 3
+                col = i % 3
+                self.add_plot(fig, row, col)
+
+    def add_slider(self):
+        if self.slider:
+            self.slider.destroy()
+
+        min_step, max_step = int(self.data['Protocol_Step'].min()), int(self.data['Protocol_Step'].max())
+        self.slider = ctk.CTkSlider(self.canvas_frame, from_=min_step, to=max_step,
+                                    number_of_steps=max_step - min_step + 1, command=self.update_cropped_data)
+        self.slider.pack(pady=20)
+
+        # Enable download button
+        self.download_button.configure(state="normal")
+
+    def update_cropped_data(self, value):
+        step = int(value)
+        self.cropped_data = self.data[self.data['Protocol_Step'] == step]
+
+    def save_all_figures(self):
+        if self.trial_path and self.data is not None:
+            fig_path = os.path.join(self.trial_path, "figure1.png")
+            plt.savefig(fig_path)
+            ctk.messagebox.showinfo("Success", f"All figures saved to {self.trial_path}")
+        else:
+            ctk.messagebox.showwarning("Warning", "No trial loaded or data available.")
+
+    def download_cropped_data(self):
+        if self.cropped_data is not None:
+            save_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
+            if save_path:
+                self.cropped_data.to_csv(save_path, index=False)
+                ctk.messagebox.showinfo("Success", f"Cropped data saved to {save_path}")
+        else:
+            ctk.messagebox.showwarning("Warning", "No cropped data available.")
+    def show_inspector(self):
+        # create a side bar that has a drop down menu for the user to select the trial they want to inspect. The trials will be read by reading the folders in ./data directory. If there are no trials in the directory the user will be prompted by a pop up window to got to the home page to run a protocol or can manually select one which will open up a file path dialog box for them to select the trial they want to inspect. Automatically create the figures for the trial and display them in the main frame
+         # On the side bar also have a mannual upload box, save all figures button. Add a button if the slider is currently modified that says download cropped data. If slider is not modified, then the button will be greyed out. This button will trigger a popup that will have the default new file name as the folder name but with _cropped appended to the end. The user can change the name if they want. The .csv should be saved to the trial folder
+
+        # once a trial has been selected, open the .csv file and read the data. See logic below on what figures to produce and how to handle the data. At the top of the main frame parse date, animal_ID, trial #, and provided_name (if there). The folder name format will either be f"{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}" or f"./data/{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}". Neatly display this information. Below that Neatly format the figures on the main frame, place a save figure button for each graph (which saves the figure to the current folder selected in ./data). At the bottom of the main frame make a dragable slider that allows the user to set the start and end data displayed. Have this update everything automtaically. In the data the final column is the step column and each step nin the slider should corespond to a step. Make sure to plot an axis for this slider.
+        # Get available trials
+            self.clear_content_frame()  # Clear existing content in the frame
+
+            trials = self.get_trials()
+
+            # If no trials are found, display the popup
+            if not trials or "No Trials Found" in trials:
+                self.no_trials_popup()
+                return
+            # Create a frame for the inspector UI inside the content frame
+            inspector_frame = ctk.CTkFrame(self.content_frame, corner_radius=0)
+            inspector_frame.pack(fill="both", expand=True)
+
+            # Sidebar
+            sidebar = ctk.CTkFrame(inspector_frame, width=200, corner_radius=0)
+            sidebar.pack(side="left", fill="y")
+
+            sidebar_label = ctk.CTkLabel(sidebar, text="Inspector Controls", font=("Arial", 16, "bold"))
+            sidebar_label.pack(pady=20)
+
+            # Dropdown for trial selection
+            trials = self.get_trials()  # Function to get available trials
+            trial_dropdown = ctk.CTkOptionMenu(sidebar, values=trials, command=self.load_trial)
+            trial_dropdown.pack(pady=10)
+
+            # Upload CSV button
+            upload_button = ctk.CTkButton(sidebar, text="Upload CSV", command=self.upload_csv)
+            upload_button.pack(pady=10)
+
+            # Save all figures button
+            save_all_button = ctk.CTkButton(sidebar, text="Save All Figures", command=self.save_all_figures)
+            save_all_button.pack(pady=10)
+
+            # Download cropped data button
+            self.download_button = ctk.CTkButton(sidebar, text="Download Cropped Data", state="disabled",
+                                                 command=self.download_cropped_data)
+            self.download_button.pack(pady=10)
+
+            # Main content area
+            main_content = ctk.CTkFrame(inspector_frame, corner_radius=0)
+            main_content.pack(side="right", fill="both", expand=True)
+
+            # Metadata display
+            self.metadata_label = ctk.CTkLabel(main_content, text="", font=("Arial", 14))
+            self.metadata_label.pack(pady=10)
+
+            # Canvas frame for plots
+            self.canvas_frame = ctk.CTkFrame(main_content)
+            self.canvas_frame.pack(fill="both", expand=True)
+
+            # Slider for data cropping
+            self.slider = None  # Initialize slider for cropping
 
     def show_settings(self):
         self.clear_content_frame()

@@ -16,7 +16,7 @@ redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 motor = None
 
 def create_folder_with_files(provided_name=None, special=False):
-    # Create the folder
+
     try:
         animal_id = redis_client.get("animal_ID")
         if animal_id is None:
@@ -27,16 +27,28 @@ def create_folder_with_files(provided_name=None, special=False):
     timestamp = datetime.now().strftime("%Y%m%d")
     trial_number = 1
 
-    original_folder_name = f"{timestamp}_{animal_id}_{trial_number:02d}"
-
-    folder_name= original_folder_name
-
-    if os.path.exists(f"{timestamp}_{animal_id}_{trial_number:02d}"):
-        while os.path.exists(folder_name):
-            trial_number += 1
-            folder_name = f"{timestamp}_{animal_id}_{trial_number:02d}"
-    else:
+    if provided_name is not None:
+        original_folder_name = f"{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}"
         folder_name = original_folder_name
+        if os.path.exists(f"./data/{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}"):
+            while os.path.exists(folder_name):
+                trial_number += 1
+                folder_name = f"./data/{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}"
+        else:
+            folder_name = original_folder_name
+    else:
+        original_folder_name = f"{timestamp}_{animal_id}_{trial_number:02d}"
+        folder_name = original_folder_name
+        if os.path.exists(f"./data/{timestamp}_{animal_id}_{trial_number:02d}"):
+            while os.path.exists(folder_name):
+                trial_number += 1
+                folder_name = f"./data/{timestamp}_{animal_id}_{trial_number:02d}"
+        else:
+            folder_name = original_folder_name
+
+    exact_folder_name= folder_name.replace("./data/", "")
+
+
 
     # create the folder
     if not os.path.exists(folder_name):
@@ -65,12 +77,9 @@ def create_folder_with_files(provided_name=None, special=False):
 
     # Copy and rename `data.csv`
     data_csv_path = 'data.csv'
-    renamed_csv_path = os.path.join(folder_name, f"{folder_name}.csv")
+    renamed_csv_path = os.path.join(folder_name, f"{exact_folder_name}.csv")
     if os.path.exists(data_csv_path):
-        if provided_name is not None:
-            shutil.copy(data_csv_path, os.path.join(folder_name, f"{provided_name}.txt"))
-        else:
-            shutil.copy(data_csv_path, os.path.join(folder_name, 'calibration.txt'))
+        shutil.copy(data_csv_path, os.path.join(folder_name, f"{exact_folder_name}.csv"))
     else:
         print("Error: `data.csv` not found.")
 
@@ -262,7 +271,6 @@ def process_protocol(protocol_path):
                     save_as_string).replace(' ', '').isdigit():
                 animal_id= redis_client.get(save_as_string).replace(' ', '')
                 redis_client.set("animal_ID", animal_id)
-                folder_name = animal_id
             elif redis_client.get(save_as_string) is not None:
                 folder_name = redis_client.get(save_as_string)
         elif command.startswith("calibrate"):

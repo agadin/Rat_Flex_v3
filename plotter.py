@@ -8,51 +8,56 @@ headers = ['Time', 'Angle', 'Force', 'raw_Force', 'Motor_State', 'Direction', 'P
 # Read the CSV file
 data = pd.read_csv('data.csv', header=None, names=headers, na_filter=False)
 
-# Identify rows with 6 or 7 columns
-data['Row_Type'] = data['Protocol_Step'].apply(lambda x: '6_column' if x == '' else '7_column')
+# if there are any 6 column rows, we will need to adjust the raw_Force values
 
-# Convert 'Force' and 'raw_Force' to numeric
-data['Force'] = pd.to_numeric(data['Force'], errors='coerce')
-data['raw_Force'] = pd.to_numeric(data['raw_Force'], errors='coerce')
+if data['Protocol_Step'].str.len().eq(0).any():
+    # Identify rows with 6 or 7 columns
+    data['Row_Type'] = data['Protocol_Step'].apply(lambda x: '6_column' if x == '' else '7_column')
 
-# Function to adjust the 6-column rows
-def fix_data_rows(data):
-    fixed_data = []
-    last_diff = 0  # Difference between Force and raw_Force for the last 7-column row
+    # Convert 'Force' and 'raw_Force' to numeric
+    data['Force'] = pd.to_numeric(data['Force'], errors='coerce')
+    data['raw_Force'] = pd.to_numeric(data['raw_Force'], errors='coerce')
 
-    for _, row in data.iterrows():
-        if row['Row_Type'] == '7_column':
-            # Update the difference for 7-column rows
-            last_diff = row['raw_Force'] - row['Force']
-            fixed_data.append(row)
-        elif row['Row_Type'] == '6_column':
-            # Adjust the 6-column row
-            new_row = row.copy()
-            # Insert the adjusted raw_Force value
-            new_row['raw_Force'] = new_row['Force'] + last_diff
-            fixed_data.append(new_row)
+    # Function to adjust the 6-column rows
+    def fix_data_rows(data):
+        fixed_data = []
+        last_diff = 0  # Difference between Force and raw_Force for the last 7-column row
 
-    return pd.DataFrame(fixed_data)
+        for _, row in data.iterrows():
+            if row['Row_Type'] == '7_column':
+                # Update the difference for 7-column rows
+                last_diff = row['raw_Force'] - row['Force']
+                fixed_data.append(row)
+            elif row['Row_Type'] == '6_column':
+                # Adjust the 6-column row
+                new_row = row.copy()
+                # Insert the adjusted raw_Force value
+                new_row['raw_Force'] = new_row['Force'] + last_diff
+                fixed_data.append(new_row)
 
-# Function to fix rows with missing columns
-def fix_rows(data):
-    fixed_data = []
-    for _, row in data.iterrows():
-        if row['Row_Type'] == '6_column':
-            new_row = row.copy()
-            new_row['Protocol_Step'] = new_row['Direction']
-            new_row['Direction'] = new_row['Motor_State']
-            fixed_data.append(new_row)
-        else:
-            fixed_data.append(row)
-    return pd.DataFrame(fixed_data)
+        return pd.DataFrame(fixed_data)
 
-# Fix the data
-fixed_data = fix_data_rows(data)
-fixed_data = fix_rows(fixed_data)
+    # Function to fix rows with missing columns
+    def fix_rows(data):
+        fixed_data = []
+        for _, row in data.iterrows():
+            if row['Row_Type'] == '6_column':
+                new_row = row.copy()
+                new_row['Protocol_Step'] = new_row['Direction']
+                new_row['Direction'] = new_row['Motor_State']
+                fixed_data.append(new_row)
+            else:
+                fixed_data.append(row)
+        return pd.DataFrame(fixed_data)
 
-# Save the fixed data to a new CSV file
-fixed_data.to_csv('fixed_data.csv', index=False)
+    # Fix the data
+    fixed_data = fix_data_rows(data)
+    fixed_data = fix_rows(fixed_data)
+
+    # Save the fixed data to a new CSV file
+    fixed_data.to_csv('fixed_data.csv', index=False)
+else:
+    fixed_data = data
 
 # Extract relevant columns
 angle = fixed_data['Angle']
