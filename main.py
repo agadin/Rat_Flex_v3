@@ -17,6 +17,7 @@ import imageio
 from PIL import Image, ImageTk
 from tkinter import StringVar
 import pandas as pd
+import cv2
 
 # Initialize CustomTkinter
 ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
@@ -218,16 +219,22 @@ class App(ctk.CTk):
         setup_status.set("Initializing...")
 
         def play_video():
-            video_path = "./img/bootup-1.mp4"
-            video = imageio.get_reader(video_path)
+            video_path = "./img/STL_Boot_2.mp4"
 
-            for frame in video:
-                image = Image.fromarray(frame)
+            video = cv2.VideoCapture(video_path)
+
+            while video.isOpened():
+                ret, frame = video.read()
+                if not ret:
+                    break
+                image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                 image = ImageTk.PhotoImage(image)
                 video_label.configure(image=image)
                 video_label.image = image
                 self.update()
-                time.sleep(1 / video.get_meta_data()["fps"])
+                time.sleep(1 / video.get(cv2.CAP_PROP_FPS))
+
+            video.release()
 
             video_label.destroy()
 
