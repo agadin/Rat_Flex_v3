@@ -245,6 +245,7 @@ class App(ctk.CTk):
                 ("Creating shared memory...", 2),
                 ("Connecting to Redis...", 4),
                 ("Loading configurations...", 6),
+                ("", 6),
             ]
 
             current_step_index = 0
@@ -276,7 +277,7 @@ class App(ctk.CTk):
                 canvas.delete("text")
                 canvas.create_text(
                     canvas.winfo_width() // 2,
-                    canvas.winfo_height() // 2,
+                    (canvas.winfo_height() // 2)+100,
                     text=setup_status.get(),
                     font=("Arial", 24),
                     fill="white",
