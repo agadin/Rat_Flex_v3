@@ -263,7 +263,7 @@ class App(ctk.CTk):
         # Overlay text with no background
         overlay_text = ctk.CTkLabel(
             self, textvariable=setup_status, font=("Arial", 24),
-            text_color="white", fg_color=None, bg_color=None
+            text_color="white", fg_color=None, bg_color="transparent"
         )
         overlay_text.place(relx=0.5, rely=0.5, anchor="center")
 
