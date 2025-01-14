@@ -234,7 +234,7 @@ class App(ctk.CTk):
 
         # Variable for overlay text
         setup_status = StringVar()
-        setup_status.set("Initializing...")
+        setup_status.set("")
 
         # Function to play video
         def play_video():
