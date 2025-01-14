@@ -186,15 +186,14 @@ class App(ctk.CTk):
 
         # Window configuration
         self.title("Stepper Motor Control")
-        self.geometry("1920x1080")
+        self.resizable(False, False)
+        # Calculate the center of the screen
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x_coordinate = (screen_width // 2) - (1920 // 2)
+        y_coordinate = (screen_height // 2) - (1080 // 2)
 
-        #center window
-        self.update_idletasks()
-        width = self.winfo_width()
-        height = self.winfo_height()
-        x = (self.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.winfo_screenheight() // 2) - (height // 2)
-        self.geometry(f"{width}x{height}+{x}+{y}")
+        self.geometry(f"1920x1080+{x_coordinate}+{y_coordinate}")
 
 
         # Top navigation bar
