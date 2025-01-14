@@ -213,7 +213,7 @@ class App(ctk.CTk):
 
     def show_boot_animation(self):
         # Create a label for the video
-        video_label = ctk.CTkLabel(self)
+        video_label = ctk.CTkLabel(self, text="", fg_color=None, bg_color=None)
         video_label.pack(expand=True, fill="both")
 
         # Variable to control overlay text
@@ -260,10 +260,10 @@ class App(ctk.CTk):
             video.release()
             video_label.destroy()
 
-        # Overlay text
+        # Overlay text with no background
         overlay_text = ctk.CTkLabel(
             self, textvariable=setup_status, font=("Arial", 24),
-            fg_color="transparent", bg_color="transparent"
+            text_color="white", fg_color=None, bg_color=None
         )
         overlay_text.place(relx=0.5, rely=0.5, anchor="center")
 
