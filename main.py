@@ -267,7 +267,8 @@ class App(ctk.CTk):
         )
         overlay_text.place(relx=0.5, rely=0.5, anchor="center")
 
-        self.after(0, play_video)
+        # Start the video playback
+        play_video()
 
 
     def clear_content_frame(self):
