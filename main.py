@@ -212,15 +212,15 @@ class App(ctk.CTk):
         self.show_home()
 
     def show_boot_animation(self):
-        # Create a label for the video
-        video_label = ctk.CTkLabel(self, text="", fg_color=None, bg_color="transparent", text_color="white")
-        video_label.pack(expand=True, fill="both")
+        # Create a canvas for video and text overlay
+        canvas = Canvas(self, bg="black", highlightthickness=0)
+        canvas.pack(expand=True, fill="both")
 
-        # Variable to control overlay text
+        # Variable for overlay text
         setup_status = StringVar()
         setup_status.set("Initializing...")
 
-        # Function to play the video
+        # Function to play video
         def play_video():
             video_path = "./img/STL_Boot_2.mp4"
             video = cv2.VideoCapture(video_path)
@@ -240,13 +240,15 @@ class App(ctk.CTk):
                 if not ret:
                     break
 
-                # Display the video frame
+                # Convert frame to ImageTk format
                 image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                 image = ImageTk.PhotoImage(image)
-                video_label.configure(image=image)
-                video_label.image = image
 
-                # Update text based on time
+                # Display video frame on the canvas
+                canvas.create_image(0, 0, anchor="nw", image=image)
+                canvas.image = image  # Keep a reference to avoid garbage collection
+
+                # Update overlay text based on time
                 elapsed_time = time.time() - start_time
                 if current_step_index < len(setup_steps) and elapsed_time >= next_step_time:
                     setup_status.set(setup_steps[current_step_index][0])
@@ -254,19 +256,24 @@ class App(ctk.CTk):
                     if current_step_index < len(setup_steps):
                         next_step_time = setup_steps[current_step_index][1]
 
+                # Overlay text on the canvas
+                canvas.delete("text")
+                canvas.create_text(
+                    canvas.winfo_width() // 2,
+                    canvas.winfo_height() // 2,
+                    text=setup_status.get(),
+                    font=("Arial", 24),
+                    fill="white",
+                    tags="text",
+                )
+
                 self.update()
                 time.sleep(1 / video.get(cv2.CAP_PROP_FPS))
 
             video.release()
-            video_label.destroy()
+            canvas.destroy()
 
-        # Overlay text with no background
-        overlay_text = ctk.CTkLabel(
-            self, textvariable=setup_status, font=("Arial", 24),
-            text_color="white", fg_color=None, bg_color="transparent"
-        )
-        overlay_text.place(relx=0.5, rely=0.5, anchor="center")
-
+        # Start the video playback
         play_video()
 
 
