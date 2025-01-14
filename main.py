@@ -242,6 +242,7 @@ class App(ctk.CTk):
             video = cv2.VideoCapture(video_path)
 
             setup_steps = [
+                ("", 4),
                 ("Creating shared memory...", 2),
                 ("Connecting to Redis...", 4),
                 ("Loading configurations...", 6),
@@ -277,7 +278,7 @@ class App(ctk.CTk):
                 canvas.delete("text")
                 canvas.create_text(
                     canvas.winfo_width() // 2,
-                    (canvas.winfo_height() // 2)+100,
+                    (canvas.winfo_height() // 2)-100,
                     text=setup_status.get(),
                     font=("Arial", 24),
                     fill="white",
