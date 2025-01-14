@@ -41,25 +41,25 @@ def create_folder_with_files(provided_name=None, special=False):
     trial_number = 1
 
     if provided_name is not None:
-        original_folder_name = f"{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}"
+        exact_folder_name =  original_folder_name = f"{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}"
         folder_name = original_folder_name
         if os.path.exists(f"./data/{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}"):
             while os.path.exists(folder_name):
                 trial_number += 1
                 folder_name = f"./data/{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}"
         else:
-            folder_name = original_folder_name
+            folder_name = f"./data/{timestamp}_{animal_id}_{trial_number:02d}"
     else:
-        original_folder_name = f"{timestamp}_{animal_id}_{trial_number:02d}"
+        exact_folder_name =  original_folder_name = f"{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}"
         folder_name = original_folder_name
         if os.path.exists(f"./data/{timestamp}_{animal_id}_{trial_number:02d}"):
             while os.path.exists(folder_name):
                 trial_number += 1
                 folder_name = f"./data/{timestamp}_{animal_id}_{trial_number:02d}"
         else:
-            folder_name = original_folder_name
+            folder_name = f"./data/{timestamp}_{animal_id}_{trial_number:02d}"
 
-    exact_folder_name= folder_name.replace("./data/", "")
+
 
 
 
