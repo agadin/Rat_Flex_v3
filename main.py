@@ -15,7 +15,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import Canvas, Frame, Scrollbar, filedialog
 import imageio
 from PIL import Image, ImageTk
-from tkinter import StringVar
+from tkinter import Canvas, StringVar
 import pandas as pd
 import cv2
 
