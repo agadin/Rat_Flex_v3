@@ -8,12 +8,25 @@ import tkinter as tk
 import customtkinter as ctk
 import os
 import shutil
+import filecmp
 from datetime import datetime
 
 
 csv_name='data.csv'
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 motor = None
+
+def verify_and_wipe_data_csv(original_path, copied_path):
+    # Verify that the contents of the original and copied files match
+    if filecmp.cmp(original_path, copied_path, shallow=False):
+        print("Verification successful: The copied file matches the original.")
+        # Wipe out the original data.csv
+        with open(original_path, 'w') as file:
+            file.truncate(0)
+        print("Original data.csv has been wiped out.")
+    else:
+        print("Verification failed: The copied file does not match the original.")
+
 
 def create_folder_with_files(provided_name=None, special=False):
 
@@ -80,6 +93,7 @@ def create_folder_with_files(provided_name=None, special=False):
     renamed_csv_path = os.path.join(folder_name, f"{exact_folder_name}.csv")
     if os.path.exists(data_csv_path):
         shutil.copy(data_csv_path, os.path.join(folder_name, f"{exact_folder_name}.csv"))
+        verify_and_wipe_data_csv(data_csv_path, renamed_csv_path)
     else:
         print("Error: `data.csv` not found.")
 
@@ -93,6 +107,8 @@ def create_folder_with_files(provided_name=None, special=False):
         info_file.write(f"Total steps: {total_steps}\n")
 
     redis_client.set("data_saved", "1")
+
+
     return True
 
 

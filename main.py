@@ -193,7 +193,7 @@ class App(ctk.CTk):
         x_coordinate = (screen_width // 2) - (1920 // 2)
         y_coordinate = (screen_height // 2) - (1080 // 2)
 
-        self.geometry(f"1920x1080+{x_coordinate}+{y_coordinate}")
+        self.geometry(f"1000x800+{x_coordinate}+{y_coordinate}")
 
 
         # Top navigation bar
