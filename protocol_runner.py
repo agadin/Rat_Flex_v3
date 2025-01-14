@@ -300,7 +300,7 @@ def process_protocol(protocol_path):
         elif command.startswith("End"):
             end_loop()
             break
-
+        print(f" Data saved: {data_saved}")
         if not data_saved:
             # Set the name to the current date and time
             data_saved = create_folder_with_files(folder_name)
