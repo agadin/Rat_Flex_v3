@@ -287,15 +287,9 @@ class App(ctk.CTk):
                 self.update()
                 time.sleep(1 / video.get(cv2.CAP_PROP_FPS))
 
-            # Keep the last label for 2 seconds after the video ends
-            if current_step_index > 0:
-                time.sleep(2)
-                canvas.delete("text")  # Remove the text
 
             video.release()
             canvas.destroy()
-            self.destroy()  # Close the splash screen window
-
         # Start the video playback
         play_video()
         self.overrideredirect(False)
