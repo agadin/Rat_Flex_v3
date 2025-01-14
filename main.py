@@ -212,6 +212,8 @@ class App(ctk.CTk):
         self.show_home()
 
     def show_boot_animation(self):
+        self.attributes('-fullscreen', True)  # Set the window to full screen
+
         video_label = ctk.CTkLabel(self)
         video_label.pack(expand=True, fill="both")
 
@@ -220,8 +222,10 @@ class App(ctk.CTk):
 
         def play_video():
             video_path = "./img/STL_Boot_2.mp4"
-
             video = cv2.VideoCapture(video_path)
+
+            setup_steps = ["Creating shared memory...", "Connecting to Redis...", "Loading configurations..."]
+            step_index = 0
 
             while video.isOpened():
                 ret, frame = video.read()
@@ -231,25 +235,24 @@ class App(ctk.CTk):
                 image = ImageTk.PhotoImage(image)
                 video_label.configure(image=image)
                 video_label.image = image
+
+                # Update the text overlay
+                if step_index < len(setup_steps):
+                    setup_status.set(setup_steps[step_index])
+                    step_index += 1
+
                 self.update()
                 time.sleep(1 / video.get(cv2.CAP_PROP_FPS))
 
             video.release()
-
             video_label.destroy()
+            self.attributes('-fullscreen', False)  # Exit full screen after the video
 
         self.after(0, play_video)
 
         # Overlay text
-        overlay_text = ctk.CTkLabel(self, textvariable=setup_status, font=("Arial", 24), fg_color="transparent")
+        overlay_text = ctk.CTkLabel(self, textvariable=setup_status, font=("Arial", 24), fg_color="transparent", bg_color="transparent")
         overlay_text.place(relx=0.5, rely=0.5, anchor="center")
-
-        # Simulate setup steps
-        setup_steps = ["Creating shared memory...", "Connecting to Redis...", "Loading configurations..."]
-        for step in setup_steps:
-            setup_status.set(step)
-            self.update()
-            time.sleep(2)  # Simulate time taken for each step
 
     def clear_content_frame(self):
         for widget in self.content_frame.winfo_children():
