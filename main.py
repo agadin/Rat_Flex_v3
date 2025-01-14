@@ -212,6 +212,11 @@ class App(ctk.CTk):
         self.show_home()
 
     def show_boot_animation(self):
+        # Configure the window for splash screen effect
+        self.overrideredirect(True)  # Remove title bar
+        self.geometry("1280x720")  # Set the window size to match 720p video (adjust as needed)
+        self.update_idletasks()
+
         # Create a canvas for video and text overlay
         canvas = Canvas(self, bg="black", highlightthickness=0)
         canvas.pack(expand=True, fill="both")
@@ -270,8 +275,14 @@ class App(ctk.CTk):
                 self.update()
                 time.sleep(1 / video.get(cv2.CAP_PROP_FPS))
 
+            # Keep the last label for 2 seconds after the video ends
+            if current_step_index > 0:
+                time.sleep(2)
+                canvas.delete("text")  # Remove the text
+
             video.release()
             canvas.destroy()
+            self.destroy()  # Close the splash screen window
 
         # Start the video playback
         play_video()
