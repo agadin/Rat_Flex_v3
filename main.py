@@ -298,6 +298,7 @@ class App(ctk.CTk):
 
         # Start the video playback
         play_video()
+        self.overrideredirect(False)
 
 
     def clear_content_frame(self):
