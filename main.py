@@ -212,10 +212,21 @@ class App(ctk.CTk):
         self.show_home()
 
     def show_boot_animation(self):
-        # Configure the window for splash screen effect
-        self.overrideredirect(True)  # Remove title bar
-        self.geometry("1280x720")  # Set the window size to match 720p video (adjust as needed)
-        self.update_idletasks()
+        # Remove title bar for splash screen effect
+        self.overrideredirect(True)
+
+        # Set the desired window size (720p video dimensions)
+        window_width = 1280
+        window_height = 720
+
+        # Calculate the center of the screen
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x_coordinate = (screen_width // 2) - (window_width // 2)
+        y_coordinate = (screen_height // 2) - (window_height // 2)
+
+        # Position the window at the center of the screen
+        self.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
 
         # Create a canvas for video and text overlay
         canvas = Canvas(self, bg="black", highlightthickness=0)
