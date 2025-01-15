@@ -824,10 +824,11 @@ class App(ctk.CTk):
         while True:
             current_protocol_out = redis_client.get("current_protocol_out")
             print(f"Protocol stopped. {self.timing_clock}. {current_protocol_out}")
-            if current_protocol_out is None:
-                self.timing_clock= None
-
+           #stop looping when current_protocol_out is empty
+            if not current_protocol_out:
+                self.timing_clock = None
                 break
+
 
             time.sleep(0.1)  # Adjust the sleep time as needed to reduce CPU usage
     def stop_protocol(self):
