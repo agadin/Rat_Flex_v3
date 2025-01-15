@@ -160,11 +160,12 @@ class ProtocolViewer(ctk.CTkFrame):
         except (ValueError, TypeError):
             current_step = None
 
+        # Update frame background color to simulate opacity
         for frame, step_num in self.step_widgets:
             if current_step == step_num:
-                frame.configure(opacity=0.9)
+                frame.configure(fg_color="lightblue")  # Simulate higher opacity
             else:
-                frame.configure(opacity=0.6)
+                frame.configure(fg_color="lightgray")  # Simulate lower opacity
 
         self.after(500, self.update_current_step)  # Check every 500ms
 
@@ -174,6 +175,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        self.timing_clock = None
         self.total_steps = 0
         self.show_boot_animation()
 
