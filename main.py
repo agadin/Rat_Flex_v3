@@ -378,6 +378,9 @@ class App(ctk.CTk):
         self.time_display = ctk.CTkLabel(display_frame, text="Time: N/A", **display_style)
         self.time_display.grid(row=0, column=0, padx=10, pady=10)
 
+        self.protocol_step_counter = ctk.CTkLabel(display_frame, text="Step: N/A", **display_style)
+        self.protocol_step_counter.grid(row=0, column=4, padx=10, pady=5)
+
         # Create and pack step count display
         self.step_display = ctk.CTkLabel(display_frame, text="Steps: N/A", **display_style)
         self.step_display.grid(row=0, column=1, padx=10, pady=10)
@@ -390,9 +393,6 @@ class App(ctk.CTk):
         self.force_display = ctk.CTkLabel(display_frame, text="Force: N/A", **display_style)
         self.force_display.grid(row=0, column=3, padx=10, pady=5)
 
-        # Protocol steps container
-        self.protocol_step_counter = ctk.CTkLabel(display_frame, text="Step: N/A", **display_style)
-        self.protocol_step_counter.grid(row=0, column=4, padx=10, pady=5)
 
         self.segmented_button = ctk.CTkSegmentedButton(self.main_frame, values=["Angle v Force", "Simple", "All"], command=self.update_graph_view)
         self.segmented_button.set("Angle v Force")  # Set default selection
@@ -825,7 +825,9 @@ class App(ctk.CTk):
             current_protocol_out = redis_client.get("current_protocol_out")
             if current_protocol_out is None:
                 self.timing_clock= None
+                print(f"Protocol stopped. {self.timing_clock}. {current_protocol_out}")
                 break
+
             time.sleep(0.1)  # Adjust the sleep time as needed to reduce CPU usage
     def stop_protocol(self):
         send_data_to_shared_memory(stop_flag=0)
@@ -854,7 +856,6 @@ class App(ctk.CTk):
                     self.force_data.pop(0)
 
                 # Update individual displays if widgets exist
-                # Update individual displays if widgets exist
                     if self.timing_clock is not None:
                         elapsed_time = time.time() - self.timing_clock
                         hours, remainder = divmod(elapsed_time, 3600)
@@ -864,7 +865,7 @@ class App(ctk.CTk):
                         # zero
                         hours = minutes = seconds = milliseconds = 0
                     self.time_display.configure(
-                        text=f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
+                        text=f"{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
                 if self.step_display.winfo_exists():
                     self.step_display.configure(text=f"{step_count}")
                 if self.angle_display.winfo_exists():
@@ -872,10 +873,10 @@ class App(ctk.CTk):
                 if self.force_display.winfo_exists():
                     self.force_display.configure(text=f"{current_force:.2f} N")
                 if self.protocol_step_counter.winfo_exists():
-                    current_step = redis_client.get("current_step")
-                    if current_step is None:
-                        current_step = 0
-                    self.protocol_step_counter.configure(text=f"Step: {current_step} / {self.total_steps}")
+                    current_step_number = redis_client.get("current_step_number")
+                    if current_step_number is None:
+                        current_step_number = 0
+                    self.protocol_step_counter.configure(text=f"Step: {current_step_number} / {self.total_steps}")
             else:
                 # Handle shared memory not available case
                 if self.step_display.winfo_exists():
