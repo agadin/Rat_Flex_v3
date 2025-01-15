@@ -205,6 +205,9 @@ def process_protocol(protocol_path):
         data_saved = False
         folder_name = None
 
+    # calculate total number of commands
+    total_commands = len(commands)
+    redis_client.set("total_commands", total_commands)
     for command in commands:
         command = command.strip()
         if not command:
@@ -297,6 +300,8 @@ def process_protocol(protocol_path):
             wait(wait_time)
         elif command.startswith("Wait_for_user_input"):
             wait_for_user_input(command)
+        elif command.startswith("no_save"):
+            data_saved = True
         elif command.startswith("End"):
             end_loop()
             break

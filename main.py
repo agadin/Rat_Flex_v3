@@ -174,6 +174,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        self.total_steps = 0
         self.show_boot_animation()
 
         # Stationary variables
@@ -191,10 +192,10 @@ class App(ctk.CTk):
         # Calculate the center of the screen
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
-        x_coordinate = (screen_width // 2) - (1200 // 2)
-        y_coordinate = (screen_height // 2) - (800 // 2)
+        x_coordinate = (screen_width // 2) - (1800 // 2)
+        y_coordinate = (screen_height // 2) - (920 // 2)
 
-        self.geometry(f"1200x800+{x_coordinate}+{y_coordinate}")
+        self.geometry(f"1800x920+{x_coordinate}+{y_coordinate}")
 
 
         # Top navigation bar
@@ -337,6 +338,16 @@ class App(ctk.CTk):
         self.stop_button = ctk.CTkButton(self.sidebar_frame, text="Stop", command=self.stop_protocol)
         self.stop_button.pack(pady=15)
 
+        # Have four three in the blank fields that allow the users to input values into redis. Stack these vertically and automatically update the redis values when the user inputs a value.
+        # Four input fields for Redis values
+        self.redis_inputs = []
+        for i in range(4):
+            input_var = ctk.StringVar()
+            input_entry = ctk.CTkEntry(self.sidebar_frame, textvariable=input_var)
+            input_entry.pack(pady=5, padx=15)
+            input_var.trace("w", lambda name, index, mode, var=input_var, idx=i: redis_client.set(f"input_{idx}", var.get()))
+            self.redis_inputs.append(input_var)
+
         # Light/Dark mode toggle
         self.mode_toggle = ctk.CTkSwitch(self.sidebar_frame, text="Light/Dark Mode", command=self.toggle_mode)
         self.mode_toggle.pack(pady=15)
@@ -345,7 +356,7 @@ class App(ctk.CTk):
         self.main_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
         self.main_frame.pack(side="left", expand=True, fill="both", padx=10)
 
-        self.protocol_name_label = ctk.CTkLabel(self.main_frame, text="Current Protocol: None", anchor="w", font=("Arial", 20, "bold"))
+        self.protocol_name_label = ctk.CTkLabel(self.main_frame, text="Current Protocol: None", anchor="w", font=("Arial", 35, "bold"))
         self.protocol_name_label.pack(pady=10, padx=20, anchor="w")
 
         display_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
@@ -376,6 +387,10 @@ class App(ctk.CTk):
         # Create and pack force display
         self.force_display = ctk.CTkLabel(display_frame, text="Force: N/A", **display_style)
         self.force_display.grid(row=0, column=3, padx=10, pady=5)
+
+        # Protocol steps container
+        self.protocol_step_counter = ctk.CTkLabel(display_frame, text="Step: N/A", **display_style)
+        self.protocol_step_counter.grid(row=0, column=4, padx=10, pady=5)
 
         self.segmented_button = ctk.CTkSegmentedButton(self.main_frame, values=["Angle v Force", "Simple", "All"], command=self.update_graph_view)
         self.segmented_button.set("Angle v Force")  # Set default selection
@@ -768,6 +783,7 @@ class App(ctk.CTk):
             def on_confirm():
                 protocol_path_c = os.path.join(self.protocol_folder, selected_protocol)
                 run_protocol(protocol_path_c)
+                self.total_steps = redis_client.get("total_steps")
                 print(f"Running protocol again: {selected_protocol}")
                 self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
                 confirm_popup.destroy()
@@ -792,12 +808,13 @@ class App(ctk.CTk):
         else:
             protocol_path = os.path.join(self.protocol_folder, selected_protocol)
             run_protocol(protocol_path)
+            self.total_steps = redis_client.get("total_steps")
             print(f"Running protocol: {selected_protocol}")
             self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
         self.start_timing_thread()
 
     def start_timing_thread(self):
-        self.start_time = time.time()
+        self.timing_clock = time.time()
         self.timing_thread = Thread(target=self.check_protocol_status)
         self.timing_thread.start()
 
@@ -805,8 +822,7 @@ class App(ctk.CTk):
         while True:
             current_protocol_out = redis_client.get("current_protocol_out")
             if current_protocol_out is None:
-                elapsed_time = time.time() - self.start_time
-                print(f"Timing stopped. Elapsed time: {elapsed_time:.2f} seconds")
+                self.timing_clock= None
                 break
             time.sleep(0.1)  # Adjust the sleep time as needed to reduce CPU usage
     def stop_protocol(self):
@@ -838,23 +854,28 @@ class App(ctk.CTk):
                 # Update individual displays if widgets exist
                 # Update individual displays if widgets exist
                 if self.time_display.winfo_exists():
-                    try:
-                        elapsed_time = time.time() - self.start_time
+                    if self.timing_clock is not None:
+                        elapsed_time = time.time() - self.timing_clock
                         hours, remainder = divmod(elapsed_time, 3600)
                         minutes, seconds = divmod(remainder, 60)
                         milliseconds = int((elapsed_time - int(elapsed_time)) * 1000)
-                    except Exception as e:
+                    else:
                         print(f"Error updating time display: {e}")
                         # zero
                         hours = minutes = seconds = milliseconds = 0
                     self.time_display.configure(
-                        text=f"Elapsed Time: {int(hours):02}:{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
+                        text=f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
                 if self.step_display.winfo_exists():
                     self.step_display.configure(text=f"{step_count}")
                 if self.angle_display.winfo_exists():
                     self.angle_display.configure(text=f"{current_angle:.1f}°")
                 if self.force_display.winfo_exists():
                     self.force_display.configure(text=f"{current_force:.2f} N")
+                if self.protocol_step_counter.winfo_exists():
+                    current_step = redis_client.get("current_step")
+                    if current_step is None:
+                        current_step = 0
+                    self.protocol_step_counter.configure(text=f"Step: {current_step} / {self.total_steps}")
             else:
                 # Handle shared memory not available case
                 if self.step_display.winfo_exists():
@@ -866,7 +887,13 @@ class App(ctk.CTk):
                 if self.time_display.winfo_exists():
                     hours = minutes = seconds = milliseconds = 0
                     self.time_display.configure(
-                        text=f"Elapsed Time: {int(hours):02}:{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
+                        text=f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
+                if self.protocol_step_counter.winfo_exists():
+                    current_step = redis_client.get("current_step")
+                    if current_step is None:
+                        current_step = 0
+                    self.protocol_step_counter.configure(text=f"Step: {current_step} / {self.total_steps}")
+
 
             time.sleep(0.1)
 
