@@ -215,6 +215,7 @@ def process_protocol(protocol_path):
         step_number += 1
         motor.current_protocol_step(step_number)
         redis_client.set("current_step", command)
+        redis_client.set("current_step_number", step_number)
         stop_flag = redis_client.get("stop_flag")
         if stop_flag == "1":
             print("Protocol stopped.")

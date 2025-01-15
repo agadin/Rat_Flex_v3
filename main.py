@@ -823,9 +823,10 @@ class App(ctk.CTk):
     def check_protocol_status(self):
         while True:
             current_protocol_out = redis_client.get("current_protocol_out")
+            print(f"Protocol stopped. {self.timing_clock}. {current_protocol_out}")
             if current_protocol_out is None:
                 self.timing_clock= None
-                print(f"Protocol stopped. {self.timing_clock}. {current_protocol_out}")
+
                 break
 
             time.sleep(0.1)  # Adjust the sleep time as needed to reduce CPU usage
@@ -874,6 +875,7 @@ class App(ctk.CTk):
                     self.force_display.configure(text=f"{current_force:.2f} N")
                 if self.protocol_step_counter.winfo_exists():
                     current_step_number = redis_client.get("current_step_number")
+                    print(f"Current step number: {current_step_number}")
                     if current_step_number is None:
                         current_step_number = 0
                     self.protocol_step_counter.configure(text=f"Step: {current_step_number} / {self.total_steps}")
