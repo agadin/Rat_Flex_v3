@@ -862,7 +862,6 @@ class App(ctk.CTk):
                         minutes, seconds = divmod(remainder, 60)
                         milliseconds = int((elapsed_time - int(elapsed_time)) * 1000)
                     else:
-                        print(f"Error updating time display: {e}")
                         # zero
                         hours = minutes = seconds = milliseconds = 0
                     self.time_display.configure(
