@@ -317,6 +317,7 @@ def process_protocol(protocol_path):
     # end_all_commands()
     redis_client.set("current_protocol_out", "")
     redis_client.set("current_step", "")
+    redis_client.set("current_step_number", "")
 # Add save as file name ability
 
 def calibrate():

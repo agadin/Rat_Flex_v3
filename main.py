@@ -821,6 +821,7 @@ class App(ctk.CTk):
         self.timing_thread.start()
 
     def check_protocol_status(self):
+        time.sleep(1)
         while True:
             current_protocol_out = redis_client.get("current_protocol_out")
             print(f"Protocol stopped. {self.timing_clock}. {current_protocol_out}")
