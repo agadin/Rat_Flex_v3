@@ -239,6 +239,7 @@ class StepperMotor:
         self.redis_client.set("current_state", self.current_state)
         self.redis_client.set("current_direction", self.current_direction)
         self.redis_client.set("moving_steps_total", steps)
+        print(f"Moving {steps} steps")
 
         counter = 0
         angle_increment = 1 / self.step_to_angle_ratio
@@ -407,9 +408,8 @@ class StepperMotor:
         data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
         stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
         i=setting_num
-        zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
-        self.raw_force = float(self.ForceSensor.read_force())
-        self.current_force = float(self.raw_force) - zero_force
+
+        self.current_force = float(self.raw_force) - self.idle_force
         packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
         self.shm.buf[:len(packed_data)] = packed_data
     def test_motor(self):
