@@ -438,10 +438,8 @@ def start_server():
         while True:
             # Check for a value in the Redis key
             protocol_path = redis_client.get("protocol_trigger")
-            print(f"Checking for protocol trigger: {protocol_path}")
             shared_memory_error=redis_client.get("shared_memory_error")
             redis_client.set("calibration_Level",motor.check_if_calibrated())
-
             if shared_memory_error == "1":
                 print("Shared memory error detected. Recreating shared memory.")
                 redis_client.set("shared_memory_error", 0)

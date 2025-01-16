@@ -896,7 +896,7 @@ class App(ctk.CTk):
                     if self.clock_values is not True:
                         hours = minutes = seconds = milliseconds = 0
 
-                self.total_steps = redis_client.get("total_steps")
+                self.total_steps = redis_client.get("total_commands")
                 self.queue.put((step_count, current_angle, current_force, minutes, seconds, milliseconds))
             else:
                 self.queue.put((None, None, None, 0, 0, 0))
