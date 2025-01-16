@@ -451,6 +451,7 @@ def start_server():
                 print(f"Found protocol path: {protocol_path}")
                 process_protocol(protocol_path)
             redis_client.set("current_protocol_out", "")
+            motor.update_shared_memory()
             time.sleep(1)  # Wait for 1 second before checking again
 
 

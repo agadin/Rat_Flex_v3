@@ -238,6 +238,7 @@ class StepperMotor:
         steps = int(abs(angle - self.current_angle) * self.step_to_angle_ratio)
         self.redis_client.set("current_state", self.current_state)
         self.redis_client.set("current_direction", self.current_direction)
+        self.redis_client.set("moving_steps_total", steps)
 
         counter = 0
         angle_increment = 1 / self.step_to_angle_ratio
@@ -318,11 +319,13 @@ class StepperMotor:
         self.current_direction = "idle"
         self.redis_client.set("current_state", self.current_state)
         self.redis_client.set("current_direction", self.current_direction)
+        self.redis_client.set("moving_steps_total", "")
 
     def move_until_force(self, direction, target_force, angle_limit_min=0, angle_limit_max=180):
         temp_data = []
         raw_force=[]
         print("direction: ", direction)
+        self.redis_client.set("moving_steps_total", target_force)
         if direction not in [0, 180]:
             raise ValueError("Direction must be either 0 or 180 degrees")
 
@@ -395,6 +398,7 @@ class StepperMotor:
         self.current_direction = "idle"
         self.redis_client.set("current_state", self.current_state)
         self.redis_client.set("current_direction", self.current_direction)
+        self.redis_client.set("moving_steps_total", "")
 
     def return_force(self):
         return self.ForceSensor.read_force()

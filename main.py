@@ -177,6 +177,7 @@ class App(ctk.CTk):
 
         self.clock_values = False
         self.timing_clock = None
+        self.step_time = None
         self.total_steps = 0
         self.show_boot_animation()
 
@@ -788,7 +789,7 @@ class App(ctk.CTk):
                 protocol_path_c = os.path.join(self.protocol_folder, selected_protocol)
                 run_protocol(protocol_path_c)
                 self.total_steps = redis_client.get("total_steps")
-                print(f"Running protocol again: {selected_protocol}")
+                print(f"Running protocol again: {self.total_steps}")
                 self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
                 confirm_popup.destroy()
 
@@ -860,6 +861,16 @@ class App(ctk.CTk):
                     self.angle_data.pop(0)
                     self.force_data.pop(0)
 
+                if step_count < 0:
+                    if self.step_time is None:
+                        self.step_time = time.time()
+                    else:
+                        self.step_time = time.time() - self.step_time
+                else:
+                    self.step_time = None
+
+
+
                 # Update individual displays if widgets exist
                 if self.timing_clock is not None:
                     elapsed_time = time.time() - self.timing_clock
@@ -874,17 +885,24 @@ class App(ctk.CTk):
 
                 self.update_displays(step_count, current_angle, current_force, minutes, seconds,
                            milliseconds)
+                self.total_steps = redis_client.get("total_steps")
             else:
                 # Handle shared memory not available case
-                self.update_displays(step_count, current_angle, current_force, minutes, seconds,
-                                     milliseconds)
+                self.update_displays(step_count, current_angle, current_force, minutes, seconds, milliseconds)
 
             time.sleep(0.1)
 
     def update_displays(self, step_count, current_angle, current_force, minutes, seconds, milliseconds):
         if step_count is not None:
             self.time_display.configure(text=f"{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
-            self.step_display.configure(text=f"{step_count}")
+            if step_count < 0:
+                if self.step_time is not None:
+                    self.step_display.configure(text=f"{self.step_time:.1f}s")
+            else:
+                self.moving_steps_total= redis_client.get("moving_steps_total")
+                if self.moving_steps_total is None:
+                    self.moving_steps_total = 0
+                self.step_display.configure(text=f"{step_count} / {self.moving_steps_total}")
             self.angle_display.configure(text=f"{current_angle:.1f}°")
             self.force_display.configure(text=f"{current_force:.2f} N")
             current_step_number = redis_client.get("current_step_number")
