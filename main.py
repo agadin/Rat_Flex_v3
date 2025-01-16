@@ -175,6 +175,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        self.clock_values = False
         self.timing_clock = None
         self.total_steps = 0
         self.show_boot_animation()
@@ -377,6 +378,7 @@ class App(ctk.CTk):
         # Create and pack time display
         self.time_display = ctk.CTkLabel(display_frame, text="Time: N/A", **display_style)
         self.time_display.grid(row=0, column=0, padx=10, pady=10)
+        self.time_display.bind("<Button-1>", lambda e: setattr(self, 'clock_values', False))
 
         self.protocol_step_counter = ctk.CTkLabel(display_frame, text="Step: N/A", **display_style)
         self.protocol_step_counter.grid(row=0, column=4, padx=10, pady=5)
@@ -864,11 +866,13 @@ class App(ctk.CTk):
                         hours, remainder = divmod(elapsed_time, 3600)
                         minutes, seconds = divmod(remainder, 60)
                         milliseconds = int((elapsed_time - int(elapsed_time)) * 1000)
+                        self.clock_values = True
                     else:
                         # zero
-                        hours = minutes = seconds = milliseconds = 0
+                        if self.clock_values is not True:
+                            hours = minutes = seconds = milliseconds = 0
                     self.time_display.configure(
-                        text=f"{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
+                        text=f"{int(minutes):02}:{int(seconds):02}.{self.milliseconds:03}")
                 if self.step_display.winfo_exists():
                     self.step_display.configure(text=f"{step_count}")
                 if self.angle_display.winfo_exists():
