@@ -365,6 +365,7 @@ def wait(wait_time):
         elapsed_time = time.time() - start_time
         sleep_time = max(timestep - elapsed_time, 0)
         time.sleep(sleep_time)
+        motor.update_shared_memory()
 
     with open(csv_name, 'a', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
