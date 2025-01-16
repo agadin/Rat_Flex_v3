@@ -410,9 +410,9 @@ class App(ctk.CTk):
         # Start background threads
         self.running = True
         self.update_thread = Thread(target=self.update_shared_memory)
-        self.calibration_thread = Thread(target=self.update_displays)
+        # self.calibration_thread = Thread(target=self.update_displays)
         self.update_thread.start()
-        self.calibration_thread.start()
+        # self.calibration_thread.start()
 
         self.update_graph_view("Angle v Force")  # Initialize with default view
 
