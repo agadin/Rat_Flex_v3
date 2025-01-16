@@ -899,6 +899,19 @@ class App(ctk.CTk):
             if current_step is None:
                 current_step = 0
             self.protocol_step_counter.configure(text=f"Step: {current_step} / {self.total_steps}")
+        try:
+            calibration_level = int(redis_client.get("calibration_Level") or 0)
+            if calibration_level == 0:
+                self.calibrate_button.configure(fg_color="red")
+            elif calibration_level == 1:
+                self.calibrate_button.configure(fg_color="yellow")
+            elif calibration_level == 2:
+                self.calibrate_button.configure(fg_color="green")
+            else:
+                self.calibrate_button.configure(fg_color="gray")  # Default color for unknown states
+        except Exception as e:
+            print(f"Error updating Calibrate button: {e}")
+            self.calibrate_button.configure(fg_color="gray")
 
     def clear_graphs(self):
         # Reset the data lists
