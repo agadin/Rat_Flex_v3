@@ -403,10 +403,10 @@ class StepperMotor:
     def return_force(self):
         return self.ForceSensor.read_force()
 
-    def update_shared_memory(self):
+    def update_shared_memory(self, setting_num):
         data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
         stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
-        i=-1
+        i=setting_num
         zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
         self.raw_force = float(self.ForceSensor.read_force())
         self.current_force = float(self.raw_force) - zero_force

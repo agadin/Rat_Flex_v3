@@ -175,6 +175,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        self.step_time_int = None
         self.clock_values = False
         self.timing_clock = None
         self.step_time = None
@@ -827,7 +828,6 @@ class App(ctk.CTk):
         time.sleep(1)
         while True:
             current_protocol_out = redis_client.get("current_protocol_out")
-            print(f"Protocol stopped. {self.timing_clock}. {current_protocol_out}")
            #stop looping when current_protocol_out is empty
             if not current_protocol_out:
                 self.timing_clock = None
@@ -861,11 +861,12 @@ class App(ctk.CTk):
                     self.angle_data.pop(0)
                     self.force_data.pop(0)
 
-                if step_count < 0:
+                if step_count ==-1:
                     if self.step_time is None:
-                        self.step_time = time.time()
+                        self.step_time_int = time.time()
+                        self.step_time = 0
                     else:
-                        self.step_time = time.time() - self.step_time
+                        self.step_time = time.time() - self.step_time_int
                 else:
                     self.step_time = None
 
@@ -900,6 +901,7 @@ class App(ctk.CTk):
                     self.step_display.configure(text=f"{self.step_time:.1f}s")
             else:
                 self.moving_steps_total= redis_client.get("moving_steps_total")
+                print(f"Moving steps total: {self.moving_steps_total}")
                 if self.moving_steps_total is None:
                     self.moving_steps_total = 0
                 self.step_display.configure(text=f"{step_count} / {self.moving_steps_total}")
