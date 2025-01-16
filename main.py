@@ -175,6 +175,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        self.queue = None
         self.step_time_int = None
         self.clock_values = False
         self.timing_clock = None
@@ -421,6 +422,16 @@ class App(ctk.CTk):
         print( "protocol: ", self.protocol_var.get())
 
         self.initialize_protocol_viewer()
+        process_queue()
+
+    def process_queue(self):
+        try:
+            while not self.queue.empty():
+                data = self.queue.get_nowait()
+                self.update_displays(*data)
+        except queue.Empty:
+            pass
+        self.after(100, self.process_queue)
 
     def initialize_protocol_viewer(self):
         # Initialize ProtocolViewer directly
@@ -884,12 +895,10 @@ class App(ctk.CTk):
                     if self.clock_values is not True:
                         hours = minutes = seconds = milliseconds = 0
 
-                self.update_displays(step_count, current_angle, current_force, minutes, seconds,
-                           milliseconds)
                 self.total_steps = redis_client.get("total_steps")
+                self.queue.put((step_count, current_angle, current_force, minutes, seconds, milliseconds))
             else:
-                # Handle shared memory not available case
-                self.update_displays(step_count, current_angle, current_force, minutes, seconds, milliseconds)
+                self.queue.put((None, None, None, 0, 0, 0))
 
             time.sleep(0.1)
 
