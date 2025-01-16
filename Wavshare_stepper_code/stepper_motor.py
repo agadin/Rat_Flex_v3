@@ -409,7 +409,11 @@ class StepperMotor:
         stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
         i=setting_num
         self.raw_force = self.ForceSensor.read_force()
-        self.current_force = float(self.raw_force) - self.idle_force
+        if self.idle_force is None:
+            idle_force_temp =0
+        else:
+            idle_force_temp = self.idle_force
+        self.current_force = float(self.raw_force) - idle_force_temp
         packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
         self.shm.buf[:len(packed_data)] = packed_data
     def test_motor(self):
