@@ -861,70 +861,44 @@ class App(ctk.CTk):
                     self.force_data.pop(0)
 
                 # Update individual displays if widgets exist
-                    if self.timing_clock is not None:
-                        elapsed_time = time.time() - self.timing_clock
-                        hours, remainder = divmod(elapsed_time, 3600)
-                        minutes, seconds = divmod(remainder, 60)
-                        milliseconds = int((elapsed_time - int(elapsed_time)) * 1000)
-                        self.clock_values = True
-                    else:
-                        # zero
-                        if self.clock_values is not True:
-                            hours = minutes = seconds = milliseconds = 0
-                    self.time_display.configure(
-                        text=f"{int(minutes):02}:{int(seconds):02}.{self.milliseconds:03}")
-                if self.step_display.winfo_exists():
-                    self.step_display.configure(text=f"{step_count}")
-                if self.angle_display.winfo_exists():
-                    self.angle_display.configure(text=f"{current_angle:.1f}°")
-                if self.force_display.winfo_exists():
-                    self.force_display.configure(text=f"{current_force:.2f} N")
-                if self.protocol_step_counter.winfo_exists():
-                    current_step_number = redis_client.get("current_step_number")
-                    print(f"Current step number: {current_step_number}")
-                    if current_step_number is None:
-                        current_step_number = 0
-                    self.protocol_step_counter.configure(text=f"Step: {current_step_number} / {self.total_steps}")
+                if self.timing_clock is not None:
+                    elapsed_time = time.time() - self.timing_clock
+                    hours, remainder = divmod(elapsed_time, 3600)
+                    minutes, seconds = divmod(remainder, 60)
+                    milliseconds = int((elapsed_time - int(elapsed_time)) * 1000)
+                    self.clock_values = True
+                else:
+                    # zero
+                    if self.clock_values is not True:
+                        hours = minutes = seconds = milliseconds = 0
+
+                self.after(0, self.update_displays, step_count, current_angle, current_force, minutes, seconds,
+                           milliseconds)
             else:
                 # Handle shared memory not available case
-                if self.step_display.winfo_exists():
-                    self.step_display.configure(text="N/A")
-                if self.angle_display.winfo_exists():
-                    self.angle_display.configure(text="N/A")
-                if self.force_display.winfo_exists():
-                    self.force_display.configure(text="N/A")
-                if self.time_display.winfo_exists():
-                    hours = minutes = seconds = milliseconds = 0
-                    self.time_display.configure(
-                        text=f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
-                if self.protocol_step_counter.winfo_exists():
-                    current_step = redis_client.get("current_step")
-                    if current_step is None:
-                        current_step = 0
-                    self.protocol_step_counter.configure(text=f"Step: {current_step} / {self.total_steps}")
-
+                self.after(0, self.update_displays, None, None, None, 0, 0, 0)
 
             time.sleep(0.1)
 
-    def update_calibrate_button(self):
-        while self.running:
-            try:
-                calibration_level = int(redis_client.get("calibration_Level") or 0)
-
-                if calibration_level == 0:
-                    self.calibrate_button.configure(fg_color="red")
-                elif calibration_level == 1:
-                    self.calibrate_button.configure(fg_color="yellow")
-                elif calibration_level == 2:
-                    self.calibrate_button.configure(fg_color="green")
-                else:
-                    self.calibrate_button.configure(fg_color="gray")  # Default color for unknown states
-
-            except Exception as e:
-                print(f"Error updating Calibrate button: {e}")
-                self.calibrate_button.configure(fg_color="gray")  # Fallback color in case of error
-
-            time.sleep(0.5)  # Adjust the refresh rate as needed
+    def update_displays(self, step_count, current_angle, current_force, minutes, seconds, milliseconds):
+        if step_count is not None:
+            self.time_display.configure(text=f"{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
+            self.step_display.configure(text=f"{step_count}")
+            self.angle_display.configure(text=f"{current_angle:.1f}°")
+            self.force_display.configure(text=f"{current_force:.2f} N")
+            current_step_number = redis_client.get("current_step_number")
+            if current_step_number is None:
+                current_step_number = 0
+            self.protocol_step_counter.configure(text=f"Step: {current_step_number} / {self.total_steps}")
+        else:
+            self.step_display.configure(text="N/A")
+            self.angle_display.configure(text="N/A")
+            self.force_display.configure(text="N/A")
+            self.time_display.configure(text=f"{int(0):02}:{int(0):02}:{int(0):02}.{0:03}")
+            current_step = redis_client.get("current_step")
+            if current_step is None:
+                current_step = 0
+            self.protocol_step_counter.configure(text=f"Step: {current_step} / {self.total_steps}")
 
     def clear_graphs(self):
         # Reset the data lists
