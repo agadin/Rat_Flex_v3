@@ -399,6 +399,15 @@ class StepperMotor:
     def return_force(self):
         return self.ForceSensor.read_force()
 
+    def update_shared_memory(self):
+        data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
+        stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
+        i=-1
+        zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
+        self.raw_force = float(self.ForceSensor.read_force())
+        self.current_force = float(self.raw_force) - zero_force
+        packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
+        self.shm.buf[:len(packed_data)] = packed_data
     def test_motor(self):
         for i in range(100):
             self.motor.TurnStep(Dir='forward', steps=1, stepdelay=0.0015)
