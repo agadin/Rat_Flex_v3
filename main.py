@@ -18,6 +18,7 @@ from PIL import Image, ImageTk
 from tkinter import Canvas, StringVar
 import pandas as pd
 import cv2
+import queue
 
 
 # Initialize CustomTkinter
@@ -175,7 +176,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.queue = None
+        self.queue = queue.Queue()
         self.step_time_int = None
         self.clock_values = False
         self.timing_clock = None
@@ -422,7 +423,7 @@ class App(ctk.CTk):
         print( "protocol: ", self.protocol_var.get())
 
         self.initialize_protocol_viewer()
-        process_queue()
+        self.process_queue()
 
     def process_queue(self):
         try:
