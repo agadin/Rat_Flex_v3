@@ -872,11 +872,12 @@ class App(ctk.CTk):
                     if self.clock_values is not True:
                         hours = minutes = seconds = milliseconds = 0
 
-                self.after(0, self.update_displays, step_count, current_angle, current_force, minutes, seconds,
+                self.update_displays(step_count, current_angle, current_force, minutes, seconds,
                            milliseconds)
             else:
                 # Handle shared memory not available case
-                self.after(0, self.update_displays, None, None, None, 0, 0, 0)
+                self.update_displays(step_count, current_angle, current_force, minutes, seconds,
+                                     milliseconds)
 
             time.sleep(0.1)
 
