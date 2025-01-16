@@ -979,6 +979,12 @@ class App(ctk.CTk):
                 # Plot data based on selected mode
                 self.ax.clear()
                 if mode == "Angle v Force":
+                    # check if self.angle_special, self.force_special are same dimensions as each other if they are not remove from highest until they are
+                    if len(self.angle_special) != len(self.force_special):
+                        if len(self.angle_special) > len(self.force_special):
+                            self.angle_special = self.angle_special[:len(self.force_special)]
+                        else:
+                            self.force_special = self.force_special[:len(self.angle_special)]
                     self.ax.plot(self.angle_special, self.force_special, label="Angle vs Force")
                     self.ax.set_xlim(0, 180)
                     self.ax.set_ylim(-1.75, 1.75)
