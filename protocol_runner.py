@@ -135,7 +135,6 @@ def create_folder_with_files(provided_name=None, special=False):
 
     redis_client.set("data_saved", "1")
 
-
     return True
 
 
