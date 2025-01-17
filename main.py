@@ -49,6 +49,16 @@ def read_shared_memory():
         print(f"Error reading shared memory: {e}")
         return None
 
+def save_to_redis_dict(redis_key, variable_name, value):
+    # Retrieve the dictionary from Redis
+    redis_dict = redis_client.hgetall(redis_key)
+
+    # Update the dictionary
+    redis_dict[variable_name] = value
+
+    # Save the updated dictionary back to Redis
+    redis_client.hset(redis_key, mapping=redis_dict)
+
 def send_data_to_shared_memory(stop_flag=1):
     step_count, current_angle, current_force = read_shared_memory()
     try:
@@ -93,7 +103,7 @@ class ProtocolViewer(ctk.CTkFrame):
         self.protocol_steps = []  # List of parsed protocol steps
         self.step_widgets = []  # References to step widgets for updating opacity
 
-        self.scrollable_frame = ctk.CTkScrollableFrame(self, width=400, height=600)
+        self.scrollable_frame = ctk.CTkScrollableFrame(self, width=400, height=800)
         self.scrollable_frame.pack(fill="both", expand=True)
 
         # Dynamically update current step opacity
@@ -350,9 +360,9 @@ class App(ctk.CTk):
         self.redis_inputs = []
         for i in range(4):
             input_var = ctk.StringVar()
-            input_entry = ctk.CTkEntry(self.sidebar_frame, textvariable=input_var)
+            input_entry = ctk.CTkEntry(self.sidebar_frame, textvariable=input_var, placeholder_text=f"input_{i}")
             input_entry.pack(pady=5, padx=15)
-            input_var.trace("w", lambda name, index, mode, var=input_var, idx=i: redis_client.set(f"input_{idx}", var.get()))
+            input_var.trace("w", lambda name, index, mode, var=input_var, idx=i:save_to_redis_dict('set_vars', f"input_{idx}", var.get()))
             self.redis_inputs.append(input_var)
 
         # Light/Dark mode toggle

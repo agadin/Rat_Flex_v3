@@ -16,6 +16,16 @@ csv_name='data.csv'
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 motor = None
 
+def save_to_redis_dict(redis_key, variable_name, value):
+    # Retrieve the dictionary from Redis
+    redis_dict = redis_client.hgetall(redis_key)
+
+    # Update the dictionary
+    redis_dict[variable_name] = value
+
+    # Save the updated dictionary back to Redis
+    redis_client.hset(redis_key, mapping=redis_dict)
+
 def verify_and_wipe_data_csv(original_path, copied_path):
     # Verify that the contents of the original and copied files match
     if filecmp.cmp(original_path, copied_path, shallow=False):
@@ -27,6 +37,16 @@ def verify_and_wipe_data_csv(original_path, copied_path):
     else:
         print("Verification failed: The copied file does not match the original.")
 
+
+def get_from_redis_dict(redis_key, variable_name):
+    # Retrieve the dictionary from Redis
+    redis_dict = redis_client.hgetall(redis_key)
+
+    # Check if the variable name exists in the dictionary
+    if variable_name in redis_dict:
+        return redis_dict[variable_name]
+    else:
+        return None
 
 def create_folder_with_files(provided_name=None, special=False):
 
@@ -120,11 +140,10 @@ def string_to_value_checker(string_input, type_s="int"):
         else:
             return int(string_input)
     except ValueError:
-        # Check for open parenthesis to handle special calculations
         if string_input.startswith("(") and string_input.endswith(")"):
             inner_expr = string_input[1:-1]  # Extract content inside parentheses
             # Define angle_value from Redis
-            angle_value = redis_client.get(inner_expr)
+            angle_value = get_from_redis_dict('set_vars',inner_expr)
             if angle_value is None:
                 raise ValueError("Variable 'angle_value' not found in Redis.")
             angle_value = float(angle_value)  # Convert to float for calculations
@@ -141,13 +160,13 @@ def string_to_value_checker(string_input, type_s="int"):
             except Exception as e:
                 raise ValueError(f"Invalid expression in input: {string_input}. Error: {e}")
         # If no parentheses, check if it's a variable and look up in Redis
-        angle_value = redis_client.get(string_input)
+        angle_value = get_from_redis_dict('set_vars',string_input)
         if angle_value is None:
             raise ValueError(f"Variable '{string_input}' not found in Redis.")
         elif isinstance(angle_value, str):
             cycle_count = 0
             while isinstance(angle_value, str) and cycle_count < 10:
-                angle_value = redis_client.get(angle_value)
+                angle_value = get_from_redis_dict('set_vars',angle_value)
                 cycle_count += 1
             if isinstance(angle_value, str):
                 raise ValueError(f"Value for '{string_input}' in Redis is not a valid number after 10 cycles.")
@@ -232,7 +251,7 @@ def process_protocol(protocol_path):
                     variable_name = str(parts[i + 1].strip()) if i + 1 < len(parts) else metric
                     metric_value = calculate_metric(metric, step_number)
                     variable_saver(variable_name, metric_value)
-                    redis_client.set(variable_name, metric_value)
+                    save_to_redis_dict('set_vars', variable_name, metric_value)
         elif command.startswith("Move_to_force"):
             params = command.split(":")[1].split(",")
 
@@ -271,7 +290,8 @@ def process_protocol(protocol_path):
                 for metric, variable_name in metrics:
                     metric_value = calculate_metric(metric, step_number)
                     variable_saver(variable_name, metric_value)
-                    redis_client.set(variable_name, metric_value)
+                    save_to_redis_dict('set_vars', variable_name, metric_value)
+
         elif command.startswith("Load_calibration"):
             # command format: Load_calibration: path/to/calibration.txt
             file_path = command.split(":")[1].strip()
@@ -395,7 +415,7 @@ def wait_for_user_input(command):
             else:
                 raise ValueError("Invalid response type")
 
-            redis_client.set(variable_name, user_input)
+            save_to_redis_dict('set_vars', variable_name, user_input)
             redis_client.set("user_input", "")  # Clear the user input after processing
             variable_saver(variable_name, user_input)
             popup.destroy()
