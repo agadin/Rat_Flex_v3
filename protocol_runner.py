@@ -78,11 +78,6 @@ def create_folder_with_files(provided_name=None, special=False):
                 folder_name = f"./data/{timestamp}_{animal_id}_{trial_number:02d}"
         else:
             folder_name = f"./data/{timestamp}_{animal_id}_{trial_number:02d}"
-
-
-
-
-
     # create the folder
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
@@ -125,6 +120,18 @@ def create_folder_with_files(provided_name=None, special=False):
         info_file.write(f"Created on: {current_date}\n")
         info_file.write(f"Total time: {total_time}\n")
         info_file.write(f"Total steps: {total_steps}\n")
+
+    #variables.txt
+    current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    set_vars = redis_client.hgetall('set_vars')
+    with open('variables.txt', 'a') as file:
+        for key, value in set_vars.items():
+            file.write(f"{current_date}, {key}, {value}\n")
+    if os.path.exists('variables.txt'):
+        shutil.copy('variables.txt', os.path.join(folder_name, 'variables.txt'))
+    else:
+        print("Error: `variables.txt` not found.")
+    verify_and_wipe_data_csv('variables.txt', os.path.join(folder_name, 'variables.txt'))
 
     redis_client.set("data_saved", "1")
 
