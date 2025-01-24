@@ -70,7 +70,7 @@ def create_folder_with_files(provided_name=None, special=False):
         else:
             folder_name = f"./data/{timestamp}_{animal_id}_{trial_number:02d}"
     else:
-        exact_folder_name =  original_folder_name = f"./data/{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}"
+        exact_folder_name =  original_folder_name = f"{timestamp}_{provided_name}_{animal_id}_{trial_number:02d}"
         folder_name = original_folder_name
         if os.path.exists(f"./data/{timestamp}_{animal_id}_{trial_number:02d}"):
             while os.path.exists(f"./data/{timestamp}_{animal_id}_{trial_number:02d}"):
