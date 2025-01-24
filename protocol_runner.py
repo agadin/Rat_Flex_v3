@@ -86,7 +86,7 @@ def create_folder_with_files(provided_name=None, special=False):
         redis_client.set("Error_code","10")
     # Copy and rename `calibrate.txt`
     # copy everything into folder
-
+    print(f"Copying files to {folder_name}")
     if os.path.exists('calibration.txt'):
         if provided_name is not None:
             shutil.copy('calibration.txt', os.path.join(folder_name, 'calibration.txt'))
