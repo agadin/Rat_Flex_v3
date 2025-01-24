@@ -218,7 +218,7 @@ class StepperMotor:
         self.redis_client.set("step_to_angle_ratio", self.step_to_angle_ratio)
 
         self.preprocess_data()
-        self.move_to_angle(90)
+        self.move_to_angle(90, 'junk.csv')
         self.redis_client.set("Calibrated",1)
 
     def return_idle_force(self):
@@ -227,8 +227,10 @@ class StepperMotor:
     def move_to_angle(self, angle, target_file=None):
         if self.step_to_angle_ratio is None:
             raise Exception("Motor not calibrated. Please run calibrate() first.")
-        if target_file is not None:
+        if target_file == 'calibrate':
             save_csv=self.calibration_file
+        elif target_file is not None:
+            save_csv= target_file
         else:
             save_csv= self.csv_name
 
