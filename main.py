@@ -921,7 +921,6 @@ class App(ctk.CTk):
                     self.step_display.configure(text=f"{self.step_time:.1f}s")
             else:
                 self.moving_steps_total= redis_client.get("moving_steps_total")
-                print(f"Moving steps total: {self.moving_steps_total}")
                 if self.moving_steps_total is None:
                     self.moving_steps_total = 0
                 self.step_display.configure(text=f"{step_count} / {self.moving_steps_total}")
