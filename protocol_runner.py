@@ -333,14 +333,14 @@ def process_protocol(protocol_path):
             end_loop()
             break
         print(f" Data saved: {data_saved}")
-        if not data_saved:
-            # Set the name to the current date and time
-            data_saved = create_folder_with_files(folder_name)
 
 
 
 
     # end_all_commands()
+    if not data_saved:
+        # Set the name to the current date and time
+        data_saved = create_folder_with_files(folder_name)
     redis_client.set("current_protocol_out", "")
     redis_client.set("current_step", "")
     redis_client.set("current_step_number", "")
