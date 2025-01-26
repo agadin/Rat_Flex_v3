@@ -6,12 +6,13 @@ import seaborn as sns
 headers = ['Time', 'Angle', 'Force', 'raw_Force', 'Motor_State', 'Direction', 'Protocol_Step']
 
 # Read the CSV file
-data = pd.read_csv('data.csv', header=None, names=headers, na_filter=False)
+data = pd.read_csv('/Users/alexandergadin/PycharmProjects/Rat_Flex_v3/data/20250124_0000_02/20250124_None_0000_01.csv', header=None, names=headers, na_filter=False)
 
 # if there are any 6 column rows, we will need to adjust the raw_Force values
+data['Protocol_Step'] = data['Protocol_Step'].astype(str)
 
-if data['Protocol_Step'].str.len().eq(0).any():
-    # Identify rows with 6 or 7 columns
+# Check if there are any rows with empty 'Protocol_Step'
+if data['Protocol_Step'].str.len().eq(0).any():    # Identify rows with 6 or 7 columns
     data['Row_Type'] = data['Protocol_Step'].apply(lambda x: '6_column' if x == '' else '7_column')
 
     # Convert 'Force' and 'raw_Force' to numeric
@@ -225,3 +226,59 @@ plt.show()
 
 
 
+
+# Filter rows with odd Protocol_Step
+odd_protocol_data = fixed_data[fixed_data['Protocol_Step'].astype(int) % 2 != 0]
+
+# Group by Protocol_Step and calculate the difference between the first and last Angle
+angle_diff = odd_protocol_data.groupby('Protocol_Step')['Angle'].agg(lambda x: x.iloc[-1] - x.iloc[0])
+
+# Take the absolute value of the angle differences
+angle_diff = angle_diff.abs()
+print(angle_diff)
+# Convert Protocol_Step to integer for proper filtering
+angle_diff.index = angle_diff.index.astype(int)
+
+# Filter out Protocol_Step 1 and 3
+filtered_angle_diff = angle_diff.drop([1, 3], errors='ignore')
+
+# Calculate the average and standard deviation of the remaining angle differences
+average_angle_diff = filtered_angle_diff.mean()
+std_angle_diff = filtered_angle_diff.std()
+
+# Print the average angle difference and standard deviation
+print(filtered_angle_diff)
+print(f"Average angle difference (excluding Protocol_Step 1 and 3): {average_angle_diff}")
+print(f"Standard deviation of angle differences (excluding Protocol_Step 1 and 3): {std_angle_diff}")
+def count_points_within_iqr(group):
+    q1 = group['Force'].quantile(0.25)
+    q3 = group['Force'].quantile(0.75)
+    iqr = q3 - q1
+    return ((group['Force'] >= q1) & (group['Force'] <= q3)).sum()
+
+# Group by Protocol_Step and count points within IQR for each group
+
+# Print the number of points within IQR for each Protocol_Step
+# Group by Protocol_Step, count points within IQR for each group, and filter out Protocol_Step 1 and 3
+
+# Filter rows with odd Protocol_Step and exclude Protocol_Step 1 and 3
+odd_protocol_data = fixed_data[(fixed_data['Protocol_Step'].astype(int) % 2 != 0) &
+                               (~fixed_data['Protocol_Step'].isin(['1', '3']))]
+
+# Function to count points within IQR
+def count_points_within_iqr(group):
+    q1 = group['Force'].quantile(0.25)
+    q3 = group['Force'].quantile(0.75)
+    return ((group['Force'] >= q1) & (group['Force'] <= q3)).sum()
+
+# Group by Protocol_Step and count points within IQR for each group
+points_within_iqr = odd_protocol_data.groupby('Protocol_Step').apply(count_points_within_iqr)
+
+# Calculate the average and standard deviation of the remaining points within IQR
+average_points_within_iqr = points_within_iqr.mean()
+std_points_within_iqr = points_within_iqr.std()
+
+# Print the number of points within IQR for each Protocol_Step, average, and standard deviation
+print(points_within_iqr)
+print(f"Average points within IQR (excluding Protocol_Step 1 and 3): {average_points_within_iqr}")
+print(f"Standard deviation of points within IQR (excluding Protocol_Step 1 and 3): {std_points_within_iqr}")
