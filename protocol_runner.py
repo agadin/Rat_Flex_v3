@@ -50,12 +50,12 @@ def get_from_redis_dict(redis_key, variable_name):
 
 def create_folder_with_files(provided_name=None, special=False):
 
-    try:
-        animal_id = redis_client.get("animal_ID")
+    animal_id = redis_client.get("animal_ID")
+    if animal_id is None:
+
+        animal_id=get_from_redis_dict('set_vars', 'animal_ID')
         if animal_id is None:
             animal_id = "0000"
-    except redis.RedisError:
-        animal_id = "0000"
 
     timestamp = datetime.now().strftime("%Y%m%d")
     trial_number = 1
@@ -112,14 +112,21 @@ def create_folder_with_files(provided_name=None, special=False):
     else:
         print("Error: `data.csv` not found.")
 
+    # check redis for selected_arm
+    selected_arm = redis_client.get("selected_arm")
+    if selected_arm is None:
+        selected_arm = "Unknown"
 
     # Create and save `information.txt` with the current date
     info_path = os.path.join(folder_name, 'information.txt')
     with open(info_path, 'w') as info_file:
-        current_date = datetime.now().strftime("%Y-%m-%d")
+        current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
         info_file.write(f"Created on: {current_date}\n")
         info_file.write(f"Total time: {total_time}\n")
         info_file.write(f"Total steps: {total_steps}\n")
+        info_file.write(f"Animal ID: {animal_id}\n")
+        info_file.write(f"Selected arm: {selected_arm}\n")
+
 
     #variables.txt
     current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

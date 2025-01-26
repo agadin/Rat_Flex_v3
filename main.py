@@ -355,6 +355,66 @@ class App(ctk.CTk):
         self.stop_button = ctk.CTkButton(self.sidebar_frame, text="Stop", command=self.stop_protocol)
         self.stop_button.pack(pady=15)
 
+        # create an input field for the user to input the animal ID and save it to redis when it is 4 numbers long
+        self.animal_id_var = ctk.StringVar()
+        self.animal_id_entry = ctk.CTkEntry(self.sidebar_frame, textvariable=self.animal_id_var, placeholder_text="Animal ID")
+        self.animal_id_entry.pack(pady=15, padx=15)
+        self.animal_id_var.trace("w", lambda name, index, mode, var=self.animal_id_var: save_to_redis_dict('set_vars', 'animal_id', var.get()))
+
+
+        # Right and Left Arm Toggle Buttons
+        self.arm_selection = ctk.StringVar(value="")  # To track the current selection
+
+        def toggle_arm_selection(selection):
+            """Toggle the arm selection and update Redis."""
+            if self.arm_selection.get() == selection:
+                # Unselect if clicked again
+                self.arm_selection.set("")
+                redis_client.set("selected_arm", "")  # Clear Redis value
+            else:
+                self.arm_selection.set(selection)
+                redis_client.set("selected_arm", selection)
+
+            # Update button states
+            update_button_states()
+
+        def update_button_states():
+            """Update the visual state of the buttons."""
+            if self.arm_selection.get() == "Right Arm":
+                right_button.configure(fg_color="blue", text_color="white")
+                left_button.configure(fg_color="gray", text_color="black")
+            elif self.arm_selection.get() == "Left Arm":
+                right_button.configure(fg_color="gray", text_color="black")
+                left_button.configure(fg_color="blue", text_color="white")
+            else:
+                right_button.configure(fg_color="gray", text_color="black")
+                left_button.configure(fg_color="gray", text_color="black")
+
+        right_button = ctk.CTkButton(
+            self.sidebar_frame,
+            text="Right Arm",
+            command=lambda: toggle_arm_selection("Right Arm"),
+            fg_color="gray",  # Default color
+            text_color="black",
+            corner_radius=10,
+            width=100
+        )
+        right_button.pack(side="left", padx=10, pady=10)
+
+        left_button = ctk.CTkButton(
+            self.sidebar_frame,
+            text="Left Arm",
+            command=lambda: toggle_arm_selection("Left Arm"),
+            fg_color="gray",  # Default color
+            text_color="black",
+            corner_radius=10,
+            width=100
+        )
+        left_button.pack(side="left", padx=10, pady=10)
+
+        # Update button states initially
+        update_button_states()
+
         # Have four three in the blank fields that allow the users to input values into redis. Stack these vertically and automatically update the redis values when the user inputs a value.
         # Four input fields for Redis values
         self.redis_inputs = []
@@ -362,7 +422,7 @@ class App(ctk.CTk):
             input_var = ctk.StringVar()
             input_entry = ctk.CTkEntry(self.sidebar_frame, textvariable=input_var, placeholder_text=f"input_{i}")
             input_entry.pack(pady=5, padx=15)
-            input_var.trace("w", lambda name, index, mode, var=input_var, idx=i:save_to_redis_dict('set_vars', f"input_{idx}", var.get()))
+            input_var.trace("w", lambda name, index, mode, var=input_var, idx=i: save_to_redis_dict('set_vars', f"input_{idx}", var.get()))
             self.redis_inputs.append(input_var)
 
         # Light/Dark mode toggle
@@ -1241,7 +1301,7 @@ class App(ctk.CTk):
         self.angle_data = []
         self.force_data = []
 
-        # Clear the graph by redrawing it with empty data
+        self.update_graph_view(self.segmented_button.get())
 
 
     def update_graph_view(self, mode):
@@ -1255,7 +1315,7 @@ class App(ctk.CTk):
         self.time_data = []
 
         # Create a new Matplotlib figure
-        self.fig, self.ax = plt.subplots()
+        self.fig, self.ax = plt.subplots(figsize=(6, 4))  # Adjust the figure size as needed
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
         self.canvas_widget = self.canvas.get_tk_widget()
         self.canvas_widget.pack(expand=True, fill="both")
