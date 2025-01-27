@@ -787,8 +787,8 @@ class App(ctk.CTk):
             self.checkbox_frame.destroy()
 
         # Frame for checkboxes at the bottom of main_content
-        checkbox_frame = ctk.CTkFrame(self.main_content, fg_color="transparent")
-        checkbox_frame.pack(side="bottom", fill="x", pady=10)
+        self.checkbox_frame = ctk.CTkFrame(self.main_content, fg_color="transparent")
+        self.checkbox_frame.pack(side="bottom", fill="x", pady=10)
 
         # Track checkbox states
         self.checkbox_states = {}
@@ -809,7 +809,7 @@ class App(ctk.CTk):
             var = ctk.BooleanVar(value=True)  # Default to checked
             self.checkbox_states[step] = var
             checkbox = ctk.CTkCheckBox(
-                checkbox_frame, text=f"Step {step}", variable=var, command=checkbox_callback
+                self.checkbox_frame, text=f"Step {step}", variable=var, command=checkbox_callback
             )
             checkbox.grid(row=i // num_columns, column=i % num_columns, padx=5, pady=5, sticky="w")
 
@@ -817,7 +817,7 @@ class App(ctk.CTk):
         remove_wait_var = ctk.BooleanVar(value=False)
         self.checkbox_states["Remove Wait"] = remove_wait_var
         remove_wait_checkbox = ctk.CTkCheckBox(
-            checkbox_frame, text="Remove Wait", variable=remove_wait_var, command=checkbox_callback
+            self.checkbox_frame, text="Remove Wait", variable=remove_wait_var, command=checkbox_callback
         )
         # Place "Remove Wait" in the next available row
         remove_wait_checkbox.grid(row=(len(odd_steps) // num_columns) + 1, column=0, padx=5, pady=5, sticky="w")
