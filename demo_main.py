@@ -437,6 +437,10 @@ class App(ctk.CTk):
             print("Error: 'main_content' does not exist or has been destroyed.")
             return
 
+        # Clear existing checkboxes if exist
+        if hasattr(self, "checkbox_frame") and self.checkbox_frame.winfo_exists():
+            self.checkbox_frame.destroy()
+
         # Frame for checkboxes at the bottom of main_content
         checkbox_frame = ctk.CTkFrame(self.main_content, fg_color="transparent")
         checkbox_frame.pack(side="bottom", fill="x", pady=10)
