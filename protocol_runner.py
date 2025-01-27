@@ -49,9 +49,24 @@ def get_from_redis_dict(redis_key, variable_name):
         return None
 
 def create_folder_with_files(provided_name=None, special=False):
+    # variables.txt
+    current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    set_vars = redis_client.hgetall('set_vars')
+    with open('variables.txt', 'a') as file:
+        for key, value in set_vars.items():
+            file.write(f"{current_date}, {key}, {value}\n")
 
-    animal_id = redis_client.get("animal_ID")
+    # check if animal_id exists in key
+    if 'animal_id' in set_vars:
+        animal_id = set_vars['animal_id']
+    else:
+        animal_id = redis_client.get("animal_ID")
     if animal_id is None:
+        animal_id = "0000"
+
+
+
+
 
         animal_id=get_from_redis_dict('set_vars', 'animal_id')
         if animal_id is None:
@@ -127,13 +142,6 @@ def create_folder_with_files(provided_name=None, special=False):
         info_file.write(f"Animal ID: {animal_id}\n")
         info_file.write(f"Selected arm: {selected_arm}\n")
 
-
-    #variables.txt
-    current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    set_vars = redis_client.hgetall('set_vars')
-    with open('variables.txt', 'a') as file:
-        for key, value in set_vars.items():
-            file.write(f"{current_date}, {key}, {value}\n")
     if os.path.exists('variables.txt'):
         shutil.copy('variables.txt', os.path.join(folder_name, 'variables.txt'))
     else:
