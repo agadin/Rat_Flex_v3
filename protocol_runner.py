@@ -53,7 +53,7 @@ def create_folder_with_files(provided_name=None, special=False):
     animal_id = redis_client.get("animal_ID")
     if animal_id is None:
 
-        animal_id=get_from_redis_dict('set_vars', 'animal_ID')
+        animal_id=get_from_redis_dict('set_vars', 'animal_id')
         if animal_id is None:
             animal_id = "0000"
 
@@ -323,7 +323,7 @@ def process_protocol(protocol_path):
                     redis_client.get(save_as_string).replace(' ', '')) == 4 and redis_client.get(
                     save_as_string).replace(' ', '').isdigit():
                 animal_id= redis_client.get(save_as_string).replace(' ', '')
-                redis_client.set("animal_ID", animal_id)
+                save_to_redis_dict('set_vars', 'animal_id', animal_id)
             elif redis_client.get(save_as_string) is not None:
                 folder_name = redis_client.get(save_as_string)
         elif command.startswith("calibrate"):
