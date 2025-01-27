@@ -781,9 +781,10 @@ class App(ctk.CTk):
             return
 
         # Remove existing checkboxes if they exist
-        for widget in self.main_content.winfo_children():
-            if isinstance(widget, ctk.CTkCheckBox):
+        if hasattr(self, "checkbox_frame") and self.checkbox_frame.winfo_exists():
+            for widget in self.checkbox_frame.winfo_children():
                 widget.destroy()
+            self.checkbox_frame.destroy()
 
         # Frame for checkboxes at the bottom of main_content
         checkbox_frame = ctk.CTkFrame(self.main_content, fg_color="transparent")
