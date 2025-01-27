@@ -780,6 +780,7 @@ class App(ctk.CTk):
             print("Error: 'main_content' does not exist or has been destroyed.")
             return
 
+        # Remove existing checkboxes if they exist
         for widget in self.main_content.winfo_children():
             if isinstance(widget, ctk.CTkCheckBox):
                 widget.destroy()
