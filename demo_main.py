@@ -316,6 +316,7 @@ class App(ctk.CTk):
         self.data = self.data_f = fixed_data
         self.display_metadata(selected_trial)
         self.plot_figures()
+        self.add_checkboxes()
 
     def display_metadata(self, folder_name):
         parts = folder_name.split("_")
