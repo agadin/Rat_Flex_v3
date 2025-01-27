@@ -1,10 +1,12 @@
 import shutil
-import seaborn as sns
 import customtkinter as ctk
-import os
 import redis
 import multiprocessing.shared_memory as sm
-import numpy as np
+from tkinter import Canvas, Frame, Scrollbar, filedialog
+from PIL import Image, ImageTk
+from tkinter import Canvas, StringVar
+import cv2
+import queue
 import time
 import struct
 import csv
@@ -12,14 +14,10 @@ from collections import defaultdict
 from threading import Thread
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from tkinter import Canvas, Frame, Scrollbar, filedialog
-import imageio
-from PIL import Image, ImageTk
-from tkinter import Canvas, StringVar
 import pandas as pd
-import cv2
-import queue
-
+import seaborn as sns
+from tkinter import ttk
+import matplotlib.ticker as ticker
 
 # Initialize CustomTkinter
 ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
