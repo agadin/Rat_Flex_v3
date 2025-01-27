@@ -1141,7 +1141,6 @@ class App(ctk.CTk):
 
         # Load the first trial and create initial content
         self.load_trial(trials[0])
-        self.add_checkboxes()
 
     def show_settings(self):
         self.clear_content_frame()
