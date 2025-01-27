@@ -65,13 +65,6 @@ def create_folder_with_files(provided_name=None, special=False):
         animal_id = "0000"
 
 
-
-
-
-        animal_id=get_from_redis_dict('set_vars', 'animal_id')
-        if animal_id is None:
-            animal_id = "0000"
-
     timestamp = datetime.now().strftime("%Y%m%d")
     trial_number = 1
 
