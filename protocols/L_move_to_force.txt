@@ -1,0 +1,20 @@
+Move_to_force: 180, 0.75, 15, 165
+wait: 2
+Move_to_force: 0, 0.75, 15, 165
+wait: 2
+Move_to_force: 180, 0.75, 15, 165
+wait: 2
+Move_to_force: 0, 0.75, 15, 165
+wait: 2
+Move_to_force: 180, 0.75, 15, 165
+wait: 2
+Move_to_force: 0, 0.75, 15, 165
+wait: 2
+Move_to_force: 180, 0.75, 15, 165
+wait: 2
+Move_to_force: 0, 0.75, 15, 165
+wait: 2
+Move_to_force: 180, 0.75, 15, 165
+wait: 2
+Move_to_force: 0, 0.75, 15, 165
+wait: 2

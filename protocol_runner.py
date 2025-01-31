@@ -264,6 +264,12 @@ def process_protocol(protocol_path):
                     metric_value = calculate_metric(metric, step_number)
                     variable_saver(variable_name, metric_value)
                     save_to_redis_dict('set_vars', variable_name, metric_value)
+        elif command.startswith("Move_to_angle_jog"):
+            parts = command.split(":")[1].split(",")
+            angle_input = parts[0].strip()
+            angle = string_to_value_checker(angle_input)
+            motor.move_to_angle(angle, 'junk.csv')
+
         elif command.startswith("Move_to_force"):
             params = command.split(":")[1].split(",")
 

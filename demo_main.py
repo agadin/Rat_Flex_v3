@@ -166,6 +166,9 @@ class App(ctk.CTk):
         display_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         display_frame.pack(pady=20)
 
+
+
+
         # Style for all three displays
         display_style = {
             "width": 300,
