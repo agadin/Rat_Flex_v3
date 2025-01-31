@@ -308,7 +308,7 @@ class StepperMotor:
             row.append(self.current_state)
             row.append(self.current_direction)
             row.append(self.step_number)
-
+        print(f"Saving data to {save_csv}")
         with open(save_csv, 'a', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
             # Write the data
