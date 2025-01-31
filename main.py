@@ -379,11 +379,11 @@ class App(ctk.CTk):
         def update_button_states():
             """Update the visual state of the buttons."""
             if self.arm_selection.get() == "Right Arm":
-                run_protocol("right_arm_jog.txt")
+                run_protocol("./protocols/right_arm_jog.txt")
                 right_button.configure(fg_color="blue", text_color="white")
                 left_button.configure(fg_color="gray", text_color="black")
             elif self.arm_selection.get() == "Left Arm":
-                run_protocol("left_arm_jog.txt")
+                run_protocol("./protocols/left_arm_jog.txt")
                 right_button.configure(fg_color="gray", text_color="black")
                 left_button.configure(fg_color="blue", text_color="white")
             else:
