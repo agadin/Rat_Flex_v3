@@ -19,6 +19,47 @@ import seaborn as sns
 from tkinter import ttk
 import matplotlib.ticker as ticker
 
+import subprocess
+import queue
+import threading
+import sys
+
+# Global variable to store process reference
+protocol_process = None
+
+def start_protocol_runner():
+    """Starts protocol_runner.py and monitors for crashes."""
+    global protocol_process
+
+    # Start protocol_runner.py
+    protocol_process = subprocess.Popen(
+        [sys.executable, "protocol_runner.py"],  # Replace with full path if necessary
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    # Start output reading thread
+    threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
+
+    # Monitor if it crashes
+    protocol_process.wait()
+
+    # If it crashes, show the popup in the main app
+    app.show_restart_popup()
+
+def read_process_output(process, output_queue):
+    """Reads stdout and stderr from the process and puts it in the queue."""
+    for line in iter(process.stdout.readline, ""):
+        output_queue.put(line)
+    process.stdout.close()
+
+# Queue to store output
+output_queue = queue.Queue()
+
+# Start protocol_runner.py in a separate thread
+threading.Thread(target=start_protocol_runner, daemon=True).start()
+
 # Initialize CustomTkinter
 ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
 ctk.set_default_color_theme("blue")
@@ -184,6 +225,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        self.iconbitmap('img/ratfav.ico')
         self.queue = queue.Queue()
         self.step_time_int = None
         self.clock_values = False
@@ -702,6 +744,9 @@ class App(ctk.CTk):
 
             # Plot 1: Angle vs. Force (spans columns 0 and 1 in row 0)
             fig1, ax1 = plt.subplots(figsize=FIGSIZE_ROW, dpi=DPI)
+            fig1.patch.set_facecolor('none')  # Make the figure background transparent
+            fig1.patch.set_edgecolor('none')  # Make the figure edge transparent
+
             ax1.plot(
                 angle, force,
                 label='Force',
@@ -1147,9 +1192,83 @@ class App(ctk.CTk):
         # Load the first trial and create initial content
         self.load_trial(trials[0])
 
+    def show_restart_popup(self):
+        """Show a popup asking the user if they want to restart protocol_runner.py."""
+        popup = ctk.CTkToplevel(self)
+        popup.title("Protocol Runner Crashed")
+        popup.geometry("400x200")
+
+        label = ctk.CTkLabel(popup, text="Protocol Runner has crashed. Restart?", font=("Arial", 14))
+        label.pack(pady=20)
+
+        def restart():
+            popup.destroy()
+            self.restart_protocol_runner()
+
+        def cancel():
+            popup.destroy()
+
+        restart_button = ctk.CTkButton(popup, text="Restart", command=restart)
+        restart_button.pack(side="left", padx=10, pady=10)
+
+        cancel_button = ctk.CTkButton(popup, text="Cancel", command=cancel)
+        cancel_button.pack(side="right", padx=10, pady=10)
+
+    def restart_protocol_runner(self):
+        """Restarts protocol_runner.py."""
+        global protocol_process
+
+        # Kill existing process if running
+        if protocol_process and protocol_process.poll() is None:
+            protocol_process.terminate()
+            time.sleep(1)  # Give some time to properly terminate
+
+        # Start a new instance of protocol_runner.py
+        threading.Thread(target=start_protocol_runner, daemon=True).start()
+
+    def update_output_window(self):
+        """Update the settings page window with new output from protocol_runner.py."""
+        try:
+            while not output_queue.empty():
+                line = output_queue.get_nowait()
+                self.output_text.config(state="normal")
+                self.output_text.insert(tk.END, line)
+                self.output_text.config(state="disabled")
+                self.output_text.see(tk.END)  # Auto-scroll to latest line
+        except queue.Empty:
+            pass
+
+        # Repeat the update process every 500ms
+        self.after(500, self.update_output_window)
+
     def show_settings(self):
+        """Show settings and monitor protocol_runner.py output"""
         self.clear_content_frame()
-        ctk.CTkLabel(self.content_frame, text="Settings (Coming Soon)").pack(pady=20)
+
+        # Create a frame for settings
+        settings_frame = ctk.CTkFrame(self.content_frame)
+        settings_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # Label
+        settings_label = ctk.CTkLabel(settings_frame, text="Settings", font=("Arial", 16, "bold"))
+        settings_label.pack(pady=10)
+
+        # Create a frame for output display
+        output_frame = ctk.CTkFrame(settings_frame)
+        output_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Create a scrolling text widget to show protocol_runner.py output
+        self.output_text = tk.Text(output_frame, wrap="word", height=15, width=80, state="disabled", bg="black",
+                                   fg="white")
+        self.output_text.pack(side="left", fill="both", expand=True)
+
+        # Add a scrollbar
+        scrollbar = tk.Scrollbar(output_frame, command=self.output_text.yview)
+        scrollbar.pack(side="right", fill="y")
+        self.output_text.config(yscrollcommand=scrollbar.set)
+
+        # Start updating the output text widget
+        self.update_output_window()
 
     def run_protocol(self):
         selected_protocol = self.protocol_var.get()
@@ -1407,5 +1526,5 @@ class App(ctk.CTk):
 
 if __name__ == "__main__":
     app = App()
-    app.protocol("WM_DELETE_WINDOW", app.on_closing)
+    app.protocol("WM_DELETE_WINDOW", app.destroy)
     app.mainloop()
