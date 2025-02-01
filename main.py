@@ -359,6 +359,8 @@ class App(ctk.CTk):
         self.animal_id_entry.pack(pady=15, padx=15)
         self.animal_id_var.trace("w", lambda name, index, mode, var=self.animal_id_var: save_to_redis_dict('set_vars', 'animal_id', var.get()))
 
+        self.button_frame = ctk.CTkFrame(self.sidebar_frame)
+        self.button_frame.pack(padx=5, pady=10, fill="x")
 
         # Right and Left Arm Toggle Buttons
         self.arm_selection = ctk.StringVar(value="")  # To track the current selection
@@ -391,7 +393,7 @@ class App(ctk.CTk):
                 left_button.configure(fg_color="gray", text_color="black")
 
         right_button = ctk.CTkButton(
-            self.sidebar_frame,
+            self.button_frame,
             text="Right Arm",
             command=lambda: toggle_arm_selection("Right Arm"),
             fg_color="gray",  # Default color
@@ -402,7 +404,7 @@ class App(ctk.CTk):
         right_button.pack(side="left", padx=10, pady=10)
 
         left_button = ctk.CTkButton(
-            self.sidebar_frame,
+            self.button_frame,
             text="Left Arm",
             command=lambda: toggle_arm_selection("Left Arm"),
             fg_color="gray",  # Default color
