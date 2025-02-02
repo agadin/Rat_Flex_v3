@@ -86,12 +86,21 @@ def create_folder_with_files(provided_name=None, special=False):
     # Copy and rename `calibrate.txt`
     # copy everything into folder
     print(f"Copying files to {folder_name}")
-    if os.path.exists('calibration.txt'):
+    if os.path.exists('calibration.csv'):
         if provided_name is not None:
-            shutil.copy('calibration.txt', os.path.join(folder_name, 'calibration.txt'))
+            shutil.copy('calibration.csv', os.path.join(folder_name, 'calibration.csv'))
 
     else:
         print("Error: `calibration.txt` not found.")
+
+    # copy current protocol into folder check redis current_protocol_out for base name and add ./protocols/
+    current_protocol_out = redis_client.get("current_protocol_out")
+    if current_protocol_out is not None:
+        protocol_path = os.path.join('protocols', current_protocol_out)
+        if os.path.exists(protocol_path):
+            shutil.copy(protocol_path, os.path.join(folder_name, current_protocol_out))
+        else:
+            print(f"Error: Protocol file not found: {protocol_path}")
 
     with open('data.csv', 'r') as file:
         reader = csv.reader(file)

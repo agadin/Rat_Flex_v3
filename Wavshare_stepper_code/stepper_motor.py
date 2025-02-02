@@ -225,12 +225,15 @@ class StepperMotor:
         return self.idle_force
 
     def move_to_angle(self, angle, target_file=None):
+        #diagnoistic target file name
+        print("file name: ", angle)
         if self.step_to_angle_ratio is None:
             raise Exception("Motor not calibrated. Please run calibrate() first.")
         if target_file == 'calibrate':
             save_csv=self.calibration_file
         elif target_file is not None:
             save_csv= target_file
+            print("target file: ", save_csv)
         else:
             save_csv= self.csv_name
 
