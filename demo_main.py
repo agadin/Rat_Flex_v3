@@ -287,9 +287,187 @@ class App(ctk.CTk):
             self.step_display.configure(text="Steps: 100")
             self.angle_display.configure(text="Angle: 45.0°")
             self.force_display.configure(text="Force: 10.5N")
+
     def show_protocol_builder(self):
+        """Display the protocol builder page with a sidebar and main content area."""
         self.clear_content_frame()
-        ctk.CTkLabel(self.content_frame, text="Protocol Builder (Coming Soon)").pack(pady=20)
+
+        # Main frame for protocol builder (sidebar + main content)
+        self.pb_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        self.pb_frame.pack(fill="both", expand=True, pady=10)
+
+        # -------------------------------
+        # Sidebar on the left for builder controls
+        # -------------------------------
+        self.pb_sidebar = ctk.CTkFrame(self.pb_frame, width=300)
+        self.pb_sidebar.pack(side="left", fill="y", padx=15, pady=10)
+
+        # Dropdown at the top: "Create New" + protocol .txt files in ./protocols/
+        protocol_folder = "./protocols"
+        # List only the txt files
+        protocol_files = [f for f in os.listdir(protocol_folder) if f.endswith(".txt")]
+        dropdown_options = ["Create New"] + protocol_files
+        self.pb_mode_var = ctk.StringVar(value="Create New")
+        self.pb_dropdown = ctk.CTkComboBox(
+            self.pb_sidebar,
+            values=dropdown_options,
+            variable=self.pb_mode_var,
+            command=self.on_pb_dropdown_change
+        )
+        self.pb_dropdown.pack(pady=10, padx=10)
+
+        # Initialize builder state: "create" (default) or "edit"
+        self.builder_mode = "create"  # This will be set to "edit" if a protocol file is selected.
+        self.current_protocol_steps = []  # List to store protocol steps (each row from the file)
+
+        # -------------------------------
+        # Button grid: six buttons arranged in 2 columns x 3 rows
+        # -------------------------------
+        self.pb_buttons_frame = ctk.CTkFrame(self.pb_sidebar)
+        self.pb_buttons_frame.pack(pady=10, padx=10)
+
+        button_names = ["Description", "Cyclic", "Scratch", "LLM", "Flow", "Other"]
+        self.pb_buttons = {}
+        for i, name in enumerate(button_names):
+            row = i // 2  # two columns per row
+            col = i % 2
+            btn = ctk.CTkButton(
+                self.pb_buttons_frame,
+                text=name,
+                command=lambda n=name: self.on_pb_button_click(n)
+            )
+            btn.grid(row=row, column=col, padx=5, pady=5, sticky="ew")
+            self.pb_buttons[name] = btn
+
+        # Set the default selected button and update the button colors
+        self.current_pb_selection = "Description"
+        self.update_pb_button_states()
+
+        # -------------------------------
+        # Main content area for building the protocol
+        # -------------------------------
+        self.pb_main = ctk.CTkFrame(self.pb_frame, fg_color="transparent")
+        self.pb_main.pack(side="left", fill="both", expand=True, padx=10, pady=10)
+
+        # Display the default builder view (e.g., Description mode)
+        self.show_description_builder()
+
+    # -----------------------------------------------------------------
+    # Callback: When the dropdown selection changes.
+    # -----------------------------------------------------------------
+    def on_pb_dropdown_change(self, value):
+        """
+        Called when the protocol dropdown value changes.
+        If "Create New" is selected, we enter create mode.
+        Otherwise, we are in edit mode and we load the selected file's steps.
+        """
+        if value == "Create New":
+            self.builder_mode = "create"
+            self.current_protocol_steps = []
+            print("Protocol Builder in CREATE mode.")
+            # Update main content to reflect the create mode view
+            self.show_description_builder()
+        else:
+            self.builder_mode = "edit"
+            protocol_path = os.path.join("./protocols", value)
+            try:
+                with open(protocol_path, "r") as f:
+                    # Read nonempty, stripped lines as protocol steps
+                    self.current_protocol_steps = [line.strip() for line in f if line.strip()]
+                print(f"Loaded protocol steps from '{value}':")
+                print(self.current_protocol_steps)
+            except Exception as e:
+                print(f"Error loading protocol '{value}': {e}")
+                self.current_protocol_steps = []
+            # Update main content as needed (for now, default to description view)
+            self.show_description_builder()
+
+    # -----------------------------------------------------------------
+    # Callback: When one of the six builder buttons is clicked.
+    # -----------------------------------------------------------------
+    def on_pb_button_click(self, button_name):
+        # Update the current selection and change button colors accordingly.
+        self.current_pb_selection = button_name
+        self.update_pb_button_states()
+
+        print(f"Builder button clicked: {button_name}")
+
+        if button_name == "Description":
+            self.show_description_builder()
+
+        elif button_name == "Cyclic":
+            if self.builder_mode == "create":
+                # In create mode, call the (to-be-implemented) cyclic builder function
+                self.build_cyclic_create_mode()
+            else:  # edit mode
+                # In edit mode, analyze the current protocol steps
+                allowed_commands = {"wait", "move_to_force", "move_to_angle_jog", "move_to_angle"}
+                unique_commands = set()
+                for step in self.current_protocol_steps:
+                    if ":" in step:
+                        # Get the command name (normalize spaces and case)
+                        command = step.split(":", 1)[0].strip().lower().replace(" ", "_")
+                        if command in allowed_commands:
+                            unique_commands.add(command)
+                print(f"Unique commands found: {unique_commands}")
+                if len(unique_commands) > 2:
+                    # More than two unique commands are present so show an error message
+                    self.show_popup("Error",
+                                    "For cyclic mode in edit mode, the protocol must have only two unique commands.")
+                elif len(unique_commands) == 2:
+                    # Exactly two unique commands: proceed with the cyclic edit mode
+                    self.build_cyclic_edit_mode()
+                else:
+                    self.show_popup("Error", "Not enough commands for a valid cyclic protocol.")
+
+        elif button_name in ["Scratch", "LLM", "Flow", "Other"]:
+            # For now, simply show an informational popup.
+            self.show_popup("Info", f"'{button_name}' mode is not yet implemented.")
+
+    # -----------------------------------------------------------------
+    # Helper function to update the button colors.
+    # -----------------------------------------------------------------
+    def update_pb_button_states(self):
+        """
+        Update the appearance of the builder buttons.
+        The currently selected button is highlighted (e.g., in blue),
+        and the others are set to the default color (e.g., gray).
+        """
+        for name, btn in self.pb_buttons.items():
+            if name == self.current_pb_selection:
+                btn.configure(fg_color="blue", text_color="white")
+            else:
+                btn.configure(fg_color="gray", text_color="black")
+
+    # -----------------------------------------------------------------
+    # The following helper methods update the main content area.
+    # They are placeholders to be expanded later.
+    # -----------------------------------------------------------------
+    def show_description_builder(self):
+        """Display the Description builder view in the main content area."""
+        # Clear any existing widgets in the main content area.
+        for widget in self.pb_main.winfo_children():
+            widget.destroy()
+        label = ctk.CTkLabel(self.pb_main, text="Description Builder Mode (to be implemented)")
+        label.pack(pady=20, padx=20)
+
+    def build_cyclic_create_mode(self):
+        """Placeholder for cyclic create mode functionality."""
+        for widget in self.pb_main.winfo_children():
+            widget.destroy()
+        label = ctk.CTkLabel(self.pb_main, text="Cyclic Create Mode (to be implemented)")
+        label.pack(pady=20, padx=20)
+
+    def build_cyclic_edit_mode(self):
+        """Placeholder for cyclic edit mode functionality (when in edit mode and exactly two allowed commands are found)."""
+        for widget in self.pb_main.winfo_children():
+            widget.destroy()
+        label = ctk.CTkLabel(self.pb_main, text="Cyclic Edit Mode (to be implemented)")
+        label.pack(pady=20, padx=20)
+
+    # -----------------------------------------------------------------
+    # Simple popup message helper.
+    # -----------------------------------------------------------------
 
     def get_trials(self):
         data_dir = "./data"
