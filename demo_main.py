@@ -40,7 +40,6 @@ def send_data_to_shared_memory(stop_flag=1):
         print(f"Error sending data to shared memory: {e}")
 
 def run_protocol(protocol_path):
-    redis_client.set('protocol_trigger', protocol_path)
     print(f"Triggered protocol: {protocol_path}")
 
 def read_calibration_data(file_path):
@@ -58,6 +57,8 @@ def read_calibration_data(file_path):
 def run_calibration():
     print("Running calibration...")
 
+def save_to_redis_dict(self, key, value):
+    print(f"Saving to Redis: {key} -> {value}")
 
 class App(ctk.CTk):
     def __init__(self, demo_mode=True):
@@ -102,7 +103,6 @@ class App(ctk.CTk):
     def clear_content_frame(self):
         for widget in self.content_frame.winfo_children():
             widget.destroy()
-
     def show_home(self):
         self.clear_content_frame()
 
@@ -152,6 +152,88 @@ class App(ctk.CTk):
         )
         self.stop_button.pack(pady=10)
 
+        # create an input field for the user to input the animal ID and save it to redis when it is 4 numbers long
+        self.animal_id_var = ctk.StringVar( value="Animal ID")
+        self.animal_id_entry = ctk.CTkEntry(self.sidebar_frame, textvariable=self.animal_id_var)
+        self.animal_id_entry.pack(pady=15, padx=15)
+
+        def save_animal_id_to_redis(*args):
+            animal_id = self.animal_id_var.get()
+            if animal_id and animal_id != "Animal ID":
+                save_to_redis_dict('set_vars', 'animal_id', animal_id)
+
+        self.animal_id_var.trace("w", save_animal_id_to_redis)
+
+        self.button_frame = ctk.CTkFrame(self.sidebar_frame)
+        self.button_frame.pack(padx=5, pady=10, fill="x")
+
+        # Right and Left Arm Toggle Buttons
+        self.arm_selection = ctk.StringVar(value="")  # To track the current selection
+
+        def toggle_arm_selection(selection):
+            """Toggle the arm selection and update Redis."""
+            if self.arm_selection.get() == selection:
+                # Unselect if clicked again
+                self.arm_selection.set("")
+                print("selected_arm", "")  # Clear Redis value
+            else:
+                self.arm_selection.set(selection)
+                print("selected_arm", selection)
+
+            # Update button states
+            update_button_states()
+
+        def update_button_states():
+            """Update the visual state of the buttons."""
+            if self.arm_selection.get() == "Right Arm":
+                run_protocol("./protocols/right_arm_jog.txt")
+                right_button.configure(fg_color="blue", text_color="white")
+                left_button.configure(fg_color="gray", text_color="black")
+            elif self.arm_selection.get() == "Left Arm":
+                run_protocol("./protocols/left_arm_jog.txt")
+                right_button.configure(fg_color="gray", text_color="black")
+                left_button.configure(fg_color="blue", text_color="white")
+            else:
+                right_button.configure(fg_color="gray", text_color="black")
+                left_button.configure(fg_color="gray", text_color="black")
+
+        right_button = ctk.CTkButton(
+            self.button_frame,
+            text="Right Arm",
+            command=lambda: toggle_arm_selection("Right Arm"),
+            fg_color="gray",  # Default color
+            text_color="black",
+            corner_radius=10,
+            width=100
+        )
+        right_button.pack(side="left", padx=10, pady=10)
+
+        left_button = ctk.CTkButton(
+            self.button_frame,
+            text="Left Arm",
+            command=lambda: toggle_arm_selection("Left Arm"),
+            fg_color="gray",  # Default color
+            text_color="black",
+            corner_radius=10,
+            width=100
+        )
+        left_button.pack(side="left", padx=10, pady=10)
+
+        # Update button states initially
+        update_button_states()
+
+        # Have four three in the blank fields that allow the users to input values into redis. Stack these vertically and automatically update the redis values when the user inputs a value.
+        # Four input fields for Redis values
+        default_texts = ["input_0", "input_1", "input_2", "input_3"]  # Replace with your default texts
+        self.redis_inputs = []
+        for i in range(4):
+            input_var = ctk.StringVar(value=default_texts[i])  # Set the initial value
+            input_entry = ctk.CTkEntry(self.sidebar_frame, textvariable=input_var, placeholder_text=f"input_{i}")
+            input_entry.pack(pady=5, padx=15)
+            input_var.trace("w", lambda name, index, mode, var=input_var, idx=i: save_to_redis_dict('set_vars',
+                                                                                                    f"input_{idx}",
+                                                                                                    var.get()))
+            self.redis_inputs.append(input_var)
         # Light/Dark mode toggle
         self.mode_toggle = ctk.CTkSwitch(self.sidebar_frame, text="Light/Dark Mode", command=self.toggle_mode)
         self.mode_toggle.pack(pady=10)
@@ -165,8 +247,6 @@ class App(ctk.CTk):
 
         display_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         display_frame.pack(pady=20)
-
-
 
 
         # Style for all three displays

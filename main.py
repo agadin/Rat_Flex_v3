@@ -396,10 +396,16 @@ class App(ctk.CTk):
         self.stop_button.pack(pady=15)
 
         # create an input field for the user to input the animal ID and save it to redis when it is 4 numbers long
-        self.animal_id_var = ctk.StringVar()
+        self.animal_id_var = ctk.StringVar( value="Animal ID")
         self.animal_id_entry = ctk.CTkEntry(self.sidebar_frame, textvariable=self.animal_id_var, placeholder_text="Animal ID")
         self.animal_id_entry.pack(pady=15, padx=15)
-        self.animal_id_var.trace("w", lambda name, index, mode, var=self.animal_id_var: save_to_redis_dict('set_vars', 'animal_id', var.get()))
+
+        def save_animal_id_to_redis(*args):
+            animal_id = self.animal_id_var.get()
+            if animal_id and animal_id != "Animal ID":
+                save_to_redis_dict('set_vars', 'animal_id', animal_id)
+
+        self.animal_id_var.trace("w", save_animal_id_to_redis)
 
         self.button_frame = ctk.CTkFrame(self.sidebar_frame)
         self.button_frame.pack(padx=5, pady=10, fill="x")
@@ -461,9 +467,10 @@ class App(ctk.CTk):
 
         # Have four three in the blank fields that allow the users to input values into redis. Stack these vertically and automatically update the redis values when the user inputs a value.
         # Four input fields for Redis values
+        default_texts = ["input_0", "input_1", "input_2", "input_3"]  # Replace with your default texts
         self.redis_inputs = []
         for i in range(4):
-            input_var = ctk.StringVar()
+            input_var = ctk.StringVar(value=default_texts[i])  # Set the initial value
             input_entry = ctk.CTkEntry(self.sidebar_frame, textvariable=input_var, placeholder_text=f"input_{i}")
             input_entry.pack(pady=5, padx=15)
             input_var.trace("w", lambda name, index, mode, var=input_var, idx=i: save_to_redis_dict('set_vars', f"input_{idx}", var.get()))
