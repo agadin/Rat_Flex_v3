@@ -18,6 +18,7 @@ import pandas as pd
 import seaborn as sns
 from tkinter import ttk
 import matplotlib.ticker as ticker
+import datetime
 
 import subprocess
 import queue
@@ -475,6 +476,12 @@ class App(ctk.CTk):
             input_entry.pack(pady=5, padx=15)
             input_var.trace("w", lambda name, index, mode, var=input_var, idx=i: save_to_redis_dict('set_vars', f"input_{idx}", var.get()))
             self.redis_inputs.append(input_var)
+
+
+        # Light/dark mode automatic toggle
+        current_hour = datetime.datetime.now().hour
+        default_mode = "Dark" if current_hour >= 18 or current_hour < 6 else "Light"
+        ctk.set_appearance_mode(default_mode)
 
         # Light/Dark mode toggle
         self.mode_toggle = ctk.CTkSwitch(self.sidebar_frame, text="Light/Dark Mode", command=self.toggle_mode)
