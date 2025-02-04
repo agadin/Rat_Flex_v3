@@ -226,9 +226,10 @@ class StepperMotor:
 
     def move_to_angle(self, angle, target_file=None):
         #diagnoistic target file name
-        print("file name: ", angle)
+        print("file name: ", target_file)
         if self.step_to_angle_ratio is None:
             raise Exception("Motor not calibrated. Please run calibrate() first.")
+
         if target_file == 'calibrate':
             save_csv=self.calibration_file
         elif target_file is not None:
@@ -237,6 +238,7 @@ class StepperMotor:
         else:
             save_csv= self.csv_name
 
+        print("target file (again): ", save_csv)
         self.current_state = "moving"
         self.current_direction = "forward" if angle > self.current_angle else "backward"
 
