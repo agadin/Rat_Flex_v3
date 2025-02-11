@@ -9,7 +9,9 @@ class SimpleApp(tk.Tk):
         # Use an absolute path for the icon file
         icon_path = os.path.abspath('./img/rat_icon_187523.png')
         try:
-            self.icon_img = ImageTk.PhotoImage(file=icon_path)
+            # Load the image using PIL
+            img = Image.open(icon_path)
+            self.icon_img = ImageTk.PhotoImage(img)
             self.iconphoto(False, self.icon_img)
             print("Icon set successfully.")
         except Exception as e:
