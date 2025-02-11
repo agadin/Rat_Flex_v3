@@ -58,9 +58,9 @@ def read_process_output(process, output_queue):
 # Queue to store output
 output_queue = queue.Queue()
 
-# Start protocol_runner.py in a separate thread
-threading.Thread(target=start_protocol_runner, daemon=True).start()
+protocol_process = None
 
+# Start protocol_runner.py in a separate thread
 # Initialize CustomTkinter
 ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
 ctk.set_default_color_theme("blue")
@@ -225,8 +225,8 @@ class ProtocolViewer(ctk.CTkFrame):
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
-
-        self.iconbitmap('img/ratfav.ico')
+        threading.Thread(target=start_protocol_runner, daemon=True).start()
+        self.iconbitmap('./img/ratfav.ico')
         self.queue = queue.Queue()
         self.step_time_int = None
         self.clock_values = False
@@ -785,16 +785,35 @@ class App(ctk.CTk):
         label = ctk.CTkLabel(self.pb_main, text="Cyclic Edit Mode (to be implemented)")
         label.pack(pady=20, padx=20)
 
-    # -----------------------------------------------------------------
-    # Simple popup message helper.
-    # -----------------------------------------------------------------
-
     def get_trials(self):
         data_dir = "./data"
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
-        return [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))] or [
-            "No Trials Found"]
+        # Get all subfolders in the data directory
+        folders = [folder for folder in os.listdir(data_dir)
+                   if os.path.isdir(os.path.join(data_dir, folder))]
+
+        # Custom sort key that extracts date, animal, and trial
+        def sort_key(folder):
+            parts = folder.split("_")
+            if len(parts) >= 3:
+                # Extract parts
+                date_str, animal_str, trial_str = parts[0], parts[1], parts[2]
+                try:
+                    # Convert to integers (assuming valid format)
+                    date_val = int(date_str)  # e.g., 20250124
+                    animal_val = int(animal_str)  # e.g., 0 or 1234
+                    trial_val = int(trial_str)  # e.g., 2
+                except ValueError:
+                    # If conversion fails, send it to the end of the list
+                    date_val, animal_val, trial_val = float('inf'), float('inf'), float('inf')
+                return (date_val, animal_val, trial_val)
+            else:
+                # If the folder name doesn't match the format, push it to the end.
+                return (float('inf'), float('inf'), float('inf'))
+
+        sorted_folders = sorted(folders, key=sort_key)
+        return sorted_folders if sorted_folders else ["No Trials Found"]
 
     def no_trials_popup(self):
         # Create a popup window
@@ -1020,13 +1039,11 @@ class App(ctk.CTk):
             print("Error: 'main_content' does not exist or has been destroyed.")
             return
 
-        # Remove existing checkboxes if they exist
+        # Clear existing checkboxes if they exist
         if hasattr(self, "checkbox_frame") and self.checkbox_frame.winfo_exists():
-            for widget in self.checkbox_frame.winfo_children():
-                widget.destroy()
             self.checkbox_frame.destroy()
 
-        # Frame for checkboxes at the bottom of main_content
+        # Create and store the frame for checkboxes at the bottom of main_content
         self.checkbox_frame = ctk.CTkFrame(self.main_content, fg_color="transparent")
         self.checkbox_frame.pack(side="bottom", fill="x", pady=10)
 
@@ -1039,7 +1056,6 @@ class App(ctk.CTk):
         def checkbox_callback():
             selected_steps = [step for step, var in self.checkbox_states.items() if var.get()]
             print(f"Selected steps: {selected_steps}")
-
             # Update the plots and table based on selected checkboxes
             self.update_content_based_on_checkboxes(selected_steps)
 
@@ -1072,16 +1088,14 @@ class App(ctk.CTk):
 
     def add_table(self, rowspan):
         """Add tables to display general statistics and detailed calculations."""
-
         # Frame for the tables
         table_frame = ttk.Frame(self.canvas_frame)
         table_frame.grid(row=0, column=2, rowspan=rowspan, padx=5, pady=5, sticky="nsew")
 
-        # General statistics table
+        # --- General statistics table (unchanged) ---
         general_stats_frame = ttk.Frame(table_frame)
         general_stats_frame.pack(fill="x", pady=10)
 
-        # Extract general stats
         try:
             with open(os.path.join(self.trial_path, "information.txt"), "r") as f:
                 lines = f.readlines()
@@ -1098,7 +1112,6 @@ class App(ctk.CTk):
         min_angle = self.data["Angle"].min()
         num_cycles = self.data["Protocol_Step"].astype(int).isin(range(1, total_steps + 1, 2)).sum() // 2
 
-        # General statistics data
         general_stats = pd.DataFrame({
             "Metric": [
                 "Created On", "Total Duration", "Total Steps", "Total Data Points",
@@ -1110,76 +1123,70 @@ class App(ctk.CTk):
             ]
         })
 
-        # Setup general stats table
         general_tree = ttk.Treeview(general_stats_frame, columns=list(general_stats.columns), show="headings",
                                     height=10)
         for col in general_stats.columns:
             general_tree.heading(col, text=col)
             general_tree.column(col, anchor="center", width=150)
-
-        # Add rows to general stats table
         for _, row in general_stats.iterrows():
             general_tree.insert("", "end", values=list(row))
-
         general_tree.pack(fill="x")
 
-        # Detailed statistics table
+        # --- Detailed statistics table (with scrollbar) ---
         detailed_stats_frame = ttk.Frame(table_frame)
-        detailed_stats_frame.pack(fill="x", pady=10)
+        detailed_stats_frame.pack(fill="both", expand=True, pady=10)
 
-        # Filter rows with odd Protocol_Step
+        # Prepare detailed statistics data (as in your original code)
         odd_protocol_data = self.data_f[self.data_f['Protocol_Step'].astype(int) % 2 != 0]
-
-        # Group by Protocol_Step and calculate the absolute difference in Angle
         angle_diff = odd_protocol_data.groupby('Protocol_Step')['Angle'].agg(lambda x: x.iloc[-1] - x.iloc[0]).abs()
-        angle_diff.index = angle_diff.index.astype(str)  # Convert index to strings
+        angle_diff.index = angle_diff.index.astype(str)
 
-        # Points within IQR calculations
         def count_points_within_iqr(group):
             q1 = group['Force'].quantile(0.25)
             q3 = group['Force'].quantile(0.75)
             return ((group['Force'] >= q1) & (group['Force'] <= q3)).sum()
 
         points_within_iqr = odd_protocol_data.groupby('Protocol_Step').apply(count_points_within_iqr)
-        points_within_iqr.index = points_within_iqr.index.astype(str)  # Convert index to strings
+        points_within_iqr.index = points_within_iqr.index.astype(str)
 
-        # Prepare the data for display
         custom_data = pd.DataFrame({
-            "Protocol_Step": angle_diff.index,  # Protocol steps as strings
-            "RoM": angle_diff.round(1),  # Round to 1 decimal place
+            "Protocol_Step": angle_diff.index,
+            "RoM": angle_diff.round(1),
             "Points in IQR": points_within_iqr
         }).reset_index(drop=True)
 
-        # Add summary row as a new row in the DataFrame
         summary_row = pd.DataFrame([{
             "Protocol_Step": "Summary",
             "RoM": f"{angle_diff.mean():.1f} | {angle_diff.std():.1f}",
             "Points in IQR": f"{points_within_iqr.mean():.1f} | {points_within_iqr.std():.1f}"
         }])
         custom_data = pd.concat([custom_data, summary_row], ignore_index=True)
-
-        # Sort rows by Protocol_Step (numerically, except for "Summary")
         custom_data["Protocol_Step_Numeric"] = pd.to_numeric(custom_data["Protocol_Step"], errors="coerce")
-        custom_data = custom_data.sort_values(
-            by=["Protocol_Step_Numeric", "Protocol_Step"],
-            ascending=[True, True]
-        ).drop(columns=["Protocol_Step_Numeric"])
+        custom_data = custom_data.sort_values(by=["Protocol_Step_Numeric", "Protocol_Step"],
+                                              ascending=[True, True]).drop(columns=["Protocol_Step_Numeric"])
 
-        # Dynamically calculate the height of the detailed stats table
-        table_height = len(custom_data)
+        # Determine visible rows (limit height to 10 if more than 10 rows)
+        total_rows = len(custom_data)
+        visible_rows = 10 if total_rows > 10 else total_rows
 
-        # Setup detailed stats table
-        detailed_tree = ttk.Treeview(detailed_stats_frame, columns=list(custom_data.columns), show="headings",
-                                     height=table_height)
+        # Create a frame to hold both the treeview and the scrollbar
+        tree_container = ttk.Frame(detailed_stats_frame)
+        tree_container.pack(fill="both", expand=True)
+
+        detailed_tree = ttk.Treeview(tree_container, columns=list(custom_data.columns), show="headings",
+                                     height=visible_rows)
         for col in custom_data.columns:
             detailed_tree.heading(col, text=col)
             detailed_tree.column(col, anchor="center", width=150)
-
-        # Add rows to detailed stats table
         for _, row in custom_data.iterrows():
             detailed_tree.insert("", "end", values=list(row))
+        detailed_tree.pack(side="left", fill="both", expand=True)
 
-        detailed_tree.pack(fill="x")
+        # Add a vertical scrollbar if there are more than 10 rows
+        if total_rows > 10:
+            vsb = ttk.Scrollbar(tree_container, orient="vertical", command=detailed_tree.yview)
+            detailed_tree.configure(yscrollcommand=vsb.set)
+            vsb.pack(side="right", fill="y")
 
     def add_slider(self):
         if self.slider:
@@ -1199,21 +1206,88 @@ class App(ctk.CTk):
 
     def save_all_figures(self):
         """Save all figures and tables displayed on the page as PNG files and show a popup message."""
-        import os
-        from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-        import pandas as pd
-        import matplotlib.pyplot as plt
+        angle = self.data_f['Angle']
+        force = self.data_f['Force']
+        time = self.data_f['Time']
+
+        direction_mapping = {'idle': 0, 'forward': 1, 'backward': -1}
+        self.data_f['Direction_numeric'] = self.data_f['Direction'].map(direction_mapping)
 
         # Create a folder for saving
         save_dir = os.path.join(self.trial_path, "screenshots")
         os.makedirs(save_dir, exist_ok=True)
 
-        # Save each matplotlib figure
-        for i, fig in enumerate(plt.get_fignums()):
-            plt.figure(fig)
-            fig_path = os.path.join(save_dir, f"figure_{i + 1}.png")
-            plt.savefig(fig_path, dpi=300)
-            print(f"Saved figure: {fig_path}")
+        figures = []
+
+        # Constants for scaling
+        FIGSIZE_ROW = (5, 3)  # Larger width for row-spanning plot
+        FIGSIZE_SMALL = (3, 2)  # Smaller size for side-by-side plots
+        DPI = 300  # Moderate DPI for clarity
+        FONT_SIZE = 6  # Font size suitable for small plots
+        LINE_WIDTH = 0.7  # Thin but visible lines
+        MARKER_SIZE = 2  # Small marker size
+        FLIER_SIZE = 1  # Smaller circles for outliers in boxplot
+
+        # Plot 1: Angle vs. Force
+        fig1, ax1 = plt.subplots(figsize=FIGSIZE_ROW, dpi=DPI)
+        ax1.plot(
+            angle, force,
+            label='Force',
+            marker='o', markersize=MARKER_SIZE,
+            linestyle='-', linewidth=LINE_WIDTH,
+            color='b'
+        )
+        ax1.set_title(f'Angle vs. Force - {self.selected_trial}', fontsize=FONT_SIZE + 2)
+        ax1.set_xlabel('Angle (degrees)', fontsize=FONT_SIZE)
+        ax1.set_ylabel('Force (N)', fontsize=FONT_SIZE)
+        ax1.tick_params(axis='both', labelsize=FONT_SIZE - 1)
+        ax1.legend(fontsize=FONT_SIZE - 1)
+        ax1.xaxis.set_major_locator(ticker.MaxNLocator(nbins=10))
+        ax1.yaxis.set_major_locator(ticker.MaxNLocator(nbins=10))
+        ax1.grid(True, linewidth=0.3)
+        plt.tight_layout()  # Adjust margins to prevent crowding
+        figures.append((fig1, 0, 0, 2))  # Spans 2 columns
+
+        # Plot 2: Force Distribution by Protocol_Step (column 0, row 1)
+        fig2, ax2 = plt.subplots(figsize=FIGSIZE_SMALL, dpi=DPI)
+        sns.boxplot(
+            x='Protocol_Step', y='Force',
+            data=self.data_f, ax=ax2,
+            linewidth=LINE_WIDTH, fliersize=FLIER_SIZE
+        )
+        ax2.set_title('Force Distribution by Protocol_Step', fontsize=FONT_SIZE + 2)
+        ax2.set_xlabel('Protocol_Step', fontsize=FONT_SIZE)
+        ax2.set_ylabel('Force (N)', fontsize=FONT_SIZE)
+        ax2.tick_params(axis='both', labelsize=FONT_SIZE - 1)
+        ax2.grid(axis='y', linestyle='--', alpha=0.5, linewidth=0.3)
+        plt.tight_layout()  # Adjust margins to prevent crowding
+        figures.append((fig2, 1, 0, 1))  # Single column
+
+        # Plot 3: Force and Direction Over Time (column 1, row 1)
+        fig3, ax3 = plt.subplots(figsize=FIGSIZE_SMALL, dpi=DPI)
+        ax3.plot(
+            time, force,
+            label='Force (N)',
+            color='blue', alpha=0.7,
+            linewidth=LINE_WIDTH
+        )
+        ax3.fill_between(
+            time, self.data_f['Direction_numeric'],
+            step='mid', alpha=0.3,
+            label='Direction', color='orange'
+        )
+        ax3.set_title('Force and Direction Over Time', fontsize=FONT_SIZE + 2)
+        ax3.set_xlabel('Time', fontsize=FONT_SIZE)
+        ax3.set_ylabel('Force (N) / Direction', fontsize=FONT_SIZE)
+        ax3.tick_params(axis='both', labelsize=FONT_SIZE - 1)
+        ax3.legend(fontsize=FONT_SIZE - 1)
+        ax3.grid(True, linewidth=0.3)
+        plt.tight_layout()  # Adjust margins to prevent crowding
+        figures.append((fig3, 1, 1, 1))  # Single column
+
+        # Save the figures above to the folder
+        for i, (fig, row, col, colspan) in enumerate(figures):
+            fig.savefig(os.path.join(save_dir, f"figure_{i + 1}.png"))
 
         # Render and save general stats table
         self.render_table_as_image(self.get_general_stats(), os.path.join(save_dir, "general_stats.png"))
