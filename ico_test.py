@@ -6,7 +6,7 @@ class SimpleApp(tk.Tk):
         super().__init__()
 
         # Use an absolute path for the icon file
-        icon_path = os.path.abspath('./img/rat_icon_187523.ico')
+        icon_path = os.path.abspath('./img/rat_icon_187523.png')
         try:
             self.iconbitmap(icon_path)
             print("Icon set successfully.")
