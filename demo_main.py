@@ -17,6 +17,7 @@ import seaborn as sns
 from tkinter import ttk
 import matplotlib.ticker as ticker
 from PIL import ImageGrab
+import readyplot as rp
 
 def read_shared_memory():
     try:
@@ -64,7 +65,8 @@ class App(ctk.CTk):
     def __init__(self, demo_mode=True):
         super().__init__()
         self.demo_mode = demo_mode
-
+        icon_path = os.path.abspath('./img/ratfav.ico')
+        self.iconbitmap(icon_path)
         # Stationary variables
         self.angle_special = []
         self.force_special = []
@@ -86,7 +88,9 @@ class App(ctk.CTk):
         self.inspector_button = ctk.CTkButton(self.nav_frame, text="Inspector", command=self.show_inspector)
         self.settings_button = ctk.CTkButton(self.nav_frame, text="Settings", command=self.show_settings)
 
-        for btn in (self.home_button, self.protocol_builder_button, self.inspector_button, self.settings_button):
+        self.comparer_button = ctk.CTkButton(self.nav_frame, text="Comparer", command=self.show_comparer)
+
+        for btn in (self.home_button, self.protocol_builder_button, self.inspector_button, self.settings_button, self.comparer_button):
             btn.pack(side="left", padx=20, expand=True)
 
         # Main content frame
@@ -473,8 +477,31 @@ class App(ctk.CTk):
         data_dir = "./data"
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
-        return [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))] or [
-            "No Trials Found"]
+        # Get all subfolders in the data directory
+        folders = [folder for folder in os.listdir(data_dir)
+                   if os.path.isdir(os.path.join(data_dir, folder))]
+
+        # Custom sort key that extracts date, animal, and trial
+        def sort_key(folder):
+            parts = folder.split("_")
+            if len(parts) >= 3:
+                # Extract parts
+                date_str, animal_str, trial_str = parts[0], parts[1], parts[2]
+                try:
+                    # Convert to integers (assuming valid format)
+                    date_val = int(date_str)  # e.g., 20250124
+                    animal_val = int(animal_str)  # e.g., 0 or 1234
+                    trial_val = int(trial_str)  # e.g., 2
+                except ValueError:
+                    # If conversion fails, send it to the end of the list
+                    date_val, animal_val, trial_val = float('inf'), float('inf'), float('inf')
+                return (date_val, animal_val, trial_val)
+            else:
+                # If the folder name doesn't match the format, push it to the end.
+                return (float('inf'), float('inf'), float('inf'))
+
+        sorted_folders = sorted(folders, key=sort_key)
+        return sorted_folders if sorted_folders else ["No Trials Found"]
 
     def no_trials_popup(self):
         # Create a popup window
@@ -525,6 +552,7 @@ class App(ctk.CTk):
             ctk.messagebox.showwarning("Warning", "No trials found. Please run a protocol or upload manually.")
             return
         self.trial_path = os.path.join("./data", selected_trial)
+        self.selected_trial = selected_trial
         print(f"Loading trial: {self.trial_path}")
         csv_file = next((f for f in os.listdir(self.trial_path) if f.endswith('.csv')), None)
         if not csv_file:
@@ -614,7 +642,7 @@ class App(ctk.CTk):
             MARKER_SIZE = 2  # Small marker size
             FLIER_SIZE = 1  # Smaller circles for outliers in boxplot
 
-            # Plot 1: Angle vs. Force (spans columns 0 and 1 in row 0)
+            # Plot 1: Angle vs. Force
             fig1, ax1 = plt.subplots(figsize=FIGSIZE_ROW, dpi=DPI)
             ax1.plot(
                 angle, force,
@@ -623,7 +651,7 @@ class App(ctk.CTk):
                 linestyle='-', linewidth=LINE_WIDTH,
                 color='b'
             )
-            ax1.set_title('Angle vs. Force', fontsize=FONT_SIZE + 2)
+            ax1.set_title(f'Angle vs. Force - {self.selected_trial}', fontsize=FONT_SIZE + 2)
             ax1.set_xlabel('Angle (degrees)', fontsize=FONT_SIZE)
             ax1.set_ylabel('Force (N)', fontsize=FONT_SIZE)
             ax1.tick_params(axis='both', labelsize=FONT_SIZE - 1)
@@ -698,13 +726,13 @@ class App(ctk.CTk):
             print("Error: 'main_content' does not exist or has been destroyed.")
             return
 
-        # Clear existing checkboxes if exist
+        # Clear existing checkboxes if they exist
         if hasattr(self, "checkbox_frame") and self.checkbox_frame.winfo_exists():
             self.checkbox_frame.destroy()
 
-        # Frame for checkboxes at the bottom of main_content
-        checkbox_frame = ctk.CTkFrame(self.main_content, fg_color="transparent")
-        checkbox_frame.pack(side="bottom", fill="x", pady=10)
+        # Create and store the frame for checkboxes at the bottom of main_content
+        self.checkbox_frame = ctk.CTkFrame(self.main_content, fg_color="transparent")
+        self.checkbox_frame.pack(side="bottom", fill="x", pady=10)
 
         # Track checkbox states
         self.checkbox_states = {}
@@ -715,7 +743,6 @@ class App(ctk.CTk):
         def checkbox_callback():
             selected_steps = [step for step, var in self.checkbox_states.items() if var.get()]
             print(f"Selected steps: {selected_steps}")
-
             # Update the plots and table based on selected checkboxes
             self.update_content_based_on_checkboxes(selected_steps)
 
@@ -725,7 +752,7 @@ class App(ctk.CTk):
             var = ctk.BooleanVar(value=True)  # Default to checked
             self.checkbox_states[step] = var
             checkbox = ctk.CTkCheckBox(
-                checkbox_frame, text=f"Step {step}", variable=var, command=checkbox_callback
+                self.checkbox_frame, text=f"Step {step}", variable=var, command=checkbox_callback
             )
             checkbox.grid(row=i // num_columns, column=i % num_columns, padx=5, pady=5, sticky="w")
 
@@ -733,7 +760,7 @@ class App(ctk.CTk):
         remove_wait_var = ctk.BooleanVar(value=False)
         self.checkbox_states["Remove Wait"] = remove_wait_var
         remove_wait_checkbox = ctk.CTkCheckBox(
-            checkbox_frame, text="Remove Wait", variable=remove_wait_var, command=checkbox_callback
+            self.checkbox_frame, text="Remove Wait", variable=remove_wait_var, command=checkbox_callback
         )
         # Place "Remove Wait" in the next available row
         remove_wait_checkbox.grid(row=(len(odd_steps) // num_columns) + 1, column=0, padx=5, pady=5, sticky="w")
@@ -748,16 +775,14 @@ class App(ctk.CTk):
 
     def add_table(self, rowspan):
         """Add tables to display general statistics and detailed calculations."""
-
         # Frame for the tables
         table_frame = ttk.Frame(self.canvas_frame)
         table_frame.grid(row=0, column=2, rowspan=rowspan, padx=5, pady=5, sticky="nsew")
 
-        # General statistics table
+        # --- General statistics table (unchanged) ---
         general_stats_frame = ttk.Frame(table_frame)
         general_stats_frame.pack(fill="x", pady=10)
 
-        # Extract general stats
         try:
             with open(os.path.join(self.trial_path, "information.txt"), "r") as f:
                 lines = f.readlines()
@@ -774,7 +799,6 @@ class App(ctk.CTk):
         min_angle = self.data["Angle"].min()
         num_cycles = self.data["Protocol_Step"].astype(int).isin(range(1, total_steps + 1, 2)).sum() // 2
 
-        # General statistics data
         general_stats = pd.DataFrame({
             "Metric": [
                 "Created On", "Total Duration", "Total Steps", "Total Data Points",
@@ -786,76 +810,70 @@ class App(ctk.CTk):
             ]
         })
 
-        # Setup general stats table
         general_tree = ttk.Treeview(general_stats_frame, columns=list(general_stats.columns), show="headings",
                                     height=10)
         for col in general_stats.columns:
             general_tree.heading(col, text=col)
             general_tree.column(col, anchor="center", width=150)
-
-        # Add rows to general stats table
         for _, row in general_stats.iterrows():
             general_tree.insert("", "end", values=list(row))
-
         general_tree.pack(fill="x")
 
-        # Detailed statistics table
+        # --- Detailed statistics table (with scrollbar) ---
         detailed_stats_frame = ttk.Frame(table_frame)
-        detailed_stats_frame.pack(fill="x", pady=10)
+        detailed_stats_frame.pack(fill="both", expand=True, pady=10)
 
-        # Filter rows with odd Protocol_Step
+        # Prepare detailed statistics data (as in your original code)
         odd_protocol_data = self.data_f[self.data_f['Protocol_Step'].astype(int) % 2 != 0]
-
-        # Group by Protocol_Step and calculate the absolute difference in Angle
         angle_diff = odd_protocol_data.groupby('Protocol_Step')['Angle'].agg(lambda x: x.iloc[-1] - x.iloc[0]).abs()
-        angle_diff.index = angle_diff.index.astype(str)  # Convert index to strings
+        angle_diff.index = angle_diff.index.astype(str)
 
-        # Points within IQR calculations
         def count_points_within_iqr(group):
             q1 = group['Force'].quantile(0.25)
             q3 = group['Force'].quantile(0.75)
             return ((group['Force'] >= q1) & (group['Force'] <= q3)).sum()
 
         points_within_iqr = odd_protocol_data.groupby('Protocol_Step').apply(count_points_within_iqr)
-        points_within_iqr.index = points_within_iqr.index.astype(str)  # Convert index to strings
+        points_within_iqr.index = points_within_iqr.index.astype(str)
 
-        # Prepare the data for display
         custom_data = pd.DataFrame({
-            "Protocol_Step": angle_diff.index,  # Protocol steps as strings
-            "RoM": angle_diff.round(1),  # Round to 1 decimal place
+            "Protocol_Step": angle_diff.index,
+            "RoM": angle_diff.round(1),
             "Points in IQR": points_within_iqr
         }).reset_index(drop=True)
 
-        # Add summary row as a new row in the DataFrame
         summary_row = pd.DataFrame([{
             "Protocol_Step": "Summary",
             "RoM": f"{angle_diff.mean():.1f} | {angle_diff.std():.1f}",
             "Points in IQR": f"{points_within_iqr.mean():.1f} | {points_within_iqr.std():.1f}"
         }])
         custom_data = pd.concat([custom_data, summary_row], ignore_index=True)
-
-        # Sort rows by Protocol_Step (numerically, except for "Summary")
         custom_data["Protocol_Step_Numeric"] = pd.to_numeric(custom_data["Protocol_Step"], errors="coerce")
-        custom_data = custom_data.sort_values(
-            by=["Protocol_Step_Numeric", "Protocol_Step"],
-            ascending=[True, True]
-        ).drop(columns=["Protocol_Step_Numeric"])
+        custom_data = custom_data.sort_values(by=["Protocol_Step_Numeric", "Protocol_Step"],
+                                              ascending=[True, True]).drop(columns=["Protocol_Step_Numeric"])
 
-        # Dynamically calculate the height of the detailed stats table
-        table_height = len(custom_data)
+        # Determine visible rows (limit height to 10 if more than 10 rows)
+        total_rows = len(custom_data)
+        visible_rows = 10 if total_rows > 10 else total_rows
 
-        # Setup detailed stats table
-        detailed_tree = ttk.Treeview(detailed_stats_frame, columns=list(custom_data.columns), show="headings",
-                                     height=table_height)
+        # Create a frame to hold both the treeview and the scrollbar
+        tree_container = ttk.Frame(detailed_stats_frame)
+        tree_container.pack(fill="both", expand=True)
+
+        detailed_tree = ttk.Treeview(tree_container, columns=list(custom_data.columns), show="headings",
+                                     height=visible_rows)
         for col in custom_data.columns:
             detailed_tree.heading(col, text=col)
             detailed_tree.column(col, anchor="center", width=150)
-
-        # Add rows to detailed stats table
         for _, row in custom_data.iterrows():
             detailed_tree.insert("", "end", values=list(row))
+        detailed_tree.pack(side="left", fill="both", expand=True)
 
-        detailed_tree.pack(fill="x")
+        # Add a vertical scrollbar if there are more than 10 rows
+        if total_rows > 10:
+            vsb = ttk.Scrollbar(tree_container, orient="vertical", command=detailed_tree.yview)
+            detailed_tree.configure(yscrollcommand=vsb.set)
+            vsb.pack(side="right", fill="y")
 
     def add_slider(self):
         if self.slider:
@@ -875,21 +893,90 @@ class App(ctk.CTk):
 
     def save_all_figures(self):
         """Save all figures and tables displayed on the page as PNG files and show a popup message."""
-        import os
-        from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-        import pandas as pd
-        import matplotlib.pyplot as plt
+        angle = self.data_f['Angle']
+        force = self.data_f['Force']
+        time = self.data_f['Time']
+
+        direction_mapping = {'idle': 0, 'forward': 1, 'backward': -1}
+        self.data_f['Direction_numeric'] = self.data_f['Direction'].map(direction_mapping)
+
 
         # Create a folder for saving
         save_dir = os.path.join(self.trial_path, "screenshots")
         os.makedirs(save_dir, exist_ok=True)
 
-        # Save each matplotlib figure
-        for i, fig in enumerate(plt.get_fignums()):
-            plt.figure(fig)
-            fig_path = os.path.join(save_dir, f"figure_{i + 1}.png")
-            plt.savefig(fig_path, dpi=300)
-            print(f"Saved figure: {fig_path}")
+        figures = []
+
+        # Constants for scaling
+        FIGSIZE_ROW = (5, 3)  # Larger width for row-spanning plot
+        FIGSIZE_SMALL = (3, 2)  # Smaller size for side-by-side plots
+        DPI = 300  # Moderate DPI for clarity
+        FONT_SIZE = 6  # Font size suitable for small plots
+        LINE_WIDTH = 0.7  # Thin but visible lines
+        MARKER_SIZE = 2  # Small marker size
+        FLIER_SIZE = 1  # Smaller circles for outliers in boxplot
+
+        # Plot 1: Angle vs. Force
+        fig1, ax1 = plt.subplots(figsize=FIGSIZE_ROW, dpi=DPI)
+        ax1.plot(
+            angle, force,
+            label='Force',
+            marker='o', markersize=MARKER_SIZE,
+            linestyle='-', linewidth=LINE_WIDTH,
+            color='b'
+        )
+        ax1.set_title(f'Angle vs. Force - {self.selected_trial}', fontsize=FONT_SIZE + 2)
+        ax1.set_xlabel('Angle (degrees)', fontsize=FONT_SIZE)
+        ax1.set_ylabel('Force (N)', fontsize=FONT_SIZE)
+        ax1.tick_params(axis='both', labelsize=FONT_SIZE - 1)
+        ax1.legend(fontsize=FONT_SIZE - 1)
+        ax1.xaxis.set_major_locator(ticker.MaxNLocator(nbins=10))
+        ax1.yaxis.set_major_locator(ticker.MaxNLocator(nbins=10))
+        ax1.grid(True, linewidth=0.3)
+        plt.tight_layout()  # Adjust margins to prevent crowding
+        figures.append((fig1, 0, 0, 2))  # Spans 2 columns
+
+        # Plot 2: Force Distribution by Protocol_Step (column 0, row 1)
+        fig2, ax2 = plt.subplots(figsize=FIGSIZE_SMALL, dpi=DPI)
+        sns.boxplot(
+            x='Protocol_Step', y='Force',
+            data=self.data_f, ax=ax2,
+            linewidth=LINE_WIDTH, fliersize=FLIER_SIZE
+        )
+        ax2.set_title('Force Distribution by Protocol_Step', fontsize=FONT_SIZE + 2)
+        ax2.set_xlabel('Protocol_Step', fontsize=FONT_SIZE)
+        ax2.set_ylabel('Force (N)', fontsize=FONT_SIZE)
+        ax2.tick_params(axis='both', labelsize=FONT_SIZE - 1)
+        ax2.grid(axis='y', linestyle='--', alpha=0.5, linewidth=0.3)
+        plt.tight_layout()  # Adjust margins to prevent crowding
+        figures.append((fig2, 1, 0, 1))  # Single column
+
+        # Plot 3: Force and Direction Over Time (column 1, row 1)
+        fig3, ax3 = plt.subplots(figsize=FIGSIZE_SMALL, dpi=DPI)
+        ax3.plot(
+            time, force,
+            label='Force (N)',
+            color='blue', alpha=0.7,
+            linewidth=LINE_WIDTH
+        )
+        ax3.fill_between(
+            time, self.data_f['Direction_numeric'],
+            step='mid', alpha=0.3,
+            label='Direction', color='orange'
+        )
+        ax3.set_title('Force and Direction Over Time', fontsize=FONT_SIZE + 2)
+        ax3.set_xlabel('Time', fontsize=FONT_SIZE)
+        ax3.set_ylabel('Force (N) / Direction', fontsize=FONT_SIZE)
+        ax3.tick_params(axis='both', labelsize=FONT_SIZE - 1)
+        ax3.legend(fontsize=FONT_SIZE - 1)
+        ax3.grid(True, linewidth=0.3)
+        plt.tight_layout()  # Adjust margins to prevent crowding
+        figures.append((fig3, 1, 1, 1))  # Single column
+
+        # Save the figures above to the folder
+        for i, (fig, row, col, colspan) in enumerate(figures):
+            fig.savefig(os.path.join(save_dir, f"figure_{i + 1}.png"))
+
 
         # Render and save general stats table
         self.render_table_as_image(self.get_general_stats(), os.path.join(save_dir, "general_stats.png"))
@@ -1163,7 +1250,287 @@ class App(ctk.CTk):
         self.angle_data = []
         self.force_data = []
 
-        # Clear the graph by redrawing it with empty data
+    def show_comparer(self):
+        self.clear_content_frame()
+
+        # Create a container frame for the Comparer page
+        comparer_container = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        comparer_container.pack(expand=True, fill="both", padx=10, pady=10)
+
+        # --- Left Sidebar ---
+        self.comparer_sidebar = ctk.CTkFrame(comparer_container, width=200)
+        self.comparer_sidebar.pack(side="left", fill="y", padx=10, pady=10)
+
+        # Saved Figures button
+        self.saved_figures_button = ctk.CTkButton(self.comparer_sidebar, text="Saved Figures",
+                                                  command=self.show_saved_figures)
+        self.saved_figures_button.pack(pady=10, padx=10)
+
+        # Height adjuster button (cycles bottom section height)
+        self.bottom_height_mode = "half"  # starting mode: half the main area
+        self.height_adjust_button = ctk.CTkButton(self.comparer_sidebar, text="Adjust Bottom Height",
+                                                  command=self.cycle_bottom_height)
+        self.height_adjust_button.pack(pady=10, padx=10)
+
+        # --- Main Content Area ---
+        self.comparer_main = ctk.CTkFrame(comparer_container, fg_color="transparent")
+        self.comparer_main.pack(side="left", expand=True, fill="both", padx=10, pady=10)
+
+        # Top section: combined angle vs force graph
+        self.combined_graph_frame = ctk.CTkFrame(self.comparer_main, fg_color="transparent", height=200)
+        self.combined_graph_frame.pack(side="top", fill="x", expand=False)
+        # (We will update this frame with our combined graph in update_combined_graph())
+
+        # Bottom section: will contain folder boxes
+        self.folder_section = ctk.CTkFrame(self.comparer_main, fg_color="transparent")
+        self.folder_section.pack(side="bottom", fill="both", expand=True)
+
+        # Create a horizontally scrollable canvas for folder boxes
+        self.folder_canvas = ctk.CTkCanvas(self.folder_section, bg="white")
+        self.folder_canvas.pack(side="top", fill="both", expand=True)
+        self.folder_scrollbar = ctk.CTkScrollbar(self.folder_section, orientation="horizontal",
+                                                 command=self.folder_canvas.xview)
+        self.folder_scrollbar.pack(side="bottom", fill="x")
+        self.folder_canvas.configure(xscrollcommand=self.folder_scrollbar.set)
+
+        self.folder_inner_frame = ctk.CTkFrame(self.folder_canvas, fg_color="transparent")
+        self.folder_canvas.create_window((0, 0), window=self.folder_inner_frame, anchor="nw")
+        self.folder_inner_frame.bind("<Configure>", lambda e: self.folder_canvas.configure(
+            scrollregion=self.folder_canvas.bbox("all")))
+
+        # For each data folder (using your sorted get_trials method), create a folder box.
+        folders = self.get_trials()  # e.g., ["20250124_0000_02", "20250127_1234_01", ...]
+        print(f"Found folders: {folders}")
+        self.folder_boxes = {}
+        for folder in folders:
+            folder_box = self.create_folder_box(folder)
+            folder_box.pack(side="left", padx=10, pady=10)
+            self.folder_boxes[folder] = folder_box
+
+        # Initially draw the combined graph.
+        self.update_combined_graph()
+
+    def show_saved_figures(self):
+        print("Saved Figures button pressed.")
+        # Implement your saved figures display logic here.
+
+    def cycle_bottom_height(self):
+        """Cycle the bottom section height between full (100%), half (50%), and none (hidden)."""
+        if self.bottom_height_mode == "half":
+            self.bottom_height_mode = "full"
+        elif self.bottom_height_mode == "full":
+            self.bottom_height_mode = "none"
+        else:
+            self.bottom_height_mode = "half"
+        self.adjust_bottom_section_height()
+
+    def adjust_bottom_section_height(self):
+        """Adjust the folder_section (bottom area) based on the mode."""
+        if self.bottom_height_mode == "full":
+            # Expand folder section to fill the main content area; hide the combined graph.
+            self.combined_graph_frame.pack_forget()
+            self.folder_section.pack(side="top", fill="both", expand=True)
+        elif self.bottom_height_mode == "half":
+            # Show both: combined graph on top and folder section below.
+            if not self.combined_graph_frame.winfo_ismapped():
+                self.combined_graph_frame.pack(side="top", fill="x", expand=False)
+            self.folder_section.pack(side="bottom", fill="both", expand=True)
+        elif self.bottom_height_mode == "none":
+            # Hide folder section altogether.
+            self.folder_section.pack_forget()
+
+    def create_folder_box(self, folder):
+        """
+        Create a box for one folder that includes:
+         - A checkbox with the folder name.
+         - A small angle vs force graph (Matplotlib figure).
+         - Information read from information.txt.
+         - A set of small checkboxes for protocol steps from the folder’s CSV file.
+        """
+        box = ctk.CTkFrame(self.folder_inner_frame, width=250, height=400, fg_color="lightgray")
+
+        # Folder selection checkbox (the one next to the folder name)
+        folder_var = ctk.BooleanVar(value=False)
+        folder_checkbox = ctk.CTkCheckBox(box, text=folder, variable=folder_var,
+                                          command=lambda: self.on_folder_checkbox_toggle(folder, folder_var))
+        folder_checkbox.pack(anchor="nw", padx=5, pady=5)
+
+        # Small angle vs force graph (a placeholder Matplotlib figure)
+        fig, ax = plt.subplots(figsize=(2, 1))
+        ax.plot([0, 1, 2], [0, 1, 0])  # placeholder plot
+        ax.set_title("Angle vs Force", fontsize=6)
+        canvas = FigureCanvasTkAgg(fig, master=box)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(padx=5, pady=5)
+        canvas.draw()
+        # Save the canvas so we can update it later.
+        box.graph_canvas = canvas
+
+        # Folder information read from information.txt
+        info_text = self.get_folder_info(folder)
+        info_label = ctk.CTkLabel(box, text=info_text, wraplength=200)
+        info_label.pack(padx=5, pady=5)
+
+        # Protocol step checkboxes for the folder (read from data.csv)
+        steps_frame = ctk.CTkFrame(box)
+        steps_frame.pack(padx=5, pady=5)
+        # (Optional: you may want to add a scrollbar here if there are many steps.)
+        protocol_steps = self.get_protocol_steps_for_folder(folder)
+        step_vars = {}
+        for i, step in enumerate(protocol_steps):
+            sv = ctk.BooleanVar(value=True)
+            cb = ctk.CTkCheckBox(steps_frame, text=f"Step {step}", variable=sv,
+                                 command=lambda s=step, v=sv: self.on_folder_step_checkbox_toggle(folder, s, v))
+            # Arrange in two columns
+            cb.grid(row=i // 2, column=i % 2, sticky="w", padx=5, pady=5)
+            step_vars[step] = sv
+
+        box.step_vars = step_vars
+        box.folder_var = folder_var  # store the folder selection variable
+
+        return box
+
+    def get_folder_info(self, folder):
+        """Read and return information from the folder’s information.txt file."""
+        info_path = os.path.join("./data", folder, "information.txt")
+        if os.path.exists(info_path):
+            with open(info_path, "r") as f:
+                return f.read()
+        return "No information available"
+
+    def get_protocol_steps_for_folder(self, folder):
+        """Read the folder’s CSV file and return a list of unique protocol steps."""
+        data_path = os.path.join("./data", folder)
+        csv_files = [f for f in os.listdir(data_path) if f.endswith(".csv")]
+        if not csv_files:
+            return []
+        data_csv = os.path.join(data_path, csv_files[0])
+        try:
+            headers = ['Time', 'Angle', 'Force', 'raw_Force', 'Motor_State', 'Direction', 'Protocol_Step']
+            df = pd.read_csv(data_csv, header=None, names=headers)
+            steps = sorted(df['Protocol_Step'].unique())
+            return steps
+        except Exception as e:
+            print(f"Error reading protocol steps for {folder}: {e}")
+            return []
+
+    def on_folder_checkbox_toggle(self, folder, var):
+        """
+        Called when the folder checkbox is toggled.
+        Changes the folder box color and refreshes both the combined graph and the mini graph.
+        """
+        if var.get():
+            print(f"Folder {folder} selected.")
+            # Change folder box color to indicate selection.
+            self.folder_boxes[folder].configure(fg_color="blue")
+        else:
+            print(f"Folder {folder} deselected.")
+            self.folder_boxes[folder].configure(fg_color="lightgray")
+        self.update_combined_graph()
+        self.update_folder_mini_graph(folder)
+
+    def on_folder_step_checkbox_toggle(self, folder, step, var):
+        """
+        Called when a protocol step checkbox in a folder box is toggled.
+        Updates the activated protocol steps for that folder and refreshes both graphs.
+        """
+        if var.get():
+            print(f"In folder {folder}, step {step} added to graph.")
+        else:
+            print(f"In folder {folder}, step {step} removed from graph.")
+        self.update_combined_graph()
+        self.update_folder_mini_graph(folder)
+
+    def get_folder_color(self, folder):
+        """Return a color for a given folder (different folders get different colors)."""
+        colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown']
+        folders = self.get_trials()  # Assuming this returns folders in a sorted order.
+        try:
+            index = folders.index(folder)
+        except ValueError:
+            index = 0
+        return colors[index % len(colors)]
+
+    def update_combined_graph(self):
+        """
+        Re-draw the combined angle vs force graph in the top section using data from every folder
+        that is selected (folder checkbox is True). For each selected folder, only plot data for the
+        protocol steps that are active.
+        """
+        # Clear the combined graph frame.
+        for widget in self.combined_graph_frame.winfo_children():
+            widget.destroy()
+
+        # Create a new figure.
+        fig, ax = plt.subplots(figsize=(6, 4))
+        # Loop over all folder boxes.
+        for folder, box in self.folder_boxes.items():
+            if box.folder_var.get():
+                # Get the active protocol steps from this folder.
+                active_steps = [step for step, var in box.step_vars.items() if var.get()]
+                data_path = os.path.join("./data", folder)
+                csv_files = [f for f in os.listdir(data_path) if f.endswith(".csv")]
+                if not csv_files:
+                    return []
+                data_csv = os.path.join(data_path, csv_files[0])
+                try:
+                    headers = ['Time', 'Angle', 'Force', 'raw_Force', 'Motor_State', 'Direction', 'Protocol_Step']
+                    df = pd.read_csv(data_csv, header=None, names=headers)
+                    #filter the data based on the active steps
+                    df = df[df['Protocol_Step'].isin(active_steps)]
+                except Exception as e:
+                    continue
+                color = self.get_folder_color(folder)
+                if not df.empty:
+                    x = df['Angle']
+                    y = df['Force']
+                    ax.plot(x, y, label=f"{folder}", color=color)
+        ax.legend(fontsize=6)
+        ax.set_title("Combined Angle vs Force Graph")
+        # Embed the figure into the combined_graph_frame.
+        canvas = FigureCanvasTkAgg(fig, master=self.combined_graph_frame)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(fill="both", expand=True)
+        canvas.draw()
+
+    def update_folder_mini_graph(self, folder):
+        """
+        Re-draw the mini graph for a specific folder based on its active protocol steps.
+        """
+        box = self.folder_boxes.get(folder)
+        if not box:
+            return
+
+        # Remove the old mini graph canvas if it exists.
+        if hasattr(box, "graph_canvas") and box.graph_canvas:
+            try:
+                box.graph_canvas.get_tk_widget().destroy()
+            except Exception:
+                pass
+
+        active_steps = [step for step, var in box.step_vars.items() if var.get()]
+
+        fig, ax = plt.subplots(figsize=(2, 1))
+        if active_steps:
+            for step in active_steps:
+                try:
+                    step_offset = int(step) * 0.1
+                except Exception:
+                    step_offset = 0
+                x = [0, 1, 2, 3]
+                y = [val + step_offset for val in [0, 1, 0, 1]]
+                ax.plot(x, y, label=f"Step {step}", linewidth=1)
+            ax.legend(fontsize=4)
+        else:
+            ax.text(0.5, 0.5, "No Active Steps", ha="center", va="center", fontsize=6)
+        ax.set_title("Angle vs Force", fontsize=6)
+
+        canvas = FigureCanvasTkAgg(fig, master=box)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(padx=5, pady=5)
+        canvas.draw()
+        box.graph_canvas = canvas  # Store the new canvas.
+
 
 # Start the application
 if __name__ == "__main__":
