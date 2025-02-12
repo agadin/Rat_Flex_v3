@@ -227,7 +227,7 @@ class App(ctk.CTk):
         super().__init__()
         threading.Thread(target=start_protocol_runner, daemon=True).start()
         icon_path = os.path.abspath('./img/ratfav.ico')
-        self.iconbitmap(icon_path)
+        self.wm_iconbitmap(icon_path)
         self.queue = queue.Queue()
         self.step_time_int = None
         self.clock_values = False
