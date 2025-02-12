@@ -28,7 +28,7 @@ import sys
 # Global variable to store process reference
 protocol_process = None
 
-def start_protocol_runner():
+def start_protocol_runner(app):
     """Starts protocol_runner.py and monitors for crashes."""
     global protocol_process
 
@@ -254,7 +254,7 @@ class App(ctk.CTk):
 
 
         # Window configuration
-        self.title("Stepper Motor Control")
+        self.title("RatFlex")
         self.resizable(False, False)
         # Calculate the center of the screen
         screen_width = self.winfo_screenwidth()
@@ -1498,7 +1498,7 @@ class App(ctk.CTk):
             time.sleep(1)  # Give some time to properly terminate
 
         # Start a new instance of protocol_runner.py
-        threading.Thread(target=start_protocol_runner, daemon=True).start()
+        threading.Thread(target=start_protocol_runner, args=(self,), daemon=True).start()
 
     def update_output_window(self):
         """Update the settings page window with new output from protocol_runner.py."""
@@ -1532,12 +1532,12 @@ class App(ctk.CTk):
         output_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Create a scrolling text widget to show protocol_runner.py output
-        self.output_text = tk.Text(output_frame, wrap="word", height=15, width=80, state="disabled", bg="black",
+        self.output_text = ttk.Text(output_frame, wrap="word", height=15, width=80, state="disabled", bg="black",
                                    fg="white")
         self.output_text.pack(side="left", fill="both", expand=True)
 
         # Add a scrollbar
-        scrollbar = tk.Scrollbar(output_frame, command=self.output_text.yview)
+        scrollbar = ttk.Scrollbar(output_frame, command=self.output_text.yview)
         scrollbar.pack(side="right", fill="y")
         self.output_text.config(yscrollcommand=scrollbar.set)
 
