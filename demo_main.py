@@ -16,8 +16,8 @@ import pandas as pd
 import seaborn as sns
 from tkinter import ttk
 import matplotlib.ticker as ticker
-from PIL import ImageGrab
 import readyplot as rp
+from PIL import Image, ImageTk
 
 def read_shared_memory():
     try:
@@ -65,8 +65,17 @@ class App(ctk.CTk):
     def __init__(self, demo_mode=True):
         super().__init__()
         self.demo_mode = demo_mode
+        # Convert .ico to .png
         icon_path = os.path.abspath('./img/ratfav.ico')
-        self.iconbitmap(icon_path)
+        png_icon_path = os.path.abspath('./img/ratfav.png')
+        try:
+            img = Image.open(icon_path)
+            img.save(png_icon_path)
+            self.icon_img = ImageTk.PhotoImage(file=png_icon_path)
+            self.iconphoto(False, self.icon_img)
+            print("Icon set successfully.")
+        except Exception as e:
+            print(f"Failed to set icon: {e}")
         # Stationary variables
         self.angle_special = []
         self.force_special = []

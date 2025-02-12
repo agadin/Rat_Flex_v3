@@ -227,7 +227,15 @@ class App(ctk.CTk):
         super().__init__()
         threading.Thread(target=start_protocol_runner, daemon=True).start()
         icon_path = os.path.abspath('./img/ratfav.ico')
-        self.wm_iconbitmap(icon_path)
+        png_icon_path = os.path.abspath('./img/ratfav.png')
+        try:
+            img = Image.open(icon_path)
+            img.save(png_icon_path)
+            self.icon_img = ImageTk.PhotoImage(file=png_icon_path)
+            self.iconphoto(False, self.icon_img)
+            print("Icon set successfully.")
+        except Exception as e:
+            print(f"Failed to set icon: {e}")
         self.queue = queue.Queue()
         self.step_time_int = None
         self.clock_values = False
