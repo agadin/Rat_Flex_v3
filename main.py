@@ -19,7 +19,7 @@ import seaborn as sns
 from tkinter import ttk
 import matplotlib.ticker as ticker
 import datetime
-
+import tkinter as tk
 import subprocess
 import queue
 import threading
@@ -27,6 +27,9 @@ import sys
 
 # Global variable to store process reference
 protocol_process = None
+
+output_queue = queue.Queue()
+
 
 def start_protocol_runner(app):
     """Starts protocol_runner.py and monitors for crashes."""
@@ -55,30 +58,30 @@ def read_process_output(process, output_queue):
         output_queue.put(line)
     process.stdout.close()
 
-# Queue to store output
-output_queue = queue.Queue()
+# Function to initialize resources
+def initialize_resources():
+    global redis_client, shm, fmt
 
-protocol_process = None
+    # Initialize CustomTkinter
+    ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
+    ctk.set_default_color_theme("blue")
 
-# Start protocol_runner.py in a separate thread
-# Initialize CustomTkinter
-ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
-ctk.set_default_color_theme("blue")
+    # Shared memory and Redis configuration
+    redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+    shm_name = 'shared_data'
+    fmt = 'i d d d'
+    shm_size = struct.calcsize(fmt)
 
-# Shared memory and Redis configuration
-redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-shm_name = 'shared_data'
-fmt = 'i d d d'
-shm_size = struct.calcsize(fmt)
+    # Try to access shared memory
+    try:
+        shm = sm.SharedMemory(name=shm_name)
+    except FileNotFoundError:
+        print("Shared memory not found. Creating new shared memory block.")
+        redis_client.set("shared_memory_error", 1)
+        time.sleep(1)
+        shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
 
-# Try to access shared memory
-try:
-    shm = sm.SharedMemory(name=shm_name)
-except FileNotFoundError:
-    print("Shared memory not found. Creating new shared memory block.")
-    redis_client.set("shared_memory_error", 1)
-    time.sleep(1)
-    shm = sm.SharedMemory(name=shm_name)
+
 
 def read_shared_memory():
     try:
@@ -1532,12 +1535,12 @@ class App(ctk.CTk):
         output_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Create a scrolling text widget to show protocol_runner.py output
-        self.output_text = ttk.Text(output_frame, wrap="word", height=15, width=80, state="disabled", bg="black",
+        self.output_text = tk.Text(output_frame, wrap="word", height=15, width=80, state="disabled", bg="black",
                                    fg="white")
         self.output_text.pack(side="left", fill="both", expand=True)
 
         # Add a scrollbar
-        scrollbar = ttk.Scrollbar(output_frame, command=self.output_text.yview)
+        scrollbar = tk.Scrollbar(output_frame, command=self.output_text.yview)
         scrollbar.pack(side="right", fill="y")
         self.output_text.config(yscrollcommand=scrollbar.set)
 
