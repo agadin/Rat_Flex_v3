@@ -30,36 +30,6 @@ protocol_process = None
 
 output_queue = queue.Queue()
 
-
-def start_protocol_runner(app):
-    global protocol_process
-
-    # Start protocol_runner.py
-    protocol_process = subprocess.Popen(
-        [sys.executable, "protocol_runner.py"],  # Replace with full path if necessary
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-
-    # Start output reading thread
-    threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
-
-    # Initialize resources after starting the subprocess
-    initialize_resources()
-
-    # Monitor if it crashes
-    protocol_process.wait()
-
-    # If it crashes, show the popup in the main app
-    app.after(0, app.show_restart_popup)
-
-def read_process_output(process, output_queue):
-    """Reads stdout and stderr from the process and puts it in the queue."""
-    for line in iter(process.stdout.readline, ""):
-        output_queue.put(line)
-    process.stdout.close()
-
 # Function to initialize resources
 def initialize_resources():
     global redis_client, shm, fmt
@@ -83,7 +53,38 @@ def initialize_resources():
         time.sleep(1)
         shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
 
+# Function to start protocol_runner.py
+def start_protocol_runner(app):
+    global protocol_process
 
+    # Start protocol_runner.py
+    protocol_process = subprocess.Popen(
+        [sys.executable, "protocol_runner.py"],  # Replace with full path if necessary
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    # Start output reading thread
+    threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
+
+    # Initialize resources after starting the subprocess
+    initialize_resources()
+
+    # Monitor if it crashes
+    protocol_process.wait()
+
+    # If it crashes, show the popup in the main app
+    if app.running:
+        app.after(0, app.show_restart_popup)
+
+def read_process_output(process, output_queue):
+    """Reads stdout and stderr from the process and puts it in the queue."""
+    for line in iter(process.stdout.readline, ""):
+        output_queue.put(line)
+    process.stdout.close()
+
+# Function to initialize resources
 
 def read_shared_memory():
     try:
