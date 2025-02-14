@@ -28,7 +28,13 @@ import sys
 # Global variable to store process reference
 protocol_process = None
 
+shm = None
+
+
 output_queue = queue.Queue()
+
+# Define the format for packing and unpacking data
+
 
 # Function to initialize resources
 # Function to initialize resources
@@ -59,6 +65,33 @@ def initialize_resources():
             existing_shm = sm.SharedMemory(name=shm_name)
             existing_shm.unlink()
             shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
+
+# Function to start protocol_runner.py
+def start_protocol_runner(app):
+    global protocol_process
+
+    # Start protocol_runner.py
+    protocol_process = subprocess.Popen(
+        [sys.executable, "protocol_runner.py"],  # Replace with full path if necessary
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    # Start output reading thread
+    threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
+
+    # Initialize resources after starting the subprocess
+    initialize_resources()
+
+    # Monitor if it crashes
+    protocol_process.wait()
+
+    # If it crashes, show the popup in the main app
+    if app.running:
+        app.after(0, app.show_restart_popup)
+
+# Function to read process output
 
 # Function to read shared memory
 def read_shared_memory():
