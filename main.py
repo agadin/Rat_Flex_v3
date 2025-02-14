@@ -31,6 +31,7 @@ protocol_process = None
 output_queue = queue.Queue()
 
 # Function to initialize resources
+# Function to initialize resources
 def initialize_resources():
     global redis_client, shm, fmt
 
@@ -51,7 +52,13 @@ def initialize_resources():
         print("Shared memory not found. Creating new shared memory block.")
         redis_client.set("shared_memory_error", 1)
         time.sleep(1)
-        shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
+        try:
+            shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
+        except FileExistsError:
+            # Unlink the existing shared memory and create a new one
+            existing_shm = sm.SharedMemory(name=shm_name)
+            existing_shm.unlink()
+            shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
 
 # Function to start protocol_runner.py
 def start_protocol_runner(app):
@@ -78,13 +85,12 @@ def start_protocol_runner(app):
     if app.running:
         app.after(0, app.show_restart_popup)
 
+# Function to read process output
 def read_process_output(process, output_queue):
     """Reads stdout and stderr from the process and puts it in the queue."""
     for line in iter(process.stdout.readline, ""):
         output_queue.put(line)
     process.stdout.close()
-
-# Function to initialize resources
 
 def read_shared_memory():
     global shm
