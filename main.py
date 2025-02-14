@@ -1802,6 +1802,7 @@ class App(ctk.CTk):
         self.destroy()
 
 if __name__ == "__main__":
+    initialize_resources()
     app = App()
     app.protocol("WM_DELETE_WINDOW", app.destroy)
     app.mainloop()
