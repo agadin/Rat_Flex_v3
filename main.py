@@ -60,30 +60,26 @@ def initialize_resources():
             existing_shm.unlink()
             shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
 
-# Function to start protocol_runner.py
-def start_protocol_runner(app):
-    global protocol_process
+# Function to read shared memory
+def read_shared_memory():
+    global shm, fmt
+    try:
+        data = bytes(shm.buf[:struct.calcsize(fmt)])
+        stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
+        return step_count, current_angle, current_force
+    except Exception as e:
+        print(f"Error reading shared memory: {e}")
+        return None
 
-    # Start protocol_runner.py
-    protocol_process = subprocess.Popen(
-        [sys.executable, "protocol_runner.py"],  # Replace with full path if necessary
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-
-    # Start output reading thread
-    threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
-
-    # Initialize resources after starting the subprocess
-    initialize_resources()
-
-    # Monitor if it crashes
-    protocol_process.wait()
-
-    # If it crashes, show the popup in the main app
-    if app.running:
-        app.after(0, app.show_restart_popup)
+# Function to send data to shared memory
+def send_data_to_shared_memory(stop_flag=1):
+    global shm, fmt
+    step_count, current_angle, current_force = read_shared_memory()
+    try:
+        packed_data = struct.pack(fmt, stop_flag, step_count, current_angle, current_force)
+        shm.buf[:len(packed_data)] = packed_data
+    except Exception as e:
+        print(f"Error writing to shared memory: {e}")
 
 # Function to read process output
 def read_process_output(process, output_queue):
