@@ -32,7 +32,6 @@ output_queue = queue.Queue()
 
 
 def start_protocol_runner(app):
-    """Starts protocol_runner.py and monitors for crashes."""
     global protocol_process
 
     # Start protocol_runner.py
@@ -46,11 +45,14 @@ def start_protocol_runner(app):
     # Start output reading thread
     threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
 
+    # Initialize resources after starting the subprocess
+    initialize_resources()
+
     # Monitor if it crashes
     protocol_process.wait()
 
     # If it crashes, show the popup in the main app
-    app.show_restart_popup()
+    app.after(0, app.show_restart_popup)
 
 def read_process_output(process, output_queue):
     """Reads stdout and stderr from the process and puts it in the queue."""
@@ -1802,7 +1804,6 @@ class App(ctk.CTk):
         self.destroy()
 
 if __name__ == "__main__":
-    initialize_resources()
     app = App()
     app.protocol("WM_DELETE_WINDOW", app.destroy)
     app.mainloop()
