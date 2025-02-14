@@ -228,7 +228,7 @@ class ProtocolViewer(ctk.CTkFrame):
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
-        threading.Thread(target=start_protocol_runner, daemon=True).start()
+        threading.Thread(target=start_protocol_runner, args=(self,), daemon=True).start()
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
         try:
