@@ -87,6 +87,7 @@ def read_process_output(process, output_queue):
 # Function to initialize resources
 
 def read_shared_memory():
+    global shm
     try:
         data = bytes(shm.buf[:struct.calcsize(fmt)])
         stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
