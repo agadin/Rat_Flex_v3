@@ -83,23 +83,12 @@ def start_protocol_runner(app):
     # Start output reading thread
     threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
 
-    # Initialize resources after starting the subprocess
-
     # Monitor if it crashes
     protocol_process.wait()
 
     # If it crashes, show the popup in the main app
     if app.running:
         app.after(0, app.show_restart_popup)
-def read_shared_memory():
-    global shm, fmt
-    try:
-        data = bytes(shm.buf[:struct.calcsize(fmt)])
-        stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
-        return step_count, current_angle, current_force
-    except Exception as e:
-        print(f"Error reading shared memory: {e}")
-        return None
 
 # Function to send data to shared memory
 def send_data_to_shared_memory(stop_flag=1):
@@ -128,16 +117,6 @@ def read_shared_memory():
         print(f"Error reading shared memory: {e}")
         return None
 
-
-def send_data_to_shared_memory(stop_flag=1):
-    step_count, current_angle, current_force = read_shared_memory()
-    try:
-        packed_data = struct.pack(fmt, stop_flag, step_count, current_angle, current_force)
-        shm.buf[:len(packed_data)] = packed_data
-    except Exception as e:
-        print(f"Error writing to shared memory: {e}")
-
-
 def read_calibration_data(file_path):
     calibration_data = defaultdict(dict)
     with open(file_path, 'r') as csvfile:
@@ -161,7 +140,7 @@ from tkinter import Frame
 
 
 class ProtocolViewer(ctk.CTkFrame):
-    def __init__(self, master, protocol_folder, protocol_var, redis_client, *args, **kwargs):
+    def __init__(self, master, protocol_folder, protocol_var, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
 
         self.protocol_folder = protocol_folder
@@ -252,6 +231,7 @@ class ProtocolViewer(ctk.CTkFrame):
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
+        self.angle_force_data = None
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         threading.Thread(target=start_protocol_runner, args=(self,), daemon=True).start()
@@ -444,6 +424,15 @@ class App(ctk.CTk):
     def run_protocol(self, protocol_path):
         self.redis_client.set('protocol_trigger', protocol_path)
         print(f"Triggered protocol: {protocol_path}")
+
+    def read_shared_memory(self):
+        try:
+            data = bytes(self.shm.buf[:struct.calcsize(fmt)])
+            stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
+            return step_count, current_angle, current_force
+        except Exception as e:
+            print(f"Error reading shared memory: {e}")
+            return None
 
     def show_home(self):
         self.clear_content_frame()
@@ -1545,7 +1534,7 @@ class App(ctk.CTk):
 
         def restart():
             popup.destroy()
-            self.restart_protocol_runner()
+            # restart logic here
 
         def cancel():
             popup.destroy()
@@ -1556,17 +1545,6 @@ class App(ctk.CTk):
         cancel_button = ctk.CTkButton(popup, text="Cancel", command=cancel)
         cancel_button.pack(side="right", padx=10, pady=10)
 
-    def restart_protocol_runner(self):
-        """Restarts protocol_runner.py."""
-        global protocol_process
-
-        # Kill existing process if running
-        if protocol_process and protocol_process.poll() is None:
-            protocol_process.terminate()
-            time.sleep(1)  # Give some time to properly terminate
-
-        # Start a new instance of protocol_runner.py
-        threading.Thread(target=start_protocol_runner, args=(self,), daemon=True).start()
 
     def update_output_window(self):
         """Update the settings page window with new output from protocol_runner.py."""
@@ -1666,8 +1644,17 @@ class App(ctk.CTk):
 
 
             time.sleep(0.1)  # Adjust the sleep time as needed to reduce CPU usage
+
+    def send_data_to_shared_memory(self,stop_flag=1):
+        step_count, current_angle, current_force = read_shared_memory()
+        try:
+            packed_data = struct.pack(fmt, stop_flag, step_count, current_angle, current_force)
+            shm.buf[:len(packed_data)] = packed_data
+        except Exception as e:
+            print(f"Error writing to shared memory: {e}")
+
     def stop_protocol(self):
-        send_data_to_shared_memory(stop_flag=0)
+        self.send_data_to_shared_memory(stop_flag=0)
         print("Protocol stopped.")
 
     def toggle_mode(self):
@@ -1676,7 +1663,7 @@ class App(ctk.CTk):
 
     def update_shared_memory(self):
         while self.running:
-            shared_data = read_shared_memory()
+            shared_data = self.read_shared_memory()
             if shared_data:
                 step_count, current_angle, current_force = shared_data
                 self.angle_special.append(current_angle)
@@ -1684,7 +1671,7 @@ class App(ctk.CTk):
                 self.time_data.append(time.time())
                 self.angle_data.append(current_angle)
                 self.force_data.append(current_force)
-
+                self.angle_force_data.append((current_angle, current_force))
                 # Cap the data lists at (60 / self.poll_rate)
                 max_length = int(30 / self.poll_rate)
                 if len(self.time_data) > max_length:
@@ -1798,16 +1785,16 @@ class App(ctk.CTk):
                 self.ax.clear()
                 if mode == "Angle v Force":
                     # check if self.angle_special, self.force_special are same dimensions as each other if they are not remove from highest until they are
-                    if len(self.angle_special) != len(self.force_special):
-                        if len(self.angle_special) > len(self.force_special):
-                            self.angle_special = self.angle_special[:len(self.force_special)]
-                        else:
-                            self.force_special = self.force_special[:len(self.angle_special)]
-                    self.ax.plot(self.angle_special, self.force_special, label="Angle vs Force")
-                    self.ax.set_xlim(0, 180)
-                    self.ax.set_ylim(-1.75, 1.75)
-                    self.ax.set_xlabel("Angle (degrees)")
-                    self.ax.set_ylabel("Force (N)")
+                    data_copy = list(self.angle_force_data)
+                    if data_copy:
+                        # Unzip the tuples into x and y values
+                        x_values, y_values = zip(*data_copy)
+
+                        self.ax.plot(x_values, x_values, label="Angle vs Force")
+                        self.ax.set_xlim(0, 180)
+                        self.ax.set_ylim(-1.75, 1.75)
+                        self.ax.set_xlabel("Angle (degrees)")
+                        self.ax.set_ylabel("Force (N)")
                 elif mode == "Simple":
                     current_time = time.time()
                     valid_indices = [i for i, t in enumerate(self.time_data) if current_time - t <= 30]
@@ -1826,7 +1813,10 @@ class App(ctk.CTk):
 
                     # Large plot on the left column
                     ax0 = self.fig.add_subplot(gs[:, 0])
-                    ax0.plot(self.angle_special, self.force_special, label="Angle vs Force", color='blue')
+                    data_copy = list(self.angle_force_data)
+                    if data_copy:
+                        x_values, y_values = zip(*data_copy)
+                        ax0.plot(x_values, y_values, label="Angle vs Force", color='blue')
                     ax0.set_xlabel("Angle (degrees)")
                     ax0.set_ylabel("Force (N)")
                     ax0.set_xlim(0, 180)
@@ -1851,7 +1841,6 @@ class App(ctk.CTk):
         # Start a periodic update of the graph
         if hasattr(self, 'update_loop_id'):
             self.graph_frame.after_cancel(self.update_loop_id)
-
 
         def update_loop():
             fetch_data()
