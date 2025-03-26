@@ -80,13 +80,31 @@ def start_protocol_runner(app):
             creationflags=subprocess.CREATE_NEW_CONSOLE
         )
     else:
-        # On Unix-like systems, use xterm to open a new terminal window.
-        protocol_process = subprocess.Popen(
-            ["xterm", "-e", sys.executable, "protocol_runner.py"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
+        # On Linux systems, try xterm first.
+        try:
+            protocol_process = subprocess.Popen(
+                ["xterm", "-e", sys.executable, "protocol_runner.py"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+        except FileNotFoundError:
+            # If xterm isn't available, try lxterminal (common on Raspberry Pi)
+            try:
+                protocol_process = subprocess.Popen(
+                    ["lxterminal", "-e", sys.executable, "protocol_runner.py"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+            except FileNotFoundError:
+                # Fallback: run the script without a new terminal window
+                protocol_process = subprocess.Popen(
+                    [sys.executable, "protocol_runner.py"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
 
     # Start output reading thread
     threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
