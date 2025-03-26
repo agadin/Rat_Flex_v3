@@ -70,13 +70,23 @@ def initialize_resources():
 def start_protocol_runner(app):
     global protocol_process
 
-    # Start protocol_runner.py
-    protocol_process = subprocess.Popen(
-        [sys.executable, "protocol_runner.py"],  # Replace with full path if necessary
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
+    if sys.platform.startswith('win'):
+        # On Windows, create a new console window.
+        protocol_process = subprocess.Popen(
+            [sys.executable, "protocol_runner.py"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            creationflags=subprocess.CREATE_NEW_CONSOLE
+        )
+    else:
+        # On Unix-like systems, use xterm to open a new terminal window.
+        protocol_process = subprocess.Popen(
+            ["xterm", "-e", sys.executable, "protocol_runner.py"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
 
     # Start output reading thread
     threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
@@ -90,10 +100,6 @@ def start_protocol_runner(app):
     # If it crashes, show the popup in the main app
     if app.running:
         app.after(0, app.show_restart_popup)
-
-# Function to read process output
-
-# Function to read shared memory
 def read_shared_memory():
     global shm, fmt
     try:

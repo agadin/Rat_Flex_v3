@@ -297,9 +297,9 @@ class App(ctk.CTk):
 
         # In demo mode, use dummy data for steps
         if self.demo_mode:
-            self.step_display.configure(text="Steps: 100")
-            self.angle_display.configure(text="Angle: 45.0°")
-            self.force_display.configure(text="Force: 10.5N")
+            self.step_display.configure(text="Time")
+            self.angle_display.configure(text="Pressure")
+            self.force_display.configure(text="Force")
 
     def show_protocol_builder(self):
         """Display the protocol builder page with a sidebar and main content area."""
@@ -783,14 +783,23 @@ class App(ctk.CTk):
         canvas.draw()
 
     def add_table(self, rowspan):
-        """Add tables to display general statistics and detailed calculations."""
-        # Frame for the tables
-        table_frame = ttk.Frame(self.canvas_frame)
-        table_frame.grid(row=0, column=2, rowspan=rowspan, padx=5, pady=5, sticky="nsew")
+        """Add tables to display general statistics and detailed calculations.
+        Both the general stats table and the detailed stats table (inside a scrollable frame)
+        are added using grid so that they do not conflict with other grid-managed widgets
+        in self.canvas_frame.
+        """
+        # Create a container frame inside self.canvas_frame using grid
+        table_frame = ctk.CTkFrame(self.canvas_frame)
+        table_frame.grid(row=0, column=2, rowspan=rowspan, sticky="nsew", padx=5, pady=5)
+        table_frame.grid_columnconfigure(0, weight=1)
+        table_frame.grid_rowconfigure(1, weight=1)
 
-        # --- General statistics table (unchanged) ---
-        general_stats_frame = ttk.Frame(table_frame)
-        general_stats_frame.pack(fill="x", pady=10)
+        # ---------------------------
+        # General Statistics Table (unchanged)
+        # ---------------------------
+        general_stats_frame = ctk.CTkFrame(table_frame)
+        general_stats_frame.grid(row=0, column=0, sticky="ew", pady=10)
+        general_stats_frame.grid_columnconfigure(0, weight=1)
 
         try:
             with open(os.path.join(self.trial_path, "information.txt"), "r") as f:
@@ -819,70 +828,150 @@ class App(ctk.CTk):
             ]
         })
 
-        general_tree = ttk.Treeview(general_stats_frame, columns=list(general_stats.columns), show="headings",
-                                    height=10)
+        general_tree = ttk.Treeview(general_stats_frame, columns=list(general_stats.columns),
+                                    show="headings", height=10)
         for col in general_stats.columns:
             general_tree.heading(col, text=col)
-            general_tree.column(col, anchor="center", width=150)
+            # Let columns stretch as needed
+            general_tree.column(col, anchor="center", width=150, stretch=True)
         for _, row in general_stats.iterrows():
             general_tree.insert("", "end", values=list(row))
-        general_tree.pack(fill="x")
+        general_tree.grid(row=0, column=0, sticky="ew")
 
-        # --- Detailed statistics table (with scrollbar) ---
-        detailed_stats_frame = ttk.Frame(table_frame)
-        detailed_stats_frame.pack(fill="both", expand=True, pady=10)
-
-        # Prepare detailed statistics data (as in your original code)
+        # ---------------------------
+        # Detailed Statistics Table in a Scrollable Frame
+        # ---------------------------
+        # Prepare detailed statistics data as before
         odd_protocol_data = self.data_f[self.data_f['Protocol_Step'].astype(int) % 2 != 0]
         angle_diff = odd_protocol_data.groupby('Protocol_Step')['Angle'].agg(lambda x: x.iloc[-1] - x.iloc[0]).abs()
+        final_angle = odd_protocol_data.groupby('Protocol_Step')['Angle'].last()
         angle_diff.index = angle_diff.index.astype(str)
+        final_angle.index = final_angle.index.astype(str)
 
         def count_points_within_iqr(group):
             q1 = group['Force'].quantile(0.25)
             q3 = group['Force'].quantile(0.75)
             return ((group['Force'] >= q1) & (group['Force'] <= q3)).sum()
 
+        def angle_diff_iqr(group):
+            q1 = group['Force'].quantile(0.25)
+            q3 = group['Force'].quantile(0.75)
+            iqr_data = group[(group['Force'] >= q1) & (group['Force'] <= q3)]
+            if not iqr_data.empty:
+                return abs(iqr_data['Angle'].iloc[-1] - iqr_data['Angle'].iloc[0])
+            return np.nan
+
+        def slope_iqr_to_last(group):
+            q1 = group['Force'].quantile(0.25)
+            q3 = group['Force'].quantile(0.75)
+            iqr_data = group[(group['Force'] >= q1) & (group['Force'] <= q3)]
+            if not iqr_data.empty:
+                last_iqr_angle = iqr_data['Angle'].iloc[-1]
+                last_iqr_force = iqr_data['Force'].iloc[-1]
+                last_angle = group['Angle'].iloc[-1]
+                last_force = group['Force'].iloc[-1]
+                if last_angle != last_iqr_angle:
+                    return (last_force - last_iqr_force) / (last_angle - last_iqr_angle)
+            return np.nan
+
         points_within_iqr = odd_protocol_data.groupby('Protocol_Step').apply(count_points_within_iqr)
+        angle_diff_in_iqr = odd_protocol_data.groupby('Protocol_Step').apply(angle_diff_iqr)
+        slope_iqr_last = odd_protocol_data.groupby('Protocol_Step').apply(slope_iqr_to_last)
         points_within_iqr.index = points_within_iqr.index.astype(str)
+        angle_diff_in_iqr.index = angle_diff_in_iqr.index.astype(str)
+        slope_iqr_last.index = slope_iqr_last.index.astype(str)
 
         custom_data = pd.DataFrame({
             "Protocol_Step": angle_diff.index,
             "RoM": angle_diff.round(1),
-            "Points in IQR": points_within_iqr
+            "Final Angle": final_angle.round(1),
+            "Points in IQR": points_within_iqr,
+            "Angle Diff in IQR": angle_diff_in_iqr.round(1),
+            "Slope IQR to Last": slope_iqr_last.round(4)  # 4 decimal places
         }).reset_index(drop=True)
 
         summary_row = pd.DataFrame([{
             "Protocol_Step": "Summary",
             "RoM": f"{angle_diff.mean():.1f} | {angle_diff.std():.1f}",
-            "Points in IQR": f"{points_within_iqr.mean():.1f} | {points_within_iqr.std():.1f}"
+            "Final Angle": "",
+            "Points in IQR": f"{points_within_iqr.mean():.1f} | {points_within_iqr.std():.1f}",
+            "Angle Diff in IQR": f"{angle_diff_in_iqr.mean():.1f} | {angle_diff_in_iqr.std():.1f}",
+            "Slope IQR to Last": f"{slope_iqr_last.mean():.2f} | {slope_iqr_last.std():.2f}"
         }])
+        # Define the path to the main data directory
+
+
+        main_data_directory = "./data"
+
+        # Define the file name for the CSV
+        csv_file_path = os.path.join(main_data_directory, "custom_data.csv")
+
+        # Ensure the Protocol_Step column is treated as numeric for filtering and sorting
+        custom_data["Protocol_Step_Numeric"] = pd.to_numeric(custom_data["Protocol_Step"], errors="coerce")
+
+        # Filter out rows where Protocol_Step is 1
+        custom_data = custom_data[custom_data["Protocol_Step_Numeric"] != 1]
+
+        # Sort the DataFrame by the numeric Protocol_Step column in ascending order
+        custom_data = custom_data.sort_values(by="Protocol_Step_Numeric", ascending=True).drop(
+            columns=["Protocol_Step_Numeric"])
+
+        # Calculate the average of each column
+        average_row = custom_data.mean(numeric_only=True).to_dict()
+        average_row["Protocol_Step"] = "Average"
+
+        # Convert the average row to a DataFrame
+        average_row_df = pd.DataFrame([average_row])
+
+        # Append the average row to the DataFrame using pd.concat
+        custom_data = pd.concat([custom_data, average_row_df], ignore_index=True)
+
+        # Calculate alternating averages for "Final Angle" and "Slope IQR to Last"
+        odd_rows = custom_data.iloc[::2]
+        even_rows = custom_data.iloc[1::2]
+
+        final_angle_avg1 = odd_rows["Final Angle"].mean()
+        final_angle_avg2 = even_rows["Final Angle"].mean()
+
+        slope_avg1 = odd_rows["Slope IQR to Last"].mean()
+        slope_avg2 = even_rows["Slope IQR to Last"].mean()
+
+        # Create DataFrames for the new rows
+        final_angle_avg1_df = pd.DataFrame([{"Protocol_Step": "Final Angle Avg 1", "Final Angle": final_angle_avg1}])
+        final_angle_avg2_df = pd.DataFrame([{"Protocol_Step": "Final Angle Avg 2", "Final Angle": final_angle_avg2}])
+        slope_avg1_df = pd.DataFrame([{"Protocol_Step": "Slope Avg 1", "Slope IQR to Last": slope_avg1}])
+        slope_avg2_df = pd.DataFrame([{"Protocol_Step": "Slope Avg 2", "Slope IQR to Last": slope_avg2}])
+
+        # Append the new rows to the DataFrame using pd.concat
+        custom_data = pd.concat([custom_data, final_angle_avg1_df, final_angle_avg2_df, slope_avg1_df, slope_avg2_df],
+                                ignore_index=True)
+
+        # Save the DataFrame to a CSV file
+        custom_data.to_csv(csv_file_path, index=False)
+
+        print(f"Data saved to {csv_file_path}")
+
         custom_data = pd.concat([custom_data, summary_row], ignore_index=True)
         custom_data["Protocol_Step_Numeric"] = pd.to_numeric(custom_data["Protocol_Step"], errors="coerce")
         custom_data = custom_data.sort_values(by=["Protocol_Step_Numeric", "Protocol_Step"],
                                               ascending=[True, True]).drop(columns=["Protocol_Step_Numeric"])
 
-        # Determine visible rows (limit height to 10 if more than 10 rows)
         total_rows = len(custom_data)
         visible_rows = 10 if total_rows > 10 else total_rows
 
-        # Create a frame to hold both the treeview and the scrollbar
-        tree_container = ttk.Frame(detailed_stats_frame)
-        tree_container.pack(fill="both", expand=True)
+        # Use CustomTkinter's scrollable frame (grid-managed) for the detailed table
+        scroll_frame = ctk.CTkScrollableFrame(table_frame, height=300)
+        scroll_frame.grid(row=1, column=0, sticky="nsew", pady=10)
+        scroll_frame.grid_columnconfigure(0, weight=1)
 
-        detailed_tree = ttk.Treeview(tree_container, columns=list(custom_data.columns), show="headings",
+        detailed_tree = ttk.Treeview(scroll_frame, columns=list(custom_data.columns), show="headings",
                                      height=visible_rows)
         for col in custom_data.columns:
             detailed_tree.heading(col, text=col)
-            detailed_tree.column(col, anchor="center", width=150)
+            detailed_tree.column(col, anchor="center", width=150, stretch=True)
         for _, row in custom_data.iterrows():
             detailed_tree.insert("", "end", values=list(row))
-        detailed_tree.pack(side="left", fill="both", expand=True)
-
-        # Add a vertical scrollbar if there are more than 10 rows
-        if total_rows > 10:
-            vsb = ttk.Scrollbar(tree_container, orient="vertical", command=detailed_tree.yview)
-            detailed_tree.configure(yscrollcommand=vsb.set)
-            vsb.pack(side="right", fill="y")
+        detailed_tree.grid(row=0, column=0, sticky="nsew")
 
     def add_slider(self):
         if self.slider:
