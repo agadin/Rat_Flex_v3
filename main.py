@@ -38,33 +38,7 @@ output_queue = queue.Queue()
 
 # Function to initialize resources
 # Function to initialize resources
-def initialize_resources():
-    global redis_client, shm, fmt
 
-    # Initialize CustomTkinter
-    ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
-    ctk.set_default_color_theme("blue")
-
-    # Shared memory and Redis configuration
-    redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-    shm_name = 'shared_data'
-    fmt = 'i d d d'
-    shm_size = struct.calcsize(fmt)
-
-    # Try to access shared memory
-    try:
-        shm = sm.SharedMemory(name=shm_name)
-    except FileNotFoundError:
-        print("Shared memory not found. Creating new shared memory block.")
-        redis_client.set("shared_memory_error", 1)
-        time.sleep(1)
-        try:
-            shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
-        except FileExistsError:
-            # Unlink the existing shared memory and create a new one
-            existing_shm = sm.SharedMemory(name=shm_name)
-            existing_shm.unlink()
-            shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
 
 # Function to start protocol_runner.py
 def start_protocol_runner(app):
@@ -110,7 +84,6 @@ def start_protocol_runner(app):
     threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
 
     # Initialize resources after starting the subprocess
-    initialize_resources()
 
     # Monitor if it crashes
     protocol_process.wait()
@@ -155,15 +128,6 @@ def read_shared_memory():
         print(f"Error reading shared memory: {e}")
         return None
 
-def save_to_redis_dict(redis_key, variable_name, value):
-    # Retrieve the dictionary from Redis
-    redis_dict = redis_client.hgetall(redis_key)
-
-    # Update the dictionary
-    redis_dict[variable_name] = value
-
-    # Save the updated dictionary back to Redis
-    redis_client.hset(redis_key, mapping=redis_dict)
 
 def send_data_to_shared_memory(stop_flag=1):
     step_count, current_angle, current_force = read_shared_memory()
@@ -173,9 +137,6 @@ def send_data_to_shared_memory(stop_flag=1):
     except Exception as e:
         print(f"Error writing to shared memory: {e}")
 
-def run_protocol(protocol_path):
-    redis_client.set('protocol_trigger', protocol_path)
-    print(f"Triggered protocol: {protocol_path}")
 
 def read_calibration_data(file_path):
     calibration_data = defaultdict(dict)
@@ -263,7 +224,7 @@ class ProtocolViewer(ctk.CTkFrame):
             frame,
             text="",
             variable=checkbox_var,
-            command=lambda: redis_client.set(f"checkedbox_{step_num}", int(checkbox_var.get()))
+            command=lambda: self.redis_client.set(f"checkedbox_{step_num}", int(checkbox_var.get()))
         )
         checkbox.grid(row=0, column=2, padx=5, pady=5)
 
@@ -272,7 +233,7 @@ class ProtocolViewer(ctk.CTkFrame):
     def update_current_step(self):
         """Update opacity dynamically based on the current step."""
         try:
-            current_step = redis_client.get("current_step")
+            current_step = self.redis_client.get("current_step")
             current_step = int(current_step) if current_step else None
         except (ValueError, TypeError):
             current_step = None
@@ -439,10 +400,51 @@ class App(ctk.CTk):
         play_video()
         self.overrideredirect(False)
 
+    def initialize_resources(self):
 
+
+        # Initialize CustomTkinter
+        ctk.set_appearance_mode("System")  # Options: "System", "Dark", "Light"
+        ctk.set_default_color_theme("blue")
+
+        # Shared memory and Redis configuration
+        self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+        shm_name = 'shared_data'
+        fmt = 'i d d d'
+        shm_size = struct.calcsize(fmt)
+
+        # Try to access shared memory
+        try:
+            self.shm = sm.SharedMemory(name=shm_name)
+        except FileNotFoundError:
+            print("Shared memory not found. Creating new shared memory block.")
+            self.redis_client.set("shared_memory_error", 1)
+            time.sleep(1)
+            try:
+                self.shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
+            except FileExistsError:
+                # Unlink the existing shared memory and create a new one
+                existing_shm = sm.SharedMemory(name=shm_name)
+                existing_shm.unlink()
+                self.shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
+                
     def clear_content_frame(self):
         for widget in self.content_frame.winfo_children():
             widget.destroy()
+
+    def save_to_redis_dict(self, redis_key, variable_name, value):
+        # Retrieve the dictionary from Redis
+        redis_dict = self.redis_client.hgetall(redis_key)
+
+        # Update the dictionary
+        redis_dict[variable_name] = value
+
+        # Save the updated dictionary back to Redis
+        self.redis_client.hset(redis_key, mapping=redis_dict)
+
+    def run_protocol(self, protocol_path):
+        self.redis_client.set('protocol_trigger', protocol_path)
+        print(f"Triggered protocol: {protocol_path}")
 
     def show_home(self):
         self.clear_content_frame()
@@ -466,7 +468,7 @@ class App(ctk.CTk):
         self.protocol_dropdown = ctk.CTkComboBox(self.sidebar_frame, values=self.protocol_files, variable=self.protocol_var)
         self.protocol_dropdown.pack(pady=15)
 
-        self.run_button = ctk.CTkButton(self.sidebar_frame, text="Run Protocol", command=self.run_protocol)
+        self.run_button = ctk.CTkButton(self.sidebar_frame, text="Run Protocol", command=self.run_protocol_init)
         self.run_button.pack(pady=15)
 
         # Stop button
@@ -481,7 +483,7 @@ class App(ctk.CTk):
         def save_animal_id_to_redis(*args):
             animal_id = self.animal_id_var.get()
             if animal_id and animal_id != "Animal ID":
-                save_to_redis_dict('set_vars', 'animal_id', animal_id)
+                self.save_to_redis_dict('set_vars', 'animal_id', animal_id)
 
         self.animal_id_var.trace("w", save_animal_id_to_redis)
 
@@ -496,10 +498,10 @@ class App(ctk.CTk):
             if self.arm_selection.get() == selection:
                 # Unselect if clicked again
                 self.arm_selection.set("")
-                redis_client.set("selected_arm", "")  # Clear Redis value
+                self.redis_client.set("selected_arm", "")  # Clear Redis value
             else:
                 self.arm_selection.set(selection)
-                redis_client.set("selected_arm", selection)
+                self.redis_client.set("selected_arm", selection)
 
             # Update button states
             update_button_states()
@@ -507,11 +509,11 @@ class App(ctk.CTk):
         def update_button_states():
             """Update the visual state of the buttons."""
             if self.arm_selection.get() == "Right Arm":
-                run_protocol("./protocols/right_arm_jog.txt")
+                self.run_protocol("./protocols/right_arm_jog.txt")
                 right_button.configure(fg_color="blue", text_color="white")
                 left_button.configure(fg_color="gray", text_color="black")
             elif self.arm_selection.get() == "Left Arm":
-                run_protocol("./protocols/left_arm_jog.txt")
+                self.run_protocol("./protocols/left_arm_jog.txt")
                 right_button.configure(fg_color="gray", text_color="black")
                 left_button.configure(fg_color="blue", text_color="white")
             else:
@@ -551,7 +553,7 @@ class App(ctk.CTk):
             input_var = ctk.StringVar(value=default_texts[i])  # Set the initial value
             input_entry = ctk.CTkEntry(self.sidebar_frame, textvariable=input_var, placeholder_text=f"input_{i}")
             input_entry.pack(pady=5, padx=15)
-            input_var.trace("w", lambda name, index, mode, var=input_var, idx=i: save_to_redis_dict('set_vars', f"input_{idx}", var.get()))
+            input_var.trace("w", lambda name, index, mode, var=input_var, idx=i: self.save_to_redis_dict('set_vars', f"input_{idx}", var.get()))
             self.redis_inputs.append(input_var)
 
 
@@ -645,7 +647,7 @@ class App(ctk.CTk):
             self.main_frame,
             protocol_folder=self.protocol_folder,
             protocol_var=self.protocol_var,
-            redis_client= redis_client
+            redis_client= self.redis_client
         )
         self.protocol_viewer.pack(fill="both", expand=True, pady=10)
 
@@ -675,7 +677,7 @@ class App(ctk.CTk):
 
     def update_timer(self, timer_label, step_number):
         def update():
-            current_step = redis_client.get("current_step")
+            current_step = self.redis_client.get("current_step")
             if current_step and int(current_step.split()[1]) == step_number:
                 elapsed_time = int(time.time() - start_time)
                 minutes, seconds = divmod(elapsed_time, 60)
@@ -1612,15 +1614,15 @@ class App(ctk.CTk):
         # Start updating the output text widget
         self.update_output_window()
 
-    def run_protocol(self):
+    def run_protocol_init(self):
         selected_protocol = self.protocol_var.get()
-        current_protocol = redis_client.get("current_protocol_out")
+        current_protocol = self.redis_client.get("current_protocol_out")
         print(f"Selected protocol: {selected_protocol}, Current protocol: {current_protocol}")
         if selected_protocol == current_protocol:
             def on_confirm():
                 protocol_path_c = os.path.join(self.protocol_folder, selected_protocol)
-                run_protocol(protocol_path_c)
-                self.total_steps = redis_client.get("total_steps")
+                self.run_protocol(protocol_path_c)
+                self.total_steps = self.redis_client.get("total_steps")
                 print(f"Running protocol again: {self.total_steps}")
                 self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
                 confirm_popup.destroy()
@@ -1644,8 +1646,8 @@ class App(ctk.CTk):
             confirm_popup.mainloop()
         else:
             protocol_path = os.path.join(self.protocol_folder, selected_protocol)
-            run_protocol(protocol_path)
-            self.total_steps = redis_client.get("total_steps")
+            self.run_protocol(protocol_path)
+            self.total_steps = self.redis_client.get("total_steps")
             print(f"Running protocol: {selected_protocol}")
             self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
         self.start_timing_thread()
@@ -1658,7 +1660,7 @@ class App(ctk.CTk):
     def check_protocol_status(self):
         time.sleep(1)
         while True:
-            current_protocol_out = redis_client.get("current_protocol_out")
+            current_protocol_out = self.redis_client.get("current_protocol_out")
            #stop looping when current_protocol_out is empty
             if not current_protocol_out:
                 self.timing_clock = None
@@ -1715,7 +1717,7 @@ class App(ctk.CTk):
                     if self.clock_values is not True:
                         hours = minutes = seconds = milliseconds = 0
 
-                self.total_steps = redis_client.get("total_commands")
+                self.total_steps = self.redis_client.get("total_commands")
                 self.queue.put((step_count, current_angle, current_force, minutes, seconds, milliseconds))
             else:
                 self.queue.put((None, None, None, 0, 0, 0))
@@ -1729,13 +1731,13 @@ class App(ctk.CTk):
                 if self.step_time is not None:
                     self.step_display.configure(text=f"{self.step_time:.1f}s")
             else:
-                self.moving_steps_total= redis_client.get("moving_steps_total")
+                self.moving_steps_total= self.redis_client.get("moving_steps_total")
                 if self.moving_steps_total is None:
                     self.moving_steps_total = 0
                 self.step_display.configure(text=f"{step_count} / {self.moving_steps_total}")
             self.angle_display.configure(text=f"{current_angle:.1f}°")
             self.force_display.configure(text=f"{current_force:.2f} N")
-            current_step_number = redis_client.get("current_step_number")
+            current_step_number = self.redis_client.get("current_step_number")
             if current_step_number is None:
                 current_step_number = 0
             self.protocol_step_counter.configure(text=f"Step: {current_step_number} / {self.total_steps}")
@@ -1744,12 +1746,12 @@ class App(ctk.CTk):
             self.angle_display.configure(text="N/A")
             self.force_display.configure(text="N/A")
             self.time_display.configure(text=f"{int(0):02}:{int(0):02}:{int(0):02}.{0:03}")
-            current_step = redis_client.get("current_step")
+            current_step = self.redis_client.get("current_step")
             if current_step is None:
                 current_step = 0
             self.protocol_step_counter.configure(text=f"Step: {current_step} / {self.total_steps}")
         try:
-            calibration_level = int(redis_client.get("calibration_Level") or 0)
+            calibration_level = int(self.redis_client.get("calibration_Level") or 0)
             if calibration_level == 0:
                 self.calibrate_button.configure(fg_color="red")
             elif calibration_level == 1:
