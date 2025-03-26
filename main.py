@@ -253,7 +253,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.running = True  # Initialize the running attribute
-
+        self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         threading.Thread(target=start_protocol_runner, args=(self,), daemon=True).start()
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
@@ -408,7 +408,6 @@ class App(ctk.CTk):
         ctk.set_default_color_theme("blue")
 
         # Shared memory and Redis configuration
-        self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         shm_name = 'shared_data'
         fmt = 'i d d d'
         shm_size = struct.calcsize(fmt)
@@ -647,7 +646,6 @@ class App(ctk.CTk):
             self.main_frame,
             protocol_folder=self.protocol_folder,
             protocol_var=self.protocol_var,
-            redis_client= self.redis_client
         )
         self.protocol_viewer.pack(fill="both", expand=True, pady=10)
 
