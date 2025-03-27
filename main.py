@@ -183,7 +183,7 @@ class ProtocolViewer(ctk.CTkFrame):
     def update_current_step(self):
         """Update opacity dynamically based on the current step."""
         try:
-            current_step = app.redis_client.get("current_step")
+            current_step = self.app.redis_client.get("current_step")
             current_step = int(current_step) if current_step else None
         except (ValueError, TypeError):
             current_step = None
