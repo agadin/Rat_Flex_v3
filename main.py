@@ -42,41 +42,42 @@ output_queue = queue.Queue()
 
 # Function to start protocol_runner.py
 def start_protocol_runner(app):
-    global protocol_process
-    if sys.platform.startswith('win'):
-        protocol_process = subprocess.Popen(
-            [sys.executable, "protocol_runner.py"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
-    else:
-        try:
+        global protocol_process
+        log_file = open("protocol_runner_error.log", "w")  # Open a log file for writing
+        if sys.platform.startswith('win'):
             protocol_process = subprocess.Popen(
-                ["xterm", "-e", sys.executable, "protocol_runner.py"],
+                [sys.executable, "protocol_runner.py"],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
+                stderr=log_file,  # Redirect stderr to the log file
+                text=True,
+                creationflags=subprocess.CREATE_NEW_CONSOLE
             )
-        except FileNotFoundError:
+        else:
             try:
                 protocol_process = subprocess.Popen(
-                    ["lxterminal", "-e", sys.executable, "protocol_runner.py"],
+                    ["xterm", "-e", sys.executable, "protocol_runner.py"],
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    stderr=log_file,  # Redirect stderr to the log file
                     text=True
                 )
             except FileNotFoundError:
-                protocol_process = subprocess.Popen(
-                    [sys.executable, "protocol_runner.py"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True
-                )
+                try:
+                    protocol_process = subprocess.Popen(
+                        ["lxterminal", "-e", sys.executable, "protocol_runner.py"],
+                        stdout=subprocess.PIPE,
+                        stderr=log_file,  # Redirect stderr to the log file
+                        text=True
+                    )
+                except FileNotFoundError:
+                    protocol_process = subprocess.Popen(
+                        [sys.executable, "protocol_runner.py"],
+                        stdout=subprocess.PIPE,
+                        stderr=log_file,  # Redirect stderr to the log file
+                        text=True
+                    )
 
-    # Start output reading thread (this is okay in a background thread)
-    threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
+        # Start output reading thread (this is okay in a background thread)
+        threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
 
 
 # Function to read process output
