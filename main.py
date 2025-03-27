@@ -208,7 +208,7 @@ class App(ctk.CTk):
         self.angle_force_data = []
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-        start_protocol_runner(self)
+        # start_protocol_runner(self)
         self.after(1000, self.check_protocol_process)
         self.initialize_resources()
         icon_path = os.path.abspath('./img/ratfav.ico')
