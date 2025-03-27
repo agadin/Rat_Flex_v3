@@ -243,7 +243,7 @@ def calculate_metric(metric, protocol_step):
 
 def process_protocol(protocol_path):
     protocol_filename = os.path.basename(protocol_path)
-    protocol_path = os.path.abspath(protocol_path)
+    protocol_path = os.path.abspath(protocol_path.lstrip('/'))
     print(f"Processing {protocol_filename}")
     redis_client.set("current_protocol_out", protocol_filename)
     #right now it is /protocols/calibrate when it needs to be the fulle path to file
