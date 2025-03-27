@@ -1662,8 +1662,6 @@ class App(ctk.CTk):
                 self.force_data.append(current_force)
                 self.angle_force_data.append((current_angle, current_force))
 
-                self.after(0, lambda: self.advanced_slider.set_blue_angle(current_angle))
-
 
                 # Cap the data lists at (60 / self.poll_rate)
                 max_length = int(30 / self.poll_rate)
@@ -1719,6 +1717,7 @@ class App(ctk.CTk):
             if current_step_number is None:
                 current_step_number = 0
             self.protocol_step_counter.configure(text=f"Step: {current_step_number} / {self.total_steps}")
+            self.advanced_slider.set_blue_angle(current_angle)
         else:
             self.step_display.configure(text="N/A")
             self.angle_display.configure(text="N/A")
@@ -1741,6 +1740,7 @@ class App(ctk.CTk):
         except Exception as e:
             print(f"Error updating Calibrate button: {e}")
             self.calibrate_button.configure(fg_color="gray")
+
 
     def clear_graphs(self):
         # Reset the data lists
