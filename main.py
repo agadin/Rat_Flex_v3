@@ -84,13 +84,15 @@ def start_protocol_runner(app):
     threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
 
     # Monitor if it crashes
-    protocol_process.wait()
+    def check_process():
+        if protocol_process.poll() is not None:
+            # If it crashes, show the popup in the main app
+            if app.running:
+                app.show_restart_popup()
+        else:
+            app.after(1000, check_process)  # Check every second
 
-    # If it crashes, show the popup in the main app
-    if app.running:
-        app.after(0, app.show_restart_popup)
-
-# Function to send data to shared memory
+    app.after(1000, check_process)  # Start the check after 1 second
 
 # Function to read process output
 def read_process_output(process, output_queue):
@@ -99,15 +101,6 @@ def read_process_output(process, output_queue):
         output_queue.put(line)
     process.stdout.close()
 
-def read_shared_memory():
-    global shm
-    try:
-        data = bytes(shm.buf[:struct.calcsize(fmt)])
-        stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
-        return step_count, current_angle, current_force
-    except Exception as e:
-        print(f"Error reading shared memory: {e}")
-        return None
 
 def read_calibration_data(file_path):
     calibration_data = defaultdict(dict)
@@ -204,7 +197,7 @@ class ProtocolViewer(ctk.CTkFrame):
     def update_current_step(self):
         """Update opacity dynamically based on the current step."""
         try:
-            current_step = self.redis_client.get("current_step")
+            current_step = app.redis_client.get("current_step")
             current_step = int(current_step) if current_step else None
         except (ValueError, TypeError):
             current_step = None
@@ -224,7 +217,7 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.advanced_slider = None
-        self.angle_force_data = None
+        self.angle_force_data = []
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         threading.Thread(target=start_protocol_runner, args=(self,), daemon=True).start()
@@ -1646,7 +1639,7 @@ class App(ctk.CTk):
             time.sleep(0.1)  # Adjust the sleep time as needed to reduce CPU usage
 
     def send_data_to_shared_memory(self,stop_flag=1):
-        step_count, current_angle, current_force = read_shared_memory()
+        step_count, current_angle, current_force = self.read_shared_memory()
         try:
             packed_data = struct.pack(self.fmt, stop_flag, step_count, current_angle, current_force)
             self.shm.buf[:len(packed_data)] = packed_data
@@ -1781,7 +1774,7 @@ class App(ctk.CTk):
 
         def fetch_data():
             # Read shared data for live updates
-            shared_data = read_shared_memory()
+            shared_data = self.read_shared_memory()
             if shared_data:
 
                 # Plot data based on selected mode
