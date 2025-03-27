@@ -101,6 +101,7 @@ def create_folder_with_files(provided_name=None, special=False):
     current_protocol_out = redis_client.get("current_protocol_out")
     if current_protocol_out is not None:
         protocol_path = os.path.join('protocols', current_protocol_out)
+
         if os.path.exists(protocol_path):
             shutil.copy(protocol_path, os.path.join(folder_name, current_protocol_out))
         else:
@@ -243,6 +244,7 @@ def calculate_metric(metric, protocol_step):
 def process_protocol(protocol_path):
     protocol_filename = os.path.basename(protocol_path)
     protocol_path = os.path.abspath(protocol_path)
+    print(f"Processing {protocol_filename}")
     redis_client.set("current_protocol_out", protocol_filename)
     #right now it is /protocols/calibrate when it needs to be the fulle path to file
 
