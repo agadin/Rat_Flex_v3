@@ -10,6 +10,10 @@ import os
 import shutil
 import filecmp
 from datetime import datetime
+import logging
+
+# Configure logging
+logging.basicConfig(filename='protocol_runner_error.log', level=logging.ERROR)
 
 
 csv_name='data.csv'
@@ -468,38 +472,42 @@ def wait_for_user_input(command):
     popup.mainloop()
 
 def start_server():
-    global motor
-    if motor is None:
-        motor = StepperMotor(
-            dir_pin=13,
-            step_pin=19,
-            enable_pin=12,
-            mode_pins=(16, 17, 20),
-            limit_switch_1=6,
-            limit_switch_2=5,
-            step_type='halfstep',
-            stepdelay=0.0015,
-            calibration_file='calibration.csv',
-            csv_name=csv_name
+    try:
+        global motor
+        if motor is None:
+            motor = StepperMotor(
+                dir_pin=13,
+                step_pin=19,
+                enable_pin=12,
+                mode_pins=(16, 17, 20),
+                limit_switch_1=6,
+                limit_switch_2=5,
+                step_type='halfstep',
+                stepdelay=0.0015,
+                calibration_file='calibration.csv',
+                csv_name=csv_name
 
-        )
-        while True:
-            # Check for a value in the Redis key
-            protocol_path = redis_client.get("protocol_trigger")
-            shared_memory_error=redis_client.get("shared_memory_error")
-            redis_client.set("calibration_Level",motor.check_if_calibrated())
-            if shared_memory_error == "1":
-                print("Shared memory error detected. Recreating shared memory.")
-                redis_client.set("shared_memory_error", 0)
-                motor.create_shared_memory()
-            if protocol_path:
-                redis_client.set("protocol_trigger", "")  # Clear the trigger after processing
-                print(f"Found protocol path: {protocol_path}")
-                process_protocol(protocol_path)
-            redis_client.set("current_protocol_out", "")
-            motor.update_shared_memory(-2)
-            time.sleep(1)  # Wait for 1 second before checking again
-
+            )
+            while True:
+                # Check for a value in the Redis key
+                protocol_path = redis_client.get("protocol_trigger")
+                shared_memory_error=redis_client.get("shared_memory_error")
+                redis_client.set("calibration_Level",motor.check_if_calibrated())
+                if shared_memory_error == "1":
+                    print("Shared memory error detected. Recreating shared memory.")
+                    redis_client.set("shared_memory_error", 0)
+                    motor.create_shared_memory()
+                if protocol_path:
+                    redis_client.set("protocol_trigger", "")  # Clear the trigger after processing
+                    print(f"Found protocol path: {protocol_path}")
+                    process_protocol(protocol_path)
+                redis_client.set("current_protocol_out", "")
+                motor.update_shared_memory(-2)
+                time.sleep(1)  # Wait for 1 second before checking again
+        pass
+    except Exception as e:
+        logging.exception("An error occurred in protocol_runner.py")
+        raise
 
 if __name__ == "__main__":
     start_server()
