@@ -101,7 +101,7 @@ def read_calibration_data(file_path):
 
 def run_calibration():
     app.protocol_var.set("calibrate_protocol.txt")
-    app.run_protocol()
+    app.run_protocol("/protocols/calibrate_protocol.txt")
 
 
 import os
@@ -368,7 +368,7 @@ class App(ctk.CTk):
 
         # Try to access shared memory
         try:
-            self.shm = sm.SharedMemory(name=shm_name)
+            self.shm = sm.SharedMemory(name='/tmp/shared_memory.dat')
         except FileNotFoundError:
             print("Shared memory not found. Creating new shared memory block.")
             self.redis_client.set("shared_memory_error", 1)
