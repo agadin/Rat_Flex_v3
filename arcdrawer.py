@@ -2,23 +2,24 @@ import tkinter as tk
 import math
 import os
 
+
 class AdvancedCurvedSlider(tk.Canvas):
     def __init__(self, master, width=300, height=200, min_val=10, max_val=170, parent_app=None, **kwargs):
         super().__init__(master, width=width, height=height, **kwargs)
         self.parent_app = parent_app
         self.min_val = min_val
         self.max_val = max_val
-        self.value = max_val  # Starting value now 170
+        self.value = min_val  # Starting value is 10
 
-        # Parameters for the arc
+        # Arc parameters
         self.radius = 100
         self.center_x = width // 2
         self.center_y = height - 20
 
-        # Set blue handle to start at the right end (angle = 0 radians) so value is 170.
-        self.blue_angle = 0
+        # Set the blue handle at the left end (angle = π) so its value is 10.
+        self.blue_angle = math.pi
 
-        # Draw the 180° arc (open downward)
+        # Draw the 180° arc (from right (0°) to left (180°))
         self.create_arc(self.center_x - self.radius, self.center_y - self.radius,
                         self.center_x + self.radius, self.center_y + self.radius,
                         start=0, extent=180, style='arc', width=2)
@@ -27,11 +28,10 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.handle_radius = 10
         self.blue_circle = self.create_oval(0, 0, 0, 0, fill="blue", outline="", tags="blue_circle")
 
-        # Bind mouse events for the blue circle.
+        # Bind mouse events.
         self.tag_bind("blue_circle", "<ButtonPress-1>", self.on_blue_press)
         self.tag_bind("blue_circle", "<B1-Motion>", self.on_blue_drag)
         self.tag_bind("blue_circle", "<ButtonRelease-1>", self.on_blue_release)
-        # Bind canvas click for target marker.
         self.bind("<Button-1>", self.on_canvas_click)
 
         self.dragging = False
@@ -49,12 +49,14 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.angle_entry = tk.Entry(self.control_frame, textvariable=self.angle_var, width=5)
         self.angle_entry.pack(side="left", padx=5)
         self.angle_entry.bind("<Return>", self.on_entry_return)
-        # Label for displaying target value (in orange)
         self.target_text = tk.Label(self.control_frame, text="", fg="orange")
+
         self.update_blue_position()
 
     def value_from_angle(self, angle):
-        """Map an angle (0 to π) to a value between min_val and max_val."""
+        """Map an angle (0 to π) to a value between min_val and max_val.
+           Here, angle=π (left) maps to 10 and angle=0 (right) maps to 170.
+        """
         return round(self.min_val + (self.max_val - self.min_val) * ((math.pi - angle) / math.pi), 2)
 
     def angle_from_value(self, value):
@@ -71,7 +73,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.angle_var.set(str(self.value_from_angle(self.blue_angle)))
 
     def set_blue_angle(self, angle_degrees):
-        """Set blue circle position using an angle in degrees."""
+        """Set the blue circle's position using an angle in degrees."""
         self.blue_angle = math.radians(angle_degrees)
         self.update_blue_position()
 
@@ -83,6 +85,7 @@ class AdvancedCurvedSlider(tk.Canvas):
             dx = event.x - self.center_x
             dy = self.center_y - event.y  # Invert y (canvas y increases downward)
             angle = math.atan2(dy, dx)
+            # Clamp the angle between 0 and π.
             angle = max(0, min(math.pi, angle))
             self.blue_angle = angle
             self.update_blue_position()
@@ -93,6 +96,7 @@ class AdvancedCurvedSlider(tk.Canvas):
             self.send_command(self.blue_angle)
 
     def on_canvas_click(self, event):
+        # Ignore click if it is on the blue circle.
         items = self.find_overlapping(event.x, event.y, event.x, event.y)
         if self.blue_circle in items:
             return
@@ -146,6 +150,7 @@ class AdvancedCurvedSlider(tk.Canvas):
 
     def animate_move(self, start_angle, target_angle, steps=20, delay=20, callback=None):
         delta = (target_angle - start_angle) / steps
+
         def step(i, current_angle):
             if i >= steps:
                 self.blue_angle = target_angle
@@ -156,13 +161,14 @@ class AdvancedCurvedSlider(tk.Canvas):
             current_angle += delta
             self.blue_angle = current_angle
             self.update_blue_position()
-            self.after(delay, lambda: step(i+1, current_angle))
+            self.after(delay, lambda: step(i + 1, current_angle))
+
         step(0, start_angle)
 
     def send_command(self, angle):
-        """Send command by writing the command string to a temporary file and running the protocol."""
-        angle = round(math.degrees(angle))
-        command_string = f"no_save\nMove_to_angle_jog: {angle}"
+        """Send the command by writing to a temporary file and invoking the protocol."""
+        angle_deg = round(math.degrees(angle))
+        command_string = f"no_save\nMove_to_angle_jog: {angle_deg}"
         temp_file = os.path.join("protocols", "temp.txt")
         try:
             with open(temp_file, "w") as f:
