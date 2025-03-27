@@ -5,19 +5,18 @@ import os
 class AdvancedCurvedSlider(tk.Canvas):
     def __init__(self, master, width=300, height=200, min_val=10, max_val=170, parent_app=None, **kwargs):
         super().__init__(master, width=width, height=height, **kwargs)
-        self.parent_app = parent_app  # Reference to the main app (used to call run_protocol)
+        self.parent_app = parent_app
         self.min_val = min_val
         self.max_val = max_val
-        self.value = min_val
+        self.value = max_val  # Starting value now 170
 
         # Parameters for the arc
-        self.radius = 100                   # Radius of the circle that defines the arc
-        self.center_x = width // 2          # Center of the circle (x-coordinate)
-        self.center_y = height - 20         # Adjust center_y so that the arc (top half) fits well
+        self.radius = 100
+        self.center_x = width // 2
+        self.center_y = height - 20
 
-        # Blue circle starting position (angle = π radians)
+        # Set blue handle to start at the right end (angle = 0 radians) so value is 170.
         self.blue_angle = 0
-
 
         # Draw the 180° arc (open downward)
         self.create_arc(self.center_x - self.radius, self.center_y - self.radius,
@@ -27,7 +26,6 @@ class AdvancedCurvedSlider(tk.Canvas):
         # Create the blue (draggable) circle.
         self.handle_radius = 10
         self.blue_circle = self.create_oval(0, 0, 0, 0, fill="blue", outline="", tags="blue_circle")
-
 
         # Bind mouse events for the blue circle.
         self.tag_bind("blue_circle", "<ButtonPress-1>", self.on_blue_press)
@@ -42,8 +40,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.target_circle = None
         self.target_angle = None
 
-        # Control frame for Jog button and value entry – not part of the slider itself,
-        # but left here for completeness. (You may choose to integrate this elsewhere.)
+        # Control frame for Jog button and value entry.
         self.control_frame = tk.Frame(master)
         self.control_frame.pack(pady=10)
         self.jog_button = tk.Button(self.control_frame, text="Jog", command=self.on_jog, state="disabled")
@@ -54,18 +51,15 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.angle_entry.bind("<Return>", self.on_entry_return)
         # Label for displaying target value (in orange)
         self.target_text = tk.Label(self.control_frame, text="", fg="orange")
-        # Not packed initially
         self.update_blue_position()
 
     def value_from_angle(self, angle):
-        # Now, angle=0 gives min_val and angle=pi gives max_val.
-        val = self.min_val + (self.max_val - self.min_val) * (angle / math.pi)
-        return round(val, 2)
+        """Map an angle (0 to π) to a value between min_val and max_val."""
+        return round(self.min_val + (self.max_val - self.min_val) * ((math.pi - angle) / math.pi), 2)
 
     def angle_from_value(self, value):
-        # Inverse of the above.
-        angle = (value - self.min_val) / (self.max_val - self.min_val) * math.pi
-        return angle
+        """Map a value between min_val and max_val back to an angle (in radians)."""
+        return math.pi - ((value - self.min_val) / (self.max_val - self.min_val)) * math.pi
 
     def update_blue_position(self):
         """Update the blue circle's position based on its current angle."""
@@ -77,11 +71,8 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.angle_var.set(str(self.value_from_angle(self.blue_angle)))
 
     def set_blue_angle(self, angle_degrees):
-        """Update the blue circle's position using an angle in degrees.
-           Converts degrees (0–180) to radians and updates the position.
-        """
-        angle_radians = math.radians(angle_degrees)
-        self.blue_angle = angle_radians
+        """Set blue circle position using an angle in degrees."""
+        self.blue_angle = math.radians(angle_degrees)
         self.update_blue_position()
 
     def on_blue_press(self, event):
@@ -99,11 +90,9 @@ class AdvancedCurvedSlider(tk.Canvas):
     def on_blue_release(self, event):
         if self.dragging:
             self.dragging = False
-            # Send command after dragging stops
             self.send_command(self.blue_angle)
 
     def on_canvas_click(self, event):
-        # If click is on blue circle, ignore it
         items = self.find_overlapping(event.x, event.y, event.x, event.y)
         if self.blue_circle in items:
             return
@@ -125,7 +114,6 @@ class AdvancedCurvedSlider(tk.Canvas):
                         x - self.handle_radius, y - self.handle_radius,
                         x + self.handle_radius, y + self.handle_radius)
         self.jog_button.config(state="normal")
-        # Update target text with value
         target_value = self.value_from_angle(self.target_angle)
         self.target_text.config(text=str(target_value))
         if not self.target_text.winfo_ismapped():
@@ -172,27 +160,19 @@ class AdvancedCurvedSlider(tk.Canvas):
         step(0, start_angle)
 
     def send_command(self, angle):
-        """Send command: wipe out temp.txt and write the command, then run the protocol.
-           The command string is:
-               no_save
-               Move_to_angle_jog: {angle}
-        """
-        # convert to degrees and round to integer
+        """Send command by writing the command string to a temporary file and running the protocol."""
         angle = round(math.degrees(angle))
         command_string = f"no_save\nMove_to_angle_jog: {angle}"
         temp_file = os.path.join("protocols", "temp.txt")
         try:
-            # Open temp.txt in write mode to wipe and then write new command
             with open(temp_file, "w") as f:
                 f.write(command_string)
         except Exception as e:
             print("Error writing to temp.txt:", e)
-        # Call the parent app's run_protocol method with temp.txt.
         if self.parent_app is not None:
             self.parent_app.run_protocol(temp_file)
         else:
             print("Parent app not set. Cannot run protocol.")
 
 # Example usage:
-# When creating the slider in your show_home method, pass the main app reference:
 # self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=200, min_val=10, max_val=170, parent_app=self)
