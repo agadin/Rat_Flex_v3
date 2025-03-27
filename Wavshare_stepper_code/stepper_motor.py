@@ -87,8 +87,8 @@ class StepperMotor:
         except Exception as e:
             print(f"Error closing shared memory: {e}")
 
-        self.shm_file = "./shared_memory/shared_memory.dat"
-        os.makedirs(os.path.dirname(self.shm_file), exist_ok=True)
+        # set this to shared_data in current directory
+        self.shm_file = "shared_memory.dat"
         with open(self.shm_file, "wb") as f:
             f.write(b'\x00' * self.shm_size)
         try:
