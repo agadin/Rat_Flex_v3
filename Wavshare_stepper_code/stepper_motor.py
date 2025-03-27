@@ -74,24 +74,16 @@ class StepperMotor:
         self.create_shared_memory()
 
     def create_shared_memory(self):
+
         try:
-            if self.shm is not None:
-                self.shm.close()
-                self.shm.unlink()
-                time.sleep(0.2)
-        except FileNotFoundError:
-            print("Shared memory not found. Skipping close and unlink.")
+            self.shm.close()
+            self.shm.unlink()
+            time.sleep(0.2)
         except Exception as e:
             print(f"Error closing shared memory: {e}")
-
-        # set this to shared_data in current directory
-        self.shm_file = "shared_memory.dat"
-        with open(self.shm_file, "wb") as f:
-            f.write(b'\x00' * self.shm_size)
-        try:
-            self.shm = sm.SharedMemory(name='shared_data', create=True, size=self.shm_size)
-        except FileExistsError:
-            self.shm = sm.SharedMemory(name='shared_data', create=False)
+        shm_name = 'shared_data'
+        shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
+        self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
 
     def load_calibration(self, path = None):
         if path is None:

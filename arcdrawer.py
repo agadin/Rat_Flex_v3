@@ -15,8 +15,9 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.center_x = width // 2          # Center of the circle (x-coordinate)
         self.center_y = height - 20         # Adjust center_y so that the arc (top half) fits well
 
-        # Blue circle starting position (angle = 0 radians)
+        # Blue circle starting position (angle = π radians)
         self.blue_angle = 0
+
 
         # Draw the 180° arc (open downward)
         self.create_arc(self.center_x - self.radius, self.center_y - self.radius,
@@ -26,6 +27,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         # Create the blue (draggable) circle.
         self.handle_radius = 10
         self.blue_circle = self.create_oval(0, 0, 0, 0, fill="blue", outline="", tags="blue_circle")
+
 
         # Bind mouse events for the blue circle.
         self.tag_bind("blue_circle", "<ButtonPress-1>", self.on_blue_press)
@@ -56,12 +58,12 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.update_blue_position()
 
     def value_from_angle(self, angle):
-        """Map an angle (0 to π) to a value between min_val and max_val."""
+        # Now, angle=0 gives min_val and angle=pi gives max_val.
         val = self.min_val + (self.max_val - self.min_val) * (angle / math.pi)
         return round(val, 2)
 
     def angle_from_value(self, value):
-        """Map a value between min_val and max_val back to an angle (in radians)."""
+        # Inverse of the above.
         angle = (value - self.min_val) / (self.max_val - self.min_val) * math.pi
         return angle
 
@@ -190,3 +192,7 @@ class AdvancedCurvedSlider(tk.Canvas):
             self.parent_app.run_protocol(temp_file)
         else:
             print("Parent app not set. Cannot run protocol.")
+
+# Example usage:
+# When creating the slider in your show_home method, pass the main app reference:
+# self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=200, min_val=10, max_val=170, parent_app=self)
