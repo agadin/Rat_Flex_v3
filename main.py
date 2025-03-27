@@ -43,9 +43,7 @@ output_queue = queue.Queue()
 # Function to start protocol_runner.py
 def start_protocol_runner(app):
     global protocol_process
-
     if sys.platform.startswith('win'):
-        # On Windows, create a new console window.
         protocol_process = subprocess.Popen(
             [sys.executable, "protocol_runner.py"],
             stdout=subprocess.PIPE,
@@ -54,7 +52,6 @@ def start_protocol_runner(app):
             creationflags=subprocess.CREATE_NEW_CONSOLE
         )
     else:
-        # On Linux systems, try xterm first.
         try:
             protocol_process = subprocess.Popen(
                 ["xterm", "-e", sys.executable, "protocol_runner.py"],
@@ -63,7 +60,6 @@ def start_protocol_runner(app):
                 text=True
             )
         except FileNotFoundError:
-            # If xterm isn't available, try lxterminal (common on Raspberry Pi)
             try:
                 protocol_process = subprocess.Popen(
                     ["lxterminal", "-e", sys.executable, "protocol_runner.py"],
@@ -72,7 +68,6 @@ def start_protocol_runner(app):
                     text=True
                 )
             except FileNotFoundError:
-                # Fallback: run the script without a new terminal window
                 protocol_process = subprocess.Popen(
                     [sys.executable, "protocol_runner.py"],
                     stdout=subprocess.PIPE,
@@ -80,19 +75,9 @@ def start_protocol_runner(app):
                     text=True
                 )
 
-    # Start output reading thread
+    # Start output reading thread (this is okay in a background thread)
     threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
 
-    # Monitor if it crashes
-    def check_process():
-        if protocol_process.poll() is not None:
-            # If it crashes, show the popup in the main app
-            if app.running:
-                app.show_restart_popup()
-        else:
-            app.after(1000, check_process)  # Check every second
-
-    app.after(1000, check_process)  # Start the check after 1 second
 
 # Function to read process output
 def read_process_output(process, output_queue):
@@ -221,7 +206,8 @@ class App(ctk.CTk):
         self.angle_force_data = []
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-        threading.Thread(target=start_protocol_runner, args=(self,), daemon=True).start()
+        start_protocol_runner(self)
+        self.after(1000, self.check_protocol_process)
         self.initialize_resources()
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
@@ -422,6 +408,13 @@ class App(ctk.CTk):
             print(f"Error reading shared memory: {e}")
             return None
 
+    def check_protocol_process(self):
+        global protocol_process
+        if protocol_process and protocol_process.poll() is not None:
+            if self.running:
+                self.show_restart_popup()
+        # Reschedule the next check on the main thread
+        self.after(1000, self.check_protocol_process)
     def show_home(self):
         self.clear_content_frame()
 
@@ -629,7 +622,9 @@ class App(ctk.CTk):
             self.main_frame,
             protocol_folder=self.protocol_folder,
             protocol_var=self.protocol_var,
+            app=self  # Pass the current app instance
         )
+
         self.protocol_viewer.pack(fill="both", expand=True, pady=10)
 
         # Trace for protocol_var to update ProtocolViewer when protocol changes
@@ -1667,7 +1662,8 @@ class App(ctk.CTk):
                 self.force_data.append(current_force)
                 self.angle_force_data.append((current_angle, current_force))
 
-                self.advanced_slider.set_blue_angle(current_angle)
+                self.after(0, lambda: self.advanced_slider.set_blue_angle(current_angle))
+
 
                 # Cap the data lists at (60 / self.poll_rate)
                 max_length = int(30 / self.poll_rate)
@@ -1851,6 +1847,12 @@ class App(ctk.CTk):
         if hasattr(self, 'update_thread'):
             self.update_thread.join()
         self.destroy()
+        try:
+            self.shm.close()
+            self.shm.unlink()  # Only unlink if you're sure no other process needs it
+        except Exception as e:
+            print(f"Error during shared memory cleanup: {e}")
+
 
 if __name__ == "__main__":
     app = App()
