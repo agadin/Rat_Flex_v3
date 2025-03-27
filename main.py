@@ -42,42 +42,43 @@ output_queue = queue.Queue()
 
 # Function to start protocol_runner.py
 def start_protocol_runner(app):
-        global protocol_process
-        log_file = open("protocol_runner_error.log", "w")  # Open a log file for writing
-        if sys.platform.startswith('win'):
-            protocol_process = subprocess.Popen(
-                [sys.executable, "protocol_runner.py"],
-                stdout=subprocess.PIPE,
-                stderr=log_file,  # Redirect stderr to the log file
-                text=True,
-                creationflags=subprocess.CREATE_NEW_CONSOLE
-            )
-        else:
-            try:
+            global protocol_process
+            stdout_log_file = open("protocol_runner_stdout.log", "w")  # Open a log file for stdout
+            stderr_log_file = open("protocol_runner_stderr.log", "w")  # Open a log file for stderr
+            if sys.platform.startswith('win'):
                 protocol_process = subprocess.Popen(
-                    ["xterm", "-e", sys.executable, "protocol_runner.py"],
-                    stdout=subprocess.PIPE,
-                    stderr=log_file,  # Redirect stderr to the log file
-                    text=True
+                    [sys.executable, "protocol_runner.py"],
+                    stdout=stdout_log_file,  # Redirect stdout to the log file
+                    stderr=stderr_log_file,  # Redirect stderr to the log file
+                    text=True,
+                    creationflags=subprocess.CREATE_NEW_CONSOLE
                 )
-            except FileNotFoundError:
+            else:
                 try:
                     protocol_process = subprocess.Popen(
-                        ["lxterminal", "-e", sys.executable, "protocol_runner.py"],
-                        stdout=subprocess.PIPE,
-                        stderr=log_file,  # Redirect stderr to the log file
+                        ["xterm", "-e", sys.executable, "protocol_runner.py"],
+                        stdout=stdout_log_file,  # Redirect stdout to the log file
+                        stderr=stderr_log_file,  # Redirect stderr to the log file
                         text=True
                     )
                 except FileNotFoundError:
-                    protocol_process = subprocess.Popen(
-                        [sys.executable, "protocol_runner.py"],
-                        stdout=subprocess.PIPE,
-                        stderr=log_file,  # Redirect stderr to the log file
-                        text=True
-                    )
+                    try:
+                        protocol_process = subprocess.Popen(
+                            ["lxterminal", "-e", sys.executable, "protocol_runner.py"],
+                            stdout=stdout_log_file,  # Redirect stdout to the log file
+                            stderr=stderr_log_file,  # Redirect stderr to the log file
+                            text=True
+                        )
+                    except FileNotFoundError:
+                        protocol_process = subprocess.Popen(
+                            [sys.executable, "protocol_runner.py"],
+                            stdout=stdout_log_file,  # Redirect stdout to the log file
+                            stderr=stderr_log_file,  # Redirect stderr to the log file
+                            text=True
+                        )
 
-        # Start output reading thread (this is okay in a background thread)
-        threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
+            # Start output reading thread (this is okay in a background thread)
+            threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
 
 
 # Function to read process output
@@ -418,7 +419,7 @@ class App(ctk.CTk):
                 if self.running:
                     self.show_restart_popup()
         # Reschedule the next check on the main thread
-        self.after(1000, self.check_protocol_process)
+        self.after(6000, self.check_protocol_process)
 
     def show_home(self):
         self.clear_content_frame()
