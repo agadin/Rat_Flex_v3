@@ -125,7 +125,7 @@ from tkinter import Frame
 
 
 class ProtocolViewer(ctk.CTkFrame):
-    def __init__(self, master, protocol_folder, protocol_var, *args, **kwargs):
+    def __init__(self, master, protocol_folder, protocol_var, app, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
 
         self.protocol_folder = protocol_folder
@@ -146,10 +146,11 @@ class ProtocolViewer(ctk.CTkFrame):
             widget.destroy()
         self.step_widgets = []
         self.protocol_steps = []
-        print("Loading protocolh:", protocol_var)
+        print("Loading protocol:", protocol_var)
         # Get the protocol path
         protocol_path = os.path.join(self.protocol_folder, protocol_var)
-
+        self.protocol_var = protocol_var
+        self.app = app
         # Read and parse the protocol
         if os.path.exists(protocol_path):
             with open(protocol_path, "r") as f:
@@ -188,7 +189,7 @@ class ProtocolViewer(ctk.CTkFrame):
             frame,
             text="",
             variable=checkbox_var,
-            command=lambda: app.redis_client.set(f"checkedbox_{step_num}", int(checkbox_var.get()))
+            command=lambda: self.app.redis_client.set(f"checkedbox_{step_num}", int(checkbox_var.get()))
         )
         checkbox.grid(row=0, column=2, padx=5, pady=5)
 
