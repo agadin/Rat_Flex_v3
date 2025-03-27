@@ -30,7 +30,7 @@ protocol_process = None
 
 shm = None
 
-
+from arcdrawer import AdvancedCurvedSlider
 output_queue = queue.Queue()
 
 # Define the format for packing and unpacking data
@@ -231,6 +231,7 @@ class ProtocolViewer(ctk.CTkFrame):
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
+        self.advanced_slider = None
         self.angle_force_data = None
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
@@ -544,6 +545,13 @@ class App(ctk.CTk):
             input_var.trace("w", lambda name, index, mode, var=input_var, idx=i: self.save_to_redis_dict('set_vars', f"input_{idx}", var.get()))
             self.redis_inputs.append(input_var)
 
+        # Create a container frame for the curved slider in the sidebar
+        slider_container = ctk.CTkFrame(self.sidebar_frame)
+        slider_container.pack(pady=10, padx=15, fill="x")
+        # Create the AdvancedCurvedSlider instance, passing self as the parent_app
+        self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=200, min_val=10, max_val=170,
+                                                    parent_app=self)
+        self.advanced_slider.pack()
 
         # Light/dark mode automatic toggle
         current_hour = datetime.datetime.now().hour
@@ -1672,6 +1680,9 @@ class App(ctk.CTk):
                 self.angle_data.append(current_angle)
                 self.force_data.append(current_force)
                 self.angle_force_data.append((current_angle, current_force))
+
+                self.advanced_slider.set_blue_angle(current_angle)
+
                 # Cap the data lists at (60 / self.poll_rate)
                 max_length = int(30 / self.poll_rate)
                 if len(self.time_data) > max_length:
@@ -1707,7 +1718,7 @@ class App(ctk.CTk):
             else:
                 self.queue.put((None, None, None, 0, 0, 0))
 
-            time.sleep(0.1)
+            time.sleep(0.05)
 
     def update_displays(self, step_count, current_angle, current_force, minutes, seconds, milliseconds):
         if step_count is not None:
