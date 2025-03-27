@@ -112,7 +112,7 @@ from tkinter import Frame
 class ProtocolViewer(ctk.CTkFrame):
     def __init__(self, master, protocol_folder, protocol_var, app, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
-
+        self.app = app
         self.protocol_folder = protocol_folder
         self.protocol_var = protocol_var
 
@@ -135,7 +135,7 @@ class ProtocolViewer(ctk.CTkFrame):
         # Get the protocol path
         protocol_path = os.path.join(self.protocol_folder, protocol_var)
         self.protocol_var = protocol_var
-        self.app = app
+
         # Read and parse the protocol
         if os.path.exists(protocol_path):
             with open(protocol_path, "r") as f:
