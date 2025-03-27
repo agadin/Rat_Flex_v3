@@ -91,14 +91,6 @@ def start_protocol_runner(app):
         app.after(0, app.show_restart_popup)
 
 # Function to send data to shared memory
-def send_data_to_shared_memory(stop_flag=1):
-    global shm, fmt
-    step_count, current_angle, current_force = read_shared_memory()
-    try:
-        packed_data = struct.pack(fmt, stop_flag, step_count, current_angle, current_force)
-        shm.buf[:len(packed_data)] = packed_data
-    except Exception as e:
-        print(f"Error writing to shared memory: {e}")
 
 # Function to read process output
 def read_process_output(process, output_queue):
@@ -236,6 +228,7 @@ class App(ctk.CTk):
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         threading.Thread(target=start_protocol_runner, args=(self,), daemon=True).start()
+        self.initialize_resources()
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
         try:
@@ -1656,7 +1649,7 @@ class App(ctk.CTk):
         step_count, current_angle, current_force = read_shared_memory()
         try:
             packed_data = struct.pack(fmt, stop_flag, step_count, current_angle, current_force)
-            shm.buf[:len(packed_data)] = packed_data
+            self.shm.buf[:len(packed_data)] = packed_data
         except Exception as e:
             print(f"Error writing to shared memory: {e}")
 
