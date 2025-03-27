@@ -176,6 +176,8 @@ class AdvancedCurvedSlider(tk.Canvas):
                no_save
                Move_to_angle_jog: {angle}
         """
+        # convert to degrees and round to integer
+        angle = round(math.degrees(angle))
         command_string = f"no_save\nMove_to_angle_jog: {angle}"
         temp_file = os.path.join("protocols", "temp.txt")
         try:
