@@ -410,11 +410,15 @@ class App(ctk.CTk):
 
     def check_protocol_process(self):
         global protocol_process
-        if protocol_process and protocol_process.poll() is not None:
-            if self.running:
-                self.show_restart_popup()
+        if protocol_process:
+            poll_result = protocol_process.poll()
+            print(f"Protocol process poll result: {poll_result}")  # Add this line for debugging
+            if poll_result is not None:
+                if self.running:
+                    self.show_restart_popup()
         # Reschedule the next check on the main thread
         self.after(1000, self.check_protocol_process)
+
     def show_home(self):
         self.clear_content_frame()
 
