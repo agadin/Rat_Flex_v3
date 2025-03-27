@@ -368,7 +368,7 @@ class App(ctk.CTk):
 
         # Try to access shared memory
         try:
-            self.shm = sm.SharedMemory(name='/tmp/shared_memory.dat')
+            self.shm = sm.SharedMemory(name='shared_memory')
         except FileNotFoundError:
             print("Shared memory not found. Creating new shared memory block.")
             self.redis_client.set("shared_memory_error", 1)
