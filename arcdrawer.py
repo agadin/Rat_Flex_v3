@@ -26,7 +26,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         # Create the blue (draggable) circle.
         self.handle_radius = 10
         self.blue_circle = self.create_oval(0, 0, 0, 0, fill="blue", outline="", tags="blue_circle")
-        self.update_blue_position()
+
 
         # Bind mouse events for the blue circle.
         self.tag_bind("blue_circle", "<ButtonPress-1>", self.on_blue_press)
@@ -54,6 +54,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         # Label for displaying target value (in orange)
         self.target_text = tk.Label(self.control_frame, text="", fg="orange")
         # Not packed initially
+        self.update_blue_position()
 
     def value_from_angle(self, angle):
         """Map an angle (0 to π) to a value between min_val and max_val."""

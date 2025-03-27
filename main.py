@@ -549,8 +549,7 @@ class App(ctk.CTk):
         slider_container = ctk.CTkFrame(self.sidebar_frame)
         slider_container.pack(pady=10, padx=15, fill="x")
         # Create the AdvancedCurvedSlider instance, passing self as the parent_app
-        self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=200, min_val=10, max_val=170,
-                                                    parent_app=self)
+        self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=200, min_val=10, max_val=170,parent_app=self)
         self.advanced_slider.pack()
 
         # Light/dark mode automatic toggle
