@@ -87,17 +87,11 @@ class StepperMotor:
         except Exception as e:
             print(f"Error closing shared memory: {e}")
 
-        shm_size = struct.calcsize(self.fmt)
-
-        # Ensure the directory exists
+        self.shm_file = "./shared_memory/shared_memory.dat"
         os.makedirs(os.path.dirname(self.shm_file), exist_ok=True)
-
-        # Create or open the memory-mapped file
         with open(self.shm_file, "wb") as f:
-            f.write(b'\x00' * shm_size)
-
-        # Create the shared memory object using the memory-mapped file
-        self.shm = sm.SharedMemory(create=True, name='shared_data', size=shm_size)
+            f.write(b'\x00' * self.shm_size)
+        self.shm = sm.SharedMemory(create=True, name='shared_data', size=self.shm_size)
 
     def load_calibration(self, path = None):
         if path is None:
@@ -451,8 +445,11 @@ class StepperMotor:
     def cleanup(self):
         self.motor.Stop()
         self.motor.cleanup()
-        self.shm.close()
-        self.shm.unlink()
+        try:
+            self.shm.close()
+            self.shm.unlink()
+        except FileNotFoundError:
+            print("Shared memory already unlinked or not found during cleanup.")
 
     def stop(self):
         self.motor.Stop()
