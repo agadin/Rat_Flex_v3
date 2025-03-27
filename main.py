@@ -195,7 +195,7 @@ class ProtocolViewer(ctk.CTkFrame):
             frame,
             text="",
             variable=checkbox_var,
-            command=lambda: self.redis_client.set(f"checkedbox_{step_num}", int(checkbox_var.get()))
+            command=lambda: app.redis_client.set(f"checkedbox_{step_num}", int(checkbox_var.get()))
         )
         checkbox.grid(row=0, column=2, padx=5, pady=5)
 
@@ -383,8 +383,8 @@ class App(ctk.CTk):
 
         # Shared memory and Redis configuration
         shm_name = 'shared_data'
-        fmt = 'i d d d'
-        shm_size = struct.calcsize(fmt)
+        self.fmt = 'i d d d'
+        shm_size = struct.calcsize(self.fmt)
 
         # Try to access shared memory
         try:
@@ -421,8 +421,8 @@ class App(ctk.CTk):
 
     def read_shared_memory(self):
         try:
-            data = bytes(self.shm.buf[:struct.calcsize(fmt)])
-            stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
+            data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
+            stop_flag, step_count, current_angle, current_force = struct.unpack(self.fmt, data)
             return step_count, current_angle, current_force
         except Exception as e:
             print(f"Error reading shared memory: {e}")
@@ -1648,7 +1648,7 @@ class App(ctk.CTk):
     def send_data_to_shared_memory(self,stop_flag=1):
         step_count, current_angle, current_force = read_shared_memory()
         try:
-            packed_data = struct.pack(fmt, stop_flag, step_count, current_angle, current_force)
+            packed_data = struct.pack(self.fmt, stop_flag, step_count, current_angle, current_force)
             self.shm.buf[:len(packed_data)] = packed_data
         except Exception as e:
             print(f"Error writing to shared memory: {e}")
