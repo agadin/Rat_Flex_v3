@@ -91,7 +91,10 @@ class StepperMotor:
         os.makedirs(os.path.dirname(self.shm_file), exist_ok=True)
         with open(self.shm_file, "wb") as f:
             f.write(b'\x00' * self.shm_size)
-        self.shm = sm.SharedMemory(create=True, name='shared_data', size=self.shm_size)
+        try:
+            self.shm = sm.SharedMemory(name='shared_data', create=True, size=self.shm_size)
+        except FileExistsError:
+            self.shm = sm.SharedMemory(name='shared_data', create=False)
 
     def load_calibration(self, path = None):
         if path is None:
