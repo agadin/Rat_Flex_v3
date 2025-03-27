@@ -66,9 +66,6 @@ class StepperMotor:
 
         # Attach to the existing shared memory
         # Create a memory-mapped file
-        self.shm_file = "shared_memory.dat"
-        with open(self.shm_file, "wb") as f:
-            f.write(b'\x00' * self.shm_size)
 
         shm_name = 'shared_data'
           # Format for unpacking (stop_flag, step_count, current_angle, current_force)
