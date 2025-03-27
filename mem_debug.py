@@ -16,6 +16,7 @@ def read_shared_memory():
 
     with open(log_file, 'a') as f:
         while True:
+            print("Reading shared memory...")
             try:
                 data = bytes(shm.buf[:shm_size])
                 stop_flag, step_count, current_angle, current_force = struct.unpack(fmt, data)
