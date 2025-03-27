@@ -507,6 +507,7 @@ def start_server():
         pass
     except Exception as e:
         logging.exception("An error occurred in protocol_runner.py")
+        input()
         raise
 
 if __name__ == "__main__":
