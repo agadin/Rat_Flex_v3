@@ -103,7 +103,7 @@ def read_calibration_data(file_path):
 
 def run_calibration():
     app.protocol_var.set("calibrate_protocol.txt")
-    app.run_protocol("/protocols/calibrate_protocol.txt")
+    app.run_protocol("calibrate_protocol.txt")
 
 
 import os
@@ -398,6 +398,8 @@ class App(ctk.CTk):
         self.redis_client.hset(redis_key, mapping=redis_dict)
 
     def run_protocol(self, protocol_path):
+        # add ./protocols/ to the protocol path
+        protocol_path = os.path.join('./protocols', protocol_path)
         self.redis_client.set('protocol_trigger', protocol_path)
         print(f"Triggered protocol: {protocol_path}")
 
