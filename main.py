@@ -1618,7 +1618,8 @@ class App(ctk.CTk):
 
             confirm_popup.mainloop()
         else:
-            protocol_path = os.path.join(self.protocol_folder, selected_protocol)
+            # protocol_path = os.path.join(self.protocol_folder, selected_protocol)
+            protocol_path = selected_protocol
             self.run_protocol(protocol_path)
             self.total_steps = self.redis_client.get("total_steps")
             print(f"Running protocol: {selected_protocol}")
