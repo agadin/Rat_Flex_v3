@@ -11,11 +11,6 @@ import shutil
 import filecmp
 from datetime import datetime
 import logging
-
-# Configure logging
-logging.basicConfig(filename='protocol_runner_error.log', level=logging.ERROR)
-
-
 csv_name='data.csv'
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
 motor = None
@@ -90,22 +85,12 @@ def create_folder_with_files(provided_name=None, special=False):
     # Copy and rename `calibrate.txt`
     # copy everything into folder
     print(f"Copying files to {folder_name}")
-    if os.path.exists('calibration.csv'):
+    if os.path.exists('calibration.txt'):
         if provided_name is not None:
-            shutil.copy('calibration.csv', os.path.join(folder_name, 'calibration.csv'))
+            shutil.copy('calibration.txt', os.path.join(folder_name, 'calibration.txt'))
 
     else:
         print("Error: `calibration.txt` not found.")
-
-    # copy current protocol into folder check redis current_protocol_out for base name and add ./protocols/
-    current_protocol_out = redis_client.get("current_protocol_out")
-    if current_protocol_out is not None:
-        protocol_path = os.path.join('protocols', current_protocol_out)
-
-        if os.path.exists(protocol_path):
-            shutil.copy(protocol_path, os.path.join(folder_name, current_protocol_out))
-        else:
-            print(f"Error: Protocol file not found: {protocol_path}")
 
     with open('data.csv', 'r') as file:
         reader = csv.reader(file)
@@ -243,12 +228,7 @@ def calculate_metric(metric, protocol_step):
 
 def process_protocol(protocol_path):
     protocol_filename = os.path.basename(protocol_path)
-    protocol_path = os.path.abspath(protocol_path.lstrip('/'))
-    print(f"Processing {protocol_filename}")
     redis_client.set("current_protocol_out", protocol_filename)
-    #right now it is /protocols/calibrate when it needs to be the fulle path to file
-
-
     with open(protocol_path, 'r') as file:
         commands = file.readlines()
         step_number = 0
@@ -270,13 +250,7 @@ def process_protocol(protocol_path):
         if stop_flag == "1":
             print("Protocol stopped.")
             break
-
-        if command.startswith("Move_to_angle_jog"):
-            parts = command.split(":")[1].split(",")
-            angle_input = parts[0].strip()
-            angle = string_to_value_checker(angle_input)
-            motor.move_to_angle(angle, 'junk.csv')
-        elif command.startswith("Move_to_angle"):
+        if command.startswith("Move_to_angle"):
             # current command: Move_to_angle:90,metric,variable_name
             parts = command.split(":")[1].split(",")
             angle_input = parts[0].strip()
@@ -289,6 +263,11 @@ def process_protocol(protocol_path):
                     metric_value = calculate_metric(metric, step_number)
                     variable_saver(variable_name, metric_value)
                     save_to_redis_dict('set_vars', variable_name, metric_value)
+        elif command.startswith("Move_to_angle_jog"):
+            parts = command.split(":")[1].split(",")
+            angle_input = parts[0].strip()
+            angle = string_to_value_checker(angle_input)
+            motor.move_to_angle(angle, 'junk.csv')
 
         elif command.startswith("Move_to_force"):
             params = command.split(":")[1].split(",")
@@ -478,43 +457,38 @@ def wait_for_user_input(command):
     popup.mainloop()
 
 def start_server():
-    try:
-        global motor
-        if motor is None:
-            motor = StepperMotor(
-                dir_pin=13,
-                step_pin=19,
-                enable_pin=12,
-                mode_pins=(16, 17, 20),
-                limit_switch_1=6,
-                limit_switch_2=5,
-                step_type='halfstep',
-                stepdelay=0.0015,
-                calibration_file='calibration.csv',
-                csv_name=csv_name
+    global motor
+    if motor is None:
+        motor = StepperMotor(
+            dir_pin=13,
+            step_pin=19,
+            enable_pin=12,
+            mode_pins=(16, 17, 20),
+            limit_switch_1=6,
+            limit_switch_2=5,
+            step_type='halfstep',
+            stepdelay=0.0015,
+            calibration_file='calibration.csv',
+            csv_name=csv_name
 
-            )
-            while True:
-                # Check for a value in the Redis key
-                protocol_path = redis_client.get("protocol_trigger")
-                shared_memory_error=redis_client.get("shared_memory_error")
-                redis_client.set("calibration_Level",motor.check_if_calibrated())
-                if shared_memory_error == "1":
-                    print("Shared memory error detected. Recreating shared memory.")
-                    redis_client.set("shared_memory_error", 0)
-                    motor.create_shared_memory()
-                if protocol_path:
-                    redis_client.set("protocol_trigger", "")  # Clear the trigger after processing
-                    print(f"Found protocol path: {protocol_path}")
-                    process_protocol(protocol_path)
-                redis_client.set("current_protocol_out", "")
-                motor.update_shared_memory(-2)
-                time.sleep(1)  # Wait for 1 second before checking again
-        pass
-    except Exception as e:
-        logging.exception("An error occurred in protocol_runner.py")
-        input()
-        raise
+        )
+        while True:
+            # Check for a value in the Redis key
+            protocol_path = redis_client.get("protocol_trigger")
+            shared_memory_error=redis_client.get("shared_memory_error")
+            redis_client.set("calibration_Level",motor.check_if_calibrated())
+            if shared_memory_error == "1":
+                print("Shared memory error detected. Recreating shared memory.")
+                redis_client.set("shared_memory_error", 0)
+                motor.create_shared_memory()
+            if protocol_path:
+                redis_client.set("protocol_trigger", "")  # Clear the trigger after processing
+                print(f"Found protocol path: {protocol_path}")
+                process_protocol(protocol_path)
+            redis_client.set("current_protocol_out", "")
+            motor.update_shared_memory(-2)
+            time.sleep(1)  # Wait for 1 second before checking again
+
 
 if __name__ == "__main__":
     start_server()
