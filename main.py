@@ -376,12 +376,12 @@ class App(ctk.CTk):
             self.redis_client.set("shared_memory_error", 1)
             time.sleep(1)
             try:
-                self.shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
+                self.shm = sm.SharedMemory(name=shm_name)
             except FileExistsError:
                 # Unlink the existing shared memory and create a new one
                 existing_shm = sm.SharedMemory(name=shm_name)
                 existing_shm.unlink()
-                self.shm = sm.SharedMemory(name=shm_name, create=True, size=shm_size)
+                self.shm = sm.SharedMemory(name=shm_name)
                 
     def clear_content_frame(self):
         for widget in self.content_frame.winfo_children():
