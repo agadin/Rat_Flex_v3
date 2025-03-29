@@ -61,7 +61,7 @@ class AdvancedCurvedSlider(tk.Canvas):
           - When angle = π (left), value = min_val (10)
           - When angle = 0 (right), value = max_val (170)
         """
-        return 180-angle* (180 / math.pi)
+        return angle* (180 / math.pi)
 
 
     def angle_from_value(self, value):
