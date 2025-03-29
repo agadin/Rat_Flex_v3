@@ -16,8 +16,8 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.center_x = width // 2
         self.center_y = height - 20
 
-        # Initialize the blue handle at the left end (angle = π) so its value is 10.
-        self.blue_angle = math.pi
+        # Initialize the blue handle at the right end (angle = 0) so its value is 10.
+        self.blue_angle = 0
 
         # Draw the 180° arc (from right (angle 0) to left (angle π))
         self.create_arc(self.center_x - self.radius, self.center_y - self.radius,
@@ -56,19 +56,18 @@ class AdvancedCurvedSlider(tk.Canvas):
 
     def value_from_angle(self, angle):
         """
-        Map an angle (π to 0) to a value between min_val and max_val.
+        Map an angle (0 to π) to a value between min_val and max_val.
         With this function:
-          - When angle = π (left), value = min_val (10)
-          - When angle = 0 (right), value = max_val (170)
+          - When angle = 0 (right), value = min_val (10)
+          - When angle = π (left), value = max_val (170)
         """
-        return angle* (180 / math.pi)
-
+        return self.min_val + (self.max_val - self.min_val) * (angle / math.pi)
 
     def angle_from_value(self, value):
         """
         Inverse of value_from_angle: compute the angle (in radians) from a given value.
         """
-        return value (math.pi / 180)
+        return (value - self.min_val) * (math.pi / (self.max_val - self.min_val))
 
     def update_blue_position(self):
         """
@@ -79,13 +78,12 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.coords(self.blue_circle,
                     x - self.handle_radius, y - self.handle_radius,
                     x + self.handle_radius, y + self.handle_radius)
-        self.angle_var.set(str(self.value_from_angle(180-self.blue_angle)))
+        self.angle_var.set(str(self.value_from_angle(self.blue_angle)))
 
     def set_blue_angle(self, angle_degrees):
         """
         Set the blue circle's position using an angle in degrees.
         """
-
         self.blue_angle = math.radians(angle_degrees)
         self.update_blue_position()
 
@@ -130,7 +128,7 @@ class AdvancedCurvedSlider(tk.Canvas):
                         x - self.handle_radius, y - self.handle_radius,
                         x + self.handle_radius, y + self.handle_radius)
         self.jog_button.config(state="normal")
-        target_value = round(180-self.target_angle* (180 / math.pi),2)
+        target_value = self.value_from_angle(self.target_angle)
         self.target_text.config(text=str(target_value))
         if not self.target_text.winfo_ismapped():
             self.target_text.pack(side="left", padx=5)
@@ -185,7 +183,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         Send a command by writing to a temporary file and (if set) calling the parent app's protocol runner.
         The command is formatted with the angle (in degrees).
         """
-        angle_deg = round(180 - math.degrees(angle))
+        angle_deg = round(math.degrees(angle))
         print(f"Sending command: {angle_deg}")
         command_string = f"no_save\nMove_to_angle_jog: {angle_deg}"
         temp_file = os.path.join("protocols", "temp.txt")
@@ -200,7 +198,3 @@ class AdvancedCurvedSlider(tk.Canvas):
             self.parent_app.run_protocol(temp_file)
         else:
             print("Parent app not set. Cannot run protocol.")
-
-# Example usage:
-# To create a slider with values from 10 to 170 (10 on the left and 170 on the right):
-# self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=200, min_val=10, max_val=170, parent_app=self)
