@@ -160,6 +160,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         val = max(self.min_val, min(self.max_val, val))
         target_angle = self.angle_from_value(val)
         # self.animate_move(self.blue_angle, target_angle, callback=lambda: self.send_command(self.blue_angle))
+        self.send_command(self.blue_angle)
 
     def animate_move(self, start_angle, target_angle, steps=20, delay=20, callback=None):
         """
