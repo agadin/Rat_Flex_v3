@@ -1,8 +1,6 @@
 import tkinter as tk
 import math
 import os
-
-
 class AdvancedCurvedSlider(tk.Canvas):
     def __init__(self, master, width=300, height=200, min_val=10, max_val=170, parent_app=None, **kwargs):
         super().__init__(master, width=width, height=height, **kwargs)
@@ -10,6 +8,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.min_val = min_val
         self.max_val = max_val
         self.value = min_val  # Starting value is 10
+        self.user_typing = False  # Flag to track if the user is typing
 
         # Arc parameters
         self.radius = 100
@@ -50,9 +49,17 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.angle_entry = tk.Entry(self.control_frame, textvariable=self.angle_var, width=5)
         self.angle_entry.pack(side="left", padx=5)
         self.angle_entry.bind("<Return>", self.on_entry_return)
+        self.angle_entry.bind("<FocusIn>", self.on_entry_focus_in)
+        self.angle_entry.bind("<FocusOut>", self.on_entry_focus_out)
         self.target_text = tk.Label(self.control_frame, text="", fg="orange")
 
         self.update_blue_position()
+
+    def on_entry_focus_in(self, event):
+        self.user_typing = True
+
+    def on_entry_focus_out(self, event):
+        self.user_typing = False
 
     def value_from_angle(self, angle):
         """
@@ -61,33 +68,32 @@ class AdvancedCurvedSlider(tk.Canvas):
           - When angle = π (left), value = min_val (10)
           - When angle = 0 (right), value = max_val (170)
         """
-        return angle* (180 / math.pi)
-
+        return angle * (180 / math.pi)
 
     def angle_from_value(self, value):
         """
         Inverse of value_from_angle: compute the angle (in radians) from a given value.
         """
-        return value (math.pi / 180)
+        return value * (math.pi / 180)
 
     def update_blue_position(self):
         """
         Update the blue circle's (handle) position on the canvas based on its current angle.
         """
-        print(f"self.blue_angle={self.blue_angle}")
-        blue_angle = math.pi - self.blue_angle
-        x = self.center_x + self.radius * math.cos(blue_angle)
-        y = self.center_y - self.radius * math.sin(blue_angle)
-        self.coords(self.blue_circle,
-                    x - self.handle_radius, y - self.handle_radius,
-                    x + self.handle_radius, y + self.handle_radius)
-        self.angle_var.set(str(self.value_from_angle(self.blue_angle)))
+        if not self.user_typing:
+            print(f"self.blue_angle={self.blue_angle}")
+            blue_angle = math.pi - self.blue_angle
+            x = self.center_x + self.radius * math.cos(blue_angle)
+            y = self.center_y - self.radius * math.sin(blue_angle)
+            self.coords(self.blue_circle,
+                        x - self.handle_radius, y - self.handle_radius,
+                        x + self.handle_radius, y + self.handle_radius)
+            self.angle_var.set(str(self.value_from_angle(self.blue_angle)))
 
     def set_blue_angle(self, angle_degrees):
         """
         Set the blue circle's position using an angle in degrees.
         """
-
         self.blue_angle = math.radians(angle_degrees)
         self.update_blue_position()
 
@@ -132,7 +138,7 @@ class AdvancedCurvedSlider(tk.Canvas):
                         x - self.handle_radius, y - self.handle_radius,
                         x + self.handle_radius, y + self.handle_radius)
         self.jog_button.config(state="normal")
-        target_value = round(180-self.target_angle* (180 / math.pi),2)
+        target_value = round(180 - self.target_angle * (180 / math.pi), 2)
         self.target_text.config(text=str(target_value))
         if not self.target_text.winfo_ismapped():
             self.target_text.pack(side="left", padx=5)
@@ -158,29 +164,9 @@ class AdvancedCurvedSlider(tk.Canvas):
         except ValueError:
             return
         val = max(self.min_val, min(self.max_val, val))
-        target_angle = self.angle_from_value(val)
-        self.animate_move(self.blue_angle, target_angle,
-                          callback=lambda: self.send_command(self.blue_angle))
-
-    def animate_move(self, start_angle, target_angle, steps=20, delay=20, callback=None):
-        """
-        Animate the blue handle from the current angle to the target angle.
-        """
-        delta = (target_angle - start_angle) / steps
-
-        def step(i, current_angle):
-            if i >= steps:
-                self.blue_angle = target_angle
-                self.update_blue_position()
-                if callback:
-                    callback()
-                return
-            current_angle += delta
-            self.blue_angle = current_angle
-            self.update_blue_position()
-            self.after(delay, lambda: step(i + 1, current_angle))
-
-        step(0, start_angle)
+        self.blue_angle = self.angle_from_value(val)
+        self.update_blue_position()
+        self.send_command(self.blue_angle)
 
     def send_command(self, angle):
         """
@@ -202,7 +188,3 @@ class AdvancedCurvedSlider(tk.Canvas):
             self.parent_app.run_protocol(temp_file)
         else:
             print("Parent app not set. Cannot run protocol.")
-
-# Example usage:
-# To create a slider with values from 10 to 170 (10 on the left and 170 on the right):
-# self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=200, min_val=10, max_val=170, parent_app=self)
