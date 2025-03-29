@@ -165,15 +165,16 @@ class AdvancedCurvedSlider(tk.Canvas):
             self.target_text.pack_forget()
 
     def on_entry_return(self, event):
-            try:
-                val = float(self.angle_var.get())
-            except ValueError:
-                return
-            val = max(self.min_val, min(self.max_val, val))
-            adjusted_val = val - 180  # Subtract 180 from the user input
-            self.blue_angle = self.angle_from_value(adjusted_val)
-            self.update_blue_position()
-            self.send_command(self.blue_angle)
+        try:
+            val = float(self.angle_var.get())
+        except ValueError:
+            return
+        val = max(self.min_val, min(self.max_val, val))
+        adjusted_val = val - 180  # Subtract 180 from the user input
+        self.blue_angle = self.angle_from_value(adjusted_val)
+        self.update_blue_position()
+        self.angle_var.set(f"{val:.1f}")  # Round the input display to 1 decimal place
+        self.send_command(self.blue_angle)
 
     def send_command(self, angle):
         """
