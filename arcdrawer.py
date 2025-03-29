@@ -79,7 +79,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.coords(self.blue_circle,
                     x - self.handle_radius, y - self.handle_radius,
                     x + self.handle_radius, y + self.handle_radius)
-        self.angle_var.set(str(self.value_from_angle(self.blue_angle)))
+        self.angle_var.set(str(self.value_from_angle(180-self.blue_angle)))
 
     def set_blue_angle(self, angle_degrees):
         """
