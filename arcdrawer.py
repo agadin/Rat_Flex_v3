@@ -90,6 +90,8 @@ class AdvancedCurvedSlider(tk.Canvas):
                         x - self.handle_radius, y - self.handle_radius,
                         x + self.handle_radius, y + self.handle_radius)
         if self.dragging:
+            if self.blue_angle_drag is None:
+                self.blue_angle_drag = self.blue_angle
             blue_angle = math.pi - self.blue_angle_drag
             x = self.center_x + self.radius * math.cos(blue_angle)
             y = self.center_y - self.radius * math.sin(blue_angle)
