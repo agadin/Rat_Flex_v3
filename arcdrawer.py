@@ -138,7 +138,7 @@ class AdvancedCurvedSlider(tk.Canvas):
                         x - self.handle_radius, y - self.handle_radius,
                         x + self.handle_radius, y + self.handle_radius)
         self.jog_button.config(state="normal")
-        target_value = round(180 - self.target_angle * (180 / math.pi), 2)
+        target_value = round(180 - self.target_angle * (180 / math.pi), 1)
         self.target_text.config(text=str(target_value))
         if not self.target_text.winfo_ismapped():
             self.target_text.pack(side="left", padx=5)
