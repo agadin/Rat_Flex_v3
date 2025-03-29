@@ -147,12 +147,14 @@ class AdvancedCurvedSlider(tk.Canvas):
         if self.target_angle is None:
             return
         self.jog_button.config(state="disabled")
-        print(f"Jogging to {math.pi -self.target_angle}")
-        self.send_command(math.pi - self.target_angle)
+        target_value=round(180 - self.target_angle * (180 / math.pi), 2)
+        #convert target_value to radians
+        target_value = math.radians(target_value)
+        print(f"Jogging to {target_value}")
+        self.send_command(target_value)
         self.on_jog_complete()
 
     def on_jog_complete(self):
-        self.send_command(self.blue_angle)
         if self.target_circle:
             self.delete(self.target_circle)
             self.target_circle = None
