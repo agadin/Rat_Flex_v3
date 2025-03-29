@@ -82,7 +82,6 @@ class AdvancedCurvedSlider(tk.Canvas):
         """
         Update the blue circle's (handle) position on the canvas based on its current angle.
         """
-        print(self.user_typing)
         if not self.dragging:
             blue_angle = math.pi - self.blue_angle
             x = self.center_x + self.radius * math.cos(blue_angle)
@@ -90,7 +89,7 @@ class AdvancedCurvedSlider(tk.Canvas):
             self.coords(self.blue_circle,
                         x - self.handle_radius, y - self.handle_radius,
                         x + self.handle_radius, y + self.handle_radius)
-        else:
+        if self.dragging:
             blue_angle = math.pi - self.blue_angle_drag
             x = self.center_x + self.radius * math.cos(blue_angle)
             y = self.center_y - self.radius * math.sin(blue_angle)
@@ -124,7 +123,7 @@ class AdvancedCurvedSlider(tk.Canvas):
     def on_blue_release(self, event):
         if self.dragging:
             self.dragging = False
-            self.send_command(self.blue_angle)
+            self.send_command(self.blue_angle_drag)
 
     def on_canvas_click(self, event):
         # Ignore the click if it's on the blue circle.
