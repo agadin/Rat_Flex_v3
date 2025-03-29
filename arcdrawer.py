@@ -126,32 +126,32 @@ class AdvancedCurvedSlider(tk.Canvas):
             self.send_command(math.pi - self.blue_angle_drag)
 
     def on_canvas_click(self, event):
-                # Ignore the click if it's on the blue circle.
-                items = self.find_overlapping(event.x, event.y, event.x, event.y)
-                if self.blue_circle in items:
-                    return
-                dx = event.x - self.center_x
-                dy = self.center_y - event.y
-                angle = math.atan2(dy, dx)
-                angle = max(0, min(math.pi, angle))
-                self.target_angle = angle
-                x = self.center_x + self.radius * math.cos(angle)
-                y = self.center_y - self.radius * math.sin(angle)
-                if self.target_circle is None:
-                    self.target_circle = self.create_oval(
+        # Ignore the click if it's on the blue circle.
+        items = self.find_overlapping(event.x, event.y, event.x, event.y)
+        if self.blue_circle in items:
+            return
+        dx = event.x - self.center_x
+        dy = self.center_y - event.y
+        angle = math.atan2(dy, dx)
+        angle = max(0, min(math.pi, angle))
+        self.target_angle = angle
+        x = self.center_x + self.radius * math.cos(angle)
+        y = self.center_y - self.radius * math.sin(angle)
+        if self.target_circle is None:
+            self.target_circle = self.create_oval(
+                x - self.handle_radius, y - self.handle_radius,
+                x + self.handle_radius, y + self.handle_radius,
+                fill="orange", outline=""
+            )
+        else:
+            self.coords(self.target_circle,
                         x - self.handle_radius, y - self.handle_radius,
-                        x + self.handle_radius, y + self.handle_radius,
-                        fill="orange", outline=""
-                    )
-                else:
-                    self.coords(self.target_circle,
-                                x - self.handle_radius, y - self.handle_radius,
-                                x + self.handle_radius, y + self.handle_radius)
-                self.jog_button.config(state="normal")
-                target_value = round(180 - self.target_angle * (180 / math.pi), 1)
-                self.target_text.configure(text=str(target_value))
-                if not self.target_text.winfo_ismapped():
-                    self.target_text.pack(side="left", padx=5, pady=5)
+                        x + self.handle_radius, y + self.handle_radius)
+        self.jog_button.configure(state="normal")
+        target_value = round(180 - self.target_angle * (180 / math.pi), 1)
+        self.target_text.configure(text=str(target_value))
+        if not self.target_text.winfo_ismapped():
+            self.target_text.pack(side="left", padx=5, pady=5)
 
     def on_jog(self):
         if self.target_angle is None:
