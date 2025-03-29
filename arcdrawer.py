@@ -61,7 +61,7 @@ class AdvancedCurvedSlider(tk.Canvas):
           - When angle = π (left), value = min_val (10)
           - When angle = 0 (right), value = max_val (170)
         """
-        return 180-angle* (180 / math.pi)
+        return angle* (180 / math.pi)
 
 
     def angle_from_value(self, value):
@@ -130,7 +130,7 @@ class AdvancedCurvedSlider(tk.Canvas):
                         x - self.handle_radius, y - self.handle_radius,
                         x + self.handle_radius, y + self.handle_radius)
         self.jog_button.config(state="normal")
-        target_value = self.value_from_angle(self.target_angle)
+        target_value = round(180-self.target_angle* (180 / math.pi),2)
         self.target_text.config(text=str(target_value))
         if not self.target_text.winfo_ismapped():
             self.target_text.pack(side="left", padx=5)
