@@ -15,7 +15,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         # Arc parameters
         self.radius = 100
         self.center_x = width // 2
-        self.center_y = height - 70
+        self.center_y = height - 40
 
         # Initialize the blue handle at the left end (angle = π) so its value is 10.
         self.blue_angle = math.pi

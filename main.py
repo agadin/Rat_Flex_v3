@@ -443,10 +443,10 @@ class App(ctk.CTk):
         self.protocol_var = ctk.StringVar(value=self.protocol_files[0])
 
         self.protocol_dropdown = ctk.CTkComboBox(self.sidebar_frame, values=self.protocol_files, variable=self.protocol_var, width=200)
-        self.protocol_dropdown.pack(pady=15)
+        self.protocol_dropdown.pack(pady=5)
 
         self.run_button = ctk.CTkButton(self.sidebar_frame, text="Run Protocol", command=self.run_protocol_init)
-        self.run_button.pack(pady=15)
+        self.run_button.pack(pady=5)
 
         # Stop button
         self.stop_button = ctk.CTkButton(self.sidebar_frame, text="Stop", command=self.stop_protocol)
@@ -537,7 +537,7 @@ class App(ctk.CTk):
         slider_container = ctk.CTkFrame(self.sidebar_frame)
         slider_container.pack(pady=5, padx=15, fill="x")
         # Create the AdvancedCurvedSlider instance, passing self as the parent_app
-        self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=175, min_val=10, max_val=170,parent_app=self)
+        self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=150, min_val=10, max_val=170,parent_app=self)
         self.advanced_slider.pack()
 
         # Light/dark mode automatic toggle
