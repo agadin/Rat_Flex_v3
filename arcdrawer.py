@@ -170,7 +170,8 @@ class AdvancedCurvedSlider(tk.Canvas):
         except ValueError:
             return
         val = max(self.min_val, min(self.max_val, val))
-        adjusted_val = val - 180  # Subtract 180 from the user input
+        adjusted_val = val
+        print(val)
         self.blue_angle = self.angle_from_value(adjusted_val)
         self.update_blue_position()
         self.angle_var.set(f"{val:.1f}")  # Round the input display to 1 decimal place
