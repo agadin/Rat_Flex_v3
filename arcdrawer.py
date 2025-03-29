@@ -123,7 +123,7 @@ class AdvancedCurvedSlider(tk.Canvas):
     def on_blue_release(self, event):
         if self.dragging:
             self.dragging = False
-            self.send_command(self.blue_angle_drag)
+            self.send_command(math.pi + self.blue_angle_drag)
 
     def on_canvas_click(self, event):
         # Ignore the click if it's on the blue circle.
