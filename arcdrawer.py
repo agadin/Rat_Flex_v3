@@ -89,6 +89,13 @@ class AdvancedCurvedSlider(tk.Canvas):
             self.coords(self.blue_circle,
                         x - self.handle_radius, y - self.handle_radius,
                         x + self.handle_radius, y + self.handle_radius)
+        else:
+            blue_angle = math.pi - self.blue_angle_drag
+            x = self.center_x + self.radius * math.cos(blue_angle)
+            y = self.center_y - self.radius * math.sin(blue_angle)
+            self.coords(self.blue_circle,
+                        x - self.handle_radius, y - self.handle_radius,
+                        x + self.handle_radius, y + self.handle_radius)
         if not self.user_typing:
             print(f"self.blue_angle={self.blue_angle}")
             self.angle_var.set(str(round(self.value_from_angle(self.blue_angle),1)))
@@ -110,7 +117,7 @@ class AdvancedCurvedSlider(tk.Canvas):
             angle = math.atan2(dy, dx)
             angle = math.pi - angle
             angle = max(0, min(math.pi, angle))
-            self.blue_angle = angle
+            self.blue_angle_drag = angle
             self.update_blue_position()
 
     def on_blue_release(self, event):
