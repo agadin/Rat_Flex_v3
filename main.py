@@ -464,7 +464,7 @@ class App(ctk.CTk):
 
         self.animal_id_var.trace("w", save_animal_id_to_redis)
 
-        self.button_frame = ctk.CTkFrame(self.sidebar_frame)
+        self.button_frame = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
         self.button_frame.pack(padx=5, pady=10, fill="x")
 
         # Right and Left Arm Toggle Buttons

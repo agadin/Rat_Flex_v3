@@ -43,7 +43,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.target_angle = None
 
         # Control frame for Jog button and value entry.
-        self.control_frame = tk.Frame(master)
+        self.control_frame = ctk.CTkFrame(master, fg_color="transparent")
         self.control_frame.pack(pady=10)
         self.jog_button = ctk.CTkButton(self.control_frame, text="Jog", command=self.on_jog, state="disabled")
         self.jog_button.pack(side="left", padx=5)
