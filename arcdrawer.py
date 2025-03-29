@@ -141,7 +141,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         if self.target_angle is None:
             return
         self.jog_button.config(state="disabled")
-        self.animate_move(self.blue_angle, self.target_angle, callback=self.on_jog_complete)
+        # self.animate_move(self.blue_angle, self.target_angle, callback=self.on_jog_complete)
 
     def on_jog_complete(self):
         self.send_command(self.blue_angle)
@@ -159,8 +159,7 @@ class AdvancedCurvedSlider(tk.Canvas):
             return
         val = max(self.min_val, min(self.max_val, val))
         target_angle = self.angle_from_value(val)
-        self.animate_move(self.blue_angle, target_angle,
-                          callback=lambda: self.send_command(self.blue_angle))
+        # self.animate_move(self.blue_angle, target_angle, callback=lambda: self.send_command(self.blue_angle))
 
     def animate_move(self, start_angle, target_angle, steps=20, delay=20, callback=None):
         """
