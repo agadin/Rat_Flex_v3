@@ -432,11 +432,11 @@ class App(ctk.CTk):
 
         # Calibrate button
         self.calibrate_button = ctk.CTkButton(self.sidebar_frame, text="Calibrate", command=run_calibration)
-        self.calibrate_button.pack(pady=15, padx=15)
+        self.calibrate_button.pack(pady=5, padx=15)
 
         # Protocol selector
         self.protocol_label = ctk.CTkLabel(self.sidebar_frame, text="Select a Protocol:")
-        self.protocol_label.pack(pady=15, padx=15)
+        self.protocol_label.pack(pady=5, padx=15)
 
         self.protocol_folder = './protocols'
         self.protocol_files = [f for f in os.listdir(self.protocol_folder) if os.path.isfile(os.path.join(self.protocol_folder, f))]
@@ -455,7 +455,7 @@ class App(ctk.CTk):
         # create an input field for the user to input the animal ID and save it to redis when it is 4 numbers long
         self.animal_id_var = ctk.StringVar( value="Animal ID")
         self.animal_id_entry = ctk.CTkEntry(self.sidebar_frame, textvariable=self.animal_id_var, placeholder_text="Animal ID")
-        self.animal_id_entry.pack(pady=15, padx=15)
+        self.animal_id_entry.pack(pady=5, padx=15)
 
         def save_animal_id_to_redis(*args):
             animal_id = self.animal_id_var.get()
@@ -535,9 +535,9 @@ class App(ctk.CTk):
 
         # Create a container frame for the curved slider in the sidebar
         slider_container = ctk.CTkFrame(self.sidebar_frame)
-        slider_container.pack(pady=10, padx=15, fill="x")
+        slider_container.pack(pady=5, padx=15, fill="x")
         # Create the AdvancedCurvedSlider instance, passing self as the parent_app
-        self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=200, min_val=10, max_val=170,parent_app=self)
+        self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=175, min_val=10, max_val=170,parent_app=self)
         self.advanced_slider.pack()
 
         # Light/dark mode automatic toggle
@@ -547,7 +547,7 @@ class App(ctk.CTk):
 
         # Light/Dark mode toggle
         self.mode_toggle = ctk.CTkSwitch(self.sidebar_frame, text="Light/Dark Mode", command=self.toggle_mode)
-        self.mode_toggle.pack(pady=15)
+        self.mode_toggle.pack(pady=5)
 
         # Main content area
         self.main_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
