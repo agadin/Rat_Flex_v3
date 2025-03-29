@@ -193,7 +193,7 @@ class AdvancedCurvedSlider(tk.Canvas):
             print("Error writing to temp.txt:", e)
         if self.parent_app is not None:
             # remove ./protocols/ from the path
-            temp_file = temp_file[11:]
+            temp_file = temp_file[10:]
             self.parent_app.run_protocol(temp_file)
         else:
             print("Parent app not set. Cannot run protocol.")
