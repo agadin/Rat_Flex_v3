@@ -465,7 +465,7 @@ class App(ctk.CTk):
         self.animal_id_var.trace("w", save_animal_id_to_redis)
 
         self.button_frame = ctk.CTkFrame(self.sidebar_frame, fg_color="transparent")
-        self.button_frame.pack(padx=5, pady=10, fill="x")
+        self.button_frame.pack(padx=15, pady=5, fill="x")
 
         # Right and Left Arm Toggle Buttons
         self.arm_selection = ctk.StringVar(value="")  # To track the current selection
@@ -506,7 +506,7 @@ class App(ctk.CTk):
             corner_radius=10,
             width=100
         )
-        right_button.pack(side="left", padx=10, pady=10)
+        right_button.pack(side="left", padx=20)
 
         left_button = ctk.CTkButton(
             self.button_frame,
@@ -517,7 +517,7 @@ class App(ctk.CTk):
             corner_radius=10,
             width=100
         )
-        left_button.pack(side="right", padx=10, pady=10)
+        left_button.pack(side="right", padx=20)
 
         # Update button states initially
         update_button_states()
