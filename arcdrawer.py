@@ -48,12 +48,12 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.jog_button = ctk.CTkButton(self.control_frame, text="Jog", command=self.on_jog, state="disabled")
         self.jog_button.pack(side="left", padx=5)
         self.angle_var = tk.StringVar()
-        self.angle_entry = tk.Entry(self.control_frame, textvariable=self.angle_var, width=5)
+        self.angle_entry = ctk.CTkEntry(self.control_frame, textvariable=self.angle_var, width=50)
         self.angle_entry.pack(side="left", padx=5)
         self.angle_entry.bind("<Return>", self.on_entry_return)
         self.angle_entry.bind("<FocusIn>", self.on_entry_focus_in)
         self.angle_entry.bind("<FocusOut>", self.on_entry_focus_out)
-        self.target_text = tk.Label(self.control_frame, text="", fg="orange")
+        self.target_text = ctk.CTkLabel(self.control_frame, text="", text_color="orange")
 
         self.update_blue_position()
 
@@ -141,7 +141,7 @@ class AdvancedCurvedSlider(tk.Canvas):
                         x + self.handle_radius, y + self.handle_radius)
         self.jog_button.config(state="normal")
         target_value = round(180 - self.target_angle * (180 / math.pi), 1)
-        self.target_text.config(text=str(target_value))
+        self.target_text.configure(text=str(target_value))
         if not self.target_text.winfo_ismapped():
             self.target_text.pack(side="left", padx=5)
 
