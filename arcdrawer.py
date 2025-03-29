@@ -55,13 +55,13 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.update_blue_position()
 
     def value_from_angle(self, angle):
-        """
-        Map an angle (0 to π) to a value between min_val and max_val.
-        With this function:
-          - When angle = 0 (left), value = min_val (10)
-          - When angle = π (right), value = max_val (170)
-        """
-        return round(self.min_val + (self.max_val - self.min_val) * (angle / math.pi), 2)
+            """
+            Map an angle (0 to π) to a value between min_val and max_val.
+            With this function:
+              - When angle = 0 (left), value = max_val (170)
+              - When angle = π (right), value = min_val (10)
+            """
+            return round(self.max_val - (self.max_val - self.min_val) * (angle / math.pi), 2)
 
     def angle_from_value(self, value):
         """
@@ -84,6 +84,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         """
         Set the blue circle's position using an angle in degrees.
         """
+
         self.blue_angle = math.radians(angle_degrees)
         self.update_blue_position()
 
