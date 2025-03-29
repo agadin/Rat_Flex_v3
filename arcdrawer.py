@@ -97,7 +97,6 @@ class AdvancedCurvedSlider(tk.Canvas):
                         x - self.handle_radius, y - self.handle_radius,
                         x + self.handle_radius, y + self.handle_radius)
         if not self.user_typing:
-            print(f"self.blue_angle={self.blue_angle}")
             self.angle_var.set(str(round(self.value_from_angle(self.blue_angle),1)))
 
     def set_blue_angle(self, angle_degrees):

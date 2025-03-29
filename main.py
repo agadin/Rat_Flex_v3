@@ -442,7 +442,7 @@ class App(ctk.CTk):
         self.protocol_files = [f for f in os.listdir(self.protocol_folder) if os.path.isfile(os.path.join(self.protocol_folder, f))]
         self.protocol_var = ctk.StringVar(value=self.protocol_files[0])
 
-        self.protocol_dropdown = ctk.CTkComboBox(self.sidebar_frame, values=self.protocol_files, variable=self.protocol_var)
+        self.protocol_dropdown = ctk.CTkComboBox(self.sidebar_frame, values=self.protocol_files, variable=self.protocol_var, width=200)
         self.protocol_dropdown.pack(pady=15)
 
         self.run_button = ctk.CTkButton(self.sidebar_frame, text="Run Protocol", command=self.run_protocol_init)
@@ -1743,7 +1743,7 @@ class App(ctk.CTk):
             elif calibration_level == 1:
                 self.calibrate_button.configure(fg_color="yellow")
             elif calibration_level == 2:
-                self.calibrate_button.configure(fg_color="green")
+                self.calibrate_button.configure(fg_color="Blue")
             else:
                 self.calibrate_button.configure(fg_color="gray")  # Default color for unknown states
         except Exception as e:
