@@ -1,6 +1,8 @@
 import tkinter as tk
 import math
 import os
+import customtkinter as ctk
+
 class AdvancedCurvedSlider(tk.Canvas):
     def __init__(self, master, width=300, height=200, min_val=10, max_val=170, parent_app=None, **kwargs):
         super().__init__(master, width=width, height=height, **kwargs)
@@ -43,7 +45,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         # Control frame for Jog button and value entry.
         self.control_frame = tk.Frame(master)
         self.control_frame.pack(pady=10)
-        self.jog_button = tk.Button(self.control_frame, text="Jog", command=self.on_jog, state="disabled")
+        self.jog_button = ctk.CTkButton(self.control_frame, text="Jog", command=self.on_jog, state="disabled")
         self.jog_button.pack(side="left", padx=5)
         self.angle_var = tk.StringVar()
         self.angle_entry = tk.Entry(self.control_frame, textvariable=self.angle_var, width=5)
