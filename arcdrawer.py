@@ -82,6 +82,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         """
         Update the blue circle's (handle) position on the canvas based on its current angle.
         """
+        print(self.user_typing)
         if not self.dragging:
             blue_angle = math.pi - self.blue_angle
             x = self.center_x + self.radius * math.cos(blue_angle)
