@@ -68,7 +68,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         """
         Inverse of value_from_angle: compute the angle (in radians) from a given value.
         """
-        return (value - self.min_val) / (self.max_val - self.min_val) * math.pi
+        return value (math.pi / 180)
 
     def update_blue_position(self):
         """
