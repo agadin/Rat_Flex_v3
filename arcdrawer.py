@@ -156,7 +156,7 @@ class AdvancedCurvedSlider(tk.Canvas):
     def on_jog(self):
         if self.target_angle is None:
             return
-        self.jog_button.config(state="disabled")
+        self.jog_button.configure(state="disabled")
         # target_value=round(self.target_angle * (180 / math.pi), 2)
         #convert target_value to radians
         # target_value = math.radians(target_value)
