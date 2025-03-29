@@ -54,15 +54,15 @@ class AdvancedCurvedSlider(tk.Canvas):
 
         self.update_blue_position()
 
-    import math
-
     def value_from_angle(self, angle):
         """
         Map an angle (π to 0) to a value between min_val and max_val.
-        Then cap the result between 10° and 170° (in radians).
+        With this function:
+          - When angle = π (left), value = min_val (10)
+          - When angle = 0 (right), value = max_val (170)
         """
-        # Map angle from π (left) to 0 (right) to min_val to max_val
-        return 180-angle
+        return math.radians(angle)
+
 
     def angle_from_value(self, value):
         """
