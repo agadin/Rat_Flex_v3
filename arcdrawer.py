@@ -75,7 +75,6 @@ class AdvancedCurvedSlider(tk.Canvas):
         Update the blue circle's (handle) position on the canvas based on its current angle.
         """
         print(f"self.blue_angle={self.blue_angle}")
-        print(f"self.target_angle ={self.target_angle }")
         blue_angle = math.pi - self.blue_angle
         x = self.center_x + self.radius * math.cos(blue_angle)
         y = self.center_y - self.radius * math.sin(blue_angle)
@@ -119,7 +118,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         dy = self.center_y - event.y
         angle = math.atan2(dy, dx)
         angle = max(0, min(math.pi, angle))
-        self.target_angle = 180 - angle * (180 / math.pi)
+        self.target_angle = angle
         x = self.center_x + self.radius * math.cos(angle)
         y = self.center_y - self.radius * math.sin(angle)
         if self.target_circle is None:
@@ -143,10 +142,9 @@ class AdvancedCurvedSlider(tk.Canvas):
             return
         self.jog_button.config(state="disabled")
         # self.animate_move(self.blue_angle, self.target_angle, callback=self.on_jog_complete)
-        self.on_jog_complete()
 
     def on_jog_complete(self):
-        self.send_command(self.target_angle)
+        self.send_command(self.blue_angle)
         if self.target_circle:
             self.delete(self.target_circle)
             self.target_circle = None
@@ -160,9 +158,9 @@ class AdvancedCurvedSlider(tk.Canvas):
         except ValueError:
             return
         val = max(self.min_val, min(self.max_val, val))
-        self.target_angle = self.angle_from_value(val)
-        # self.animate_move(self.blue_angle, target_angle, callback=lambda: self.send_command(self.blue_angle))
-        self.send_command(self.blue_angle)
+        target_angle = self.angle_from_value(val)
+        self.animate_move(self.blue_angle, target_angle,
+                          callback=lambda: self.send_command(self.blue_angle))
 
     def animate_move(self, start_angle, target_angle, steps=20, delay=20, callback=None):
         """
