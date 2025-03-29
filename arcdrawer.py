@@ -184,7 +184,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         Send a command by writing to a temporary file and (if set) calling the parent app's protocol runner.
         The command is formatted with the angle (in degrees).
         """
-        angle_deg = round(180 - math.degrees(angle))
+        angle_deg = round(math.degrees(angle))
         command_string = f"no_save\nMove_to_angle_jog: {angle_deg}"
         temp_file = os.path.join("protocols", "temp.txt")
         try:
