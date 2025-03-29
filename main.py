@@ -517,7 +517,7 @@ class App(ctk.CTk):
             corner_radius=10,
             width=100
         )
-        left_button.pack(side="left", padx=10, pady=10)
+        left_button.pack(side="right", padx=10, pady=10)
 
         # Update button states initially
         update_button_states()
