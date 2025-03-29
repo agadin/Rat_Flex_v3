@@ -48,12 +48,12 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.jog_button = ctk.CTkButton(self.control_frame, text="Jog", command=self.on_jog, state="disabled")
         self.jog_button.pack(side="left", padx=5)
         self.angle_var = tk.StringVar()
-        self.angle_entry = ctk.CTkEntry(self.control_frame, textvariable=self.angle_var, width=50)
+        self.angle_entry = tk.Entry(self.control_frame, textvariable=self.angle_var, width=5)
         self.angle_entry.pack(side="left", padx=5)
         self.angle_entry.bind("<Return>", self.on_entry_return)
         self.angle_entry.bind("<FocusIn>", self.on_entry_focus_in)
         self.angle_entry.bind("<FocusOut>", self.on_entry_focus_out)
-        self.target_text = ctk.CTkLabel(self.control_frame, text="", text_color="orange")
+        self.target_text = tk.Label(self.control_frame, text="", fg="orange")
 
         self.update_blue_position()
 
@@ -141,7 +141,7 @@ class AdvancedCurvedSlider(tk.Canvas):
                         x + self.handle_radius, y + self.handle_radius)
         self.jog_button.config(state="normal")
         target_value = round(180 - self.target_angle * (180 / math.pi), 1)
-        self.target_text.configure(text=str(target_value))
+        self.target_text.config(text=str(target_value))
         if not self.target_text.winfo_ismapped():
             self.target_text.pack(side="left", padx=5)
 
@@ -165,16 +165,15 @@ class AdvancedCurvedSlider(tk.Canvas):
             self.target_text.pack_forget()
 
     def on_entry_return(self, event):
-        try:
-            val = float(self.angle_var.get())
-        except ValueError:
-            return
-        val = max(self.min_val, min(self.max_val, val))
-        adjusted_val = val - 180  # Subtract 180 from the user input
-        self.blue_angle = self.angle_from_value(adjusted_val)
-        self.update_blue_position()
-        self.angle_var.set(f"{val:.1f}")  # Round the input display to 1 decimal place
-        self.send_command(self.blue_angle)
+            try:
+                val = float(self.angle_var.get())
+            except ValueError:
+                return
+            val = max(self.min_val, min(self.max_val, val))
+            adjusted_val = val - 180  # Subtract 180 from the user input
+            self.blue_angle = self.angle_from_value(adjusted_val)
+            self.update_blue_position()
+            self.send_command(self.blue_angle)
 
     def send_command(self, angle):
         """
