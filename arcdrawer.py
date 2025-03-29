@@ -118,7 +118,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         dy = self.center_y - event.y
         angle = math.atan2(dy, dx)
         angle = max(0, min(math.pi, angle))
-        self.target_angle = angle
+        self.target_angle = 180 - angle * (180 / math.pi)
         x = self.center_x + self.radius * math.cos(angle)
         y = self.center_y - self.radius * math.sin(angle)
         if self.target_circle is None:
@@ -145,7 +145,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.on_jog_complete()
 
     def on_jog_complete(self):
-        self.send_command(self.blue_angle)
+        self.send_command(self.target_angle)
         if self.target_circle:
             self.delete(self.target_circle)
             self.target_circle = None
@@ -159,7 +159,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         except ValueError:
             return
         val = max(self.min_val, min(self.max_val, val))
-        target_angle = self.angle_from_value(val)
+        self.target_angle = self.angle_from_value(val)
         # self.animate_move(self.blue_angle, target_angle, callback=lambda: self.send_command(self.blue_angle))
         self.send_command(self.blue_angle)
 
