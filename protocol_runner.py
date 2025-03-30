@@ -401,6 +401,7 @@ def wait(wait_time):
         idle_force = motor.return_idle_force()
     else:
         idle_force = 0  # Default to 0 if no zero force is set
+    redis_client.set("steps_Level", motor.return_steps_since_calibration())
 
     while time.time() < end_time:
         start_time = time.time()
@@ -487,7 +488,6 @@ def start_server():
             shared_memory_error=redis_client.get("shared_memory_error")
             redis_client.set("calibration_Level",motor.check_if_calibrated())
             redis_client.set("steps_Level",motor.return_steps_since_calibration())
-            print(f"steps_Level {motor.return_steps_since_calibration()}")
             if shared_memory_error == "1":
                 print("Shared memory error detected. Recreating shared memory.")
                 redis_client.set("shared_memory_error", 0)

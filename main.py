@@ -442,6 +442,10 @@ class App(ctk.CTk):
         self.protocol_files = [f for f in os.listdir(self.protocol_folder) if os.path.isfile(os.path.join(self.protocol_folder, f))]
         self.protocol_var = ctk.StringVar(value=self.protocol_files[0])
 
+        #remove calibrate_protocol.txt from the list if it exists
+        if "calibrate_protocol.txt" in self.protocol_files:
+            self.protocol_files.remove("calibrate_protocol.txt")
+
         self.protocol_dropdown = ctk.CTkComboBox(self.sidebar_frame, values=self.protocol_files, variable=self.protocol_var, width=200)
         self.protocol_dropdown.pack(pady=5)
 
@@ -1746,7 +1750,7 @@ class App(ctk.CTk):
                 self.calibrate_button.configure(fg_color="yellow")
             elif calibration_level == 2:
                 steps_level = int(self.redis_client.get("steps_Level") or 0)
-
+                print(f"Steps Level: {steps_level}")
                 if steps_level <= 7500:
                     # Transition from blue (0,0,255) to yellow (255,255,0)
                     t = steps_level / 7500.0
