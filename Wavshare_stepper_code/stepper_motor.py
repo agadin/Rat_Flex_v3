@@ -281,9 +281,9 @@ class StepperMotor:
                 if i < 3:
                     #use reverse direction for first 3 steps to get a better zero force
                     if self.current_direction == 'forward':
-                        temp_direction = 'forward'
-                    else:
                         temp_direction = 'backward'
+                    else:
+                        temp_direction = 'forward'
                     self.zero_force = self.find_closest_force_optimized(self.current_angle, temp_direction)
                 else:
                     self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
@@ -367,9 +367,9 @@ class StepperMotor:
             if i < 4:
                 # use reverse direction for first 3 steps to get a better zero force
                 if self.current_direction == 'forward':
-                    temp_direction = 'forward'
-                else:
                     temp_direction = 'backward'
+                else:
+                    temp_direction = 'forward'
                 self.zero_force = self.find_closest_force_optimized(self.current_angle, temp_direction)
             else:
                 self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
