@@ -28,6 +28,7 @@ class StepperMotor:
 
     def __init__(self, dir_pin, step_pin, enable_pin, mode_pins, limit_switch_1, limit_switch_2, step_type='halfstep',
                  stepdelay=0.0015, calibration_file='calibration.cvs', csv_name='data.csv'):
+        self.zero_force = 0
         self.idle_force = None
         self.raw_force = None
         self.processed_calibration = None
@@ -125,6 +126,9 @@ class StepperMotor:
 
     def return_current_protocol_step(self):
         return self.step_number
+
+    def get_zero_force(self):
+        return self.zero_force
 
     def read_calibration_data(self):
         calibration_data = defaultdict(dict)
@@ -274,8 +278,8 @@ class StepperMotor:
                 self.current_force = float(self.raw_force)
                 temp_data.append([i, self.current_angle, float(self.current_force)])
             else:
-                self.current_force = float(self.raw_force) - self.find_closest_force_optimized(self.current_angle,
-                                                                                               self.current_direction)
+                self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
+                self.current_force = float(self.raw_force) -self.zero_force
                 temp_data.append([i, self.current_angle, float(self.current_force), self.raw_force])
 
             try:
@@ -351,9 +355,9 @@ class StepperMotor:
                 break
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
-            zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
+            self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
             self.raw_force = float(self.ForceSensor.read_force())
-            self.current_force = float(self.raw_force) - zero_force
+            self.current_force = float(self.raw_force) - self.zero_force
             try:
                 # Pack the data
                 # packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
@@ -408,10 +412,12 @@ class StepperMotor:
         stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
         i = setting_num
         self.raw_force = self.ForceSensor.read_force()
-        if self.idle_force is None:
-            idle_force_temp = 0
-        else:
+        if self.zero_force is not None:
+            idle_force_temp= self.zero_force
+        elif self.idle_force is not None:
             idle_force_temp = self.idle_force
+        else:
+            idle_force_temp = 0
         self.current_force = float(self.raw_force) - idle_force_temp
         packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
         self.shm.buf[:len(packed_data)] = packed_data
