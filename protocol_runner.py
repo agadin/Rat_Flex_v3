@@ -394,7 +394,14 @@ def wait(wait_time):
     end_time = time.time() + wait_time
     temp_data = []
     # open data.csv and read direction from last row if it exists and file was edited in the past 30 seconds
-    idle_force= motor.return_idle_force()
+    # idle_force= motor.return_idle_force()
+    # get self.zero_force from the motor object
+    idle_force = motor.get_zero_force()
+    if idle_force is None:
+        idle_force = motor.return_idle_force()
+    else:
+        idle_force = 0  # Default to 0 if no zero force is set
+
     while time.time() < end_time:
         start_time = time.time()
         raw_force = motor.ForceSensor.read_force()
@@ -489,7 +496,7 @@ def start_server():
                 process_protocol(protocol_path)
             redis_client.set("current_protocol_out", "")
             motor.update_shared_memory(-2)
-            time.sleep(1)  # Wait for 1 second before checking again
+            time.sleep(0.5)  # Wait for 1 second before checking again
 
 
 if __name__ == "__main__":
