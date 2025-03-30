@@ -1758,6 +1758,7 @@ class App(ctk.CTk):
         self.time_data = []
         self.angle_data = []
         self.force_data = []
+        self.angle_force_data = []
 
         self.update_graph_view(self.segmented_button.get())
 
