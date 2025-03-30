@@ -278,7 +278,15 @@ class StepperMotor:
                 self.current_force = float(self.raw_force)
                 temp_data.append([i, self.current_angle, float(self.current_force)])
             else:
-                self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
+                if i < 3:
+                    #use reverse direction for first 3 steps to get a better zero force
+                    if self.current_direction == 'forward':
+                        temp_direction = 'forward'
+                    else:
+                        temp_direction = 'backward'
+                    self.zero_force = self.find_closest_force_optimized(self.current_angle, temp_direction)
+                else:
+                    self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
                 self.current_force = float(self.raw_force) -self.zero_force
                 temp_data.append([i, self.current_angle, float(self.current_force), self.raw_force])
 
@@ -355,9 +363,19 @@ class StepperMotor:
                 break
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
-            self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
             self.raw_force = float(self.ForceSensor.read_force())
+            if i < 4:
+                # use reverse direction for first 3 steps to get a better zero force
+                if self.current_direction == 'forward':
+                    temp_direction = 'forward'
+                else:
+                    temp_direction = 'backward'
+                self.zero_force = self.find_closest_force_optimized(self.current_angle, temp_direction)
+            else:
+                self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
+
             self.current_force = float(self.raw_force) - self.zero_force
+
             try:
                 # Pack the data
                 # packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
