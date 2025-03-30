@@ -18,7 +18,7 @@ class ForceSensor:
             print(f"Could not open Port {self.port}")
             print(e)
             self.ser = None
-            self.zero_values()
+        self.zero_values()
 
     def zero_values(self):
         if self.ser:
@@ -28,7 +28,7 @@ class ForceSensor:
                     self.ser.write(b'W\r')
                     response = self.ser.readline().decode('utf-8').strip()
                     values.append(float(response))
-                    time.sleep(0.1)  # Short delay between readings
+                    time.sleep(0.05)  # Short delay between readings
                 self.idle_calibration_value = sum(values) / len(values)
                 print(f"Idle calibration value: {self.idle_calibration_value}")
             except Exception as e:
@@ -41,7 +41,7 @@ class ForceSensor:
             try:
                 self.ser.write(b'W\r')
                 response = self.ser.readline().decode('utf-8').strip()
-                force_out=float(response)-1.87 #add idle calibration value
+                force_out = float(response) - self.idle_calibration_value
                 return force_out
             except Exception as e:
                 print(f"Error reading from Port {self.port}")
