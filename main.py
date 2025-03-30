@@ -1792,7 +1792,7 @@ class App(ctk.CTk):
                         # Unzip the tuples into x and y values
                         x_values, y_values = zip(*data_copy)
                         print(x_values)
-                        self.ax.plot(x_values, x_values, label="Angle vs Force")
+                        self.ax.plot(x_values, y_values, label="Angle vs Force")
                         self.ax.set_xlim(0, 180)
                         self.ax.set_ylim(-1.75, 1.75)
                         self.ax.set_xlabel("Angle (degrees)")
