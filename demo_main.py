@@ -652,7 +652,7 @@ class App(ctk.CTk):
             FLIER_SIZE = 1  # Smaller circles for outliers in boxplot
 
             # Plot 1: Angle vs. Force
-            fig1, ax1 = plt.subplots(figsize=FIGSIZE_ROW, dpi=DPI)
+            fig1, ax1 = plt.subplots(figsize=FIGSIZE_ROW, dpi=DPI,  facecolor='gray')
             ax1.plot(
                 angle, force,
                 label='Force',
@@ -660,6 +660,7 @@ class App(ctk.CTk):
                 linestyle='-', linewidth=LINE_WIDTH,
                 color='b'
             )
+            ax1.set_facecolor('gray')
             ax1.set_title(f'Angle vs. Force - {self.selected_trial}', fontsize=FONT_SIZE + 2)
             ax1.set_xlabel('Angle (degrees)', fontsize=FONT_SIZE)
             ax1.set_ylabel('Force (N)', fontsize=FONT_SIZE)

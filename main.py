@@ -1788,6 +1788,8 @@ class App(ctk.CTk):
                 if mode == "Angle v Force":
                     # check if self.angle_special, self.force_special are same dimensions as each other if they are not remove from highest until they are
                     data_copy = list(self.angle_force_data)
+                    print(f"Angle vs Force data points: {len(data_copy)}")
+                    print(data_copy)
                     if data_copy:
                         # Unzip the tuples into x and y values
                         x_values, y_values = zip(*data_copy)
