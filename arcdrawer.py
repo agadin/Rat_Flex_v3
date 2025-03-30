@@ -11,6 +11,7 @@ class AdvancedCurvedSlider(tk.Canvas):
         self.max_val = max_val
         self.value = min_val  # Starting value is 10
         self.user_typing = False  # Flag to track if the user is typing
+        self.blue_angle_drag = None  # To store the angle during drag
 
         # Arc parameters
         self.radius = 100
