@@ -486,6 +486,7 @@ def start_server():
             protocol_path = redis_client.get("protocol_trigger")
             shared_memory_error=redis_client.get("shared_memory_error")
             redis_client.set("calibration_Level",motor.check_if_calibrated())
+            redis_client.set("steps_Level",motor.return_steps_since_calibration())
             if shared_memory_error == "1":
                 print("Shared memory error detected. Recreating shared memory.")
                 redis_client.set("shared_memory_error", 0)

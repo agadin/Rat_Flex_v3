@@ -36,6 +36,7 @@ class StepperMotor:
         self.step_number = None
         self.current_run_data = None
         self.current_force = None
+        self.total_step_since_calibration = 0
         if not hasattr(self, 'initialized'):  # Ensure __init__ is only called once
             self.dir_pin = dir_pin
             self.step_pin = step_pin
@@ -184,6 +185,7 @@ class StepperMotor:
         self.current_direction = 'calibrating'
         self.current_state = 'calibrating'
         self.current_angle = 0
+        self.total_step_since_calibration = 0
         self.redis_client.set("current_state", self.current_state)
         self.redis_client.set("current_direction", self.current_direction)
 
@@ -224,6 +226,151 @@ class StepperMotor:
         self.move_to_angle(90, 'junk.csv')
         self.redis_client.set("Calibrated", 1)
 
+    def calibrate_cornering(self, num_cycles=5, angle_delta=10, recovery_threshold=0.05,
+                            csv_filename="cornering_calibration.csv"):
+        """
+        Calibrate cornering by jogging the motor using move_to_angle.
+
+        For each cycle:
+          1. Move to mid position (90°).
+          2. Forward-to-backward:
+             a. Move forward by angle_delta (e.g. from 90° to 90+angle_delta).
+             b. Use the last few readings from that move as the baseline.
+             c. Reverse direction by moving to (90 - angle_delta).
+             d. Analyze the reversal data (only the first 5° worth of movement)
+                to find the maximum deviation from baseline (kick magnitude)
+                and the number of steps (duration) until the force recovers within recovery_threshold.
+          3. Backward-to-forward:
+             a. Move back to 90°.
+             b. Move backward by angle_delta (from 90° to 90-angle_delta).
+             c. Use the final readings as baseline.
+             d. Reverse direction by moving to (90 + angle_delta) and analyze the data similarly.
+
+        All the movement data is appended to csv_filename.
+        Finally, the method averages the measured values over all cycles and stores them in:
+
+          self.cornering_calibration = {
+              'forward_to_backward': {'avg_kick': avg_fwd2bwd_kick, 'avg_duration_steps': avg_fwd2bwd_duration},
+              'backward_to_forward': {'avg_kick': avg_bwd2fwd_kick, 'avg_duration_steps': avg_bwd2fwd_duration}
+          }
+        """
+        import numpy as np
+        import csv
+        import time
+
+        # Initialize CSV file with a header.
+        with open(csv_filename, 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerow(["cycle", "transition", "time", "angle", "force", "state", "direction", "step"])
+
+        # Lists to hold results for each transition type.
+        fwd_to_bwd_results = []
+        bwd_to_fwd_results = []
+
+        # Ensure we start from the mid point.
+        self.move_to_angle(90, target_file=csv_filename)
+        time.sleep(0.5)
+
+        for cycle in range(1, num_cycles + 1):
+            print(f"Starting cycle {cycle} for cornering calibration")
+
+            # ----- Forward-to-Backward Transition -----
+            # 1. Move forward by angle_delta.
+            target_angle = 90 + angle_delta
+            self.move_to_angle(target_angle, target_file=csv_filename)
+            time.sleep(0.2)
+
+            # Use the last few force readings from the forward move as the baseline.
+            if len(self.current_run_data) >= 3:
+                forward_baseline = np.mean([row[2] for row in self.current_run_data[-3:]])
+            else:
+                forward_baseline = self.current_run_data[-1][2]
+
+            # 2. Reverse direction: move to (90 - angle_delta).
+            reversal_target = 90 - angle_delta
+            self.move_to_angle(reversal_target, target_file=csv_filename)
+            reversal_data = self.current_run_data  # Capture the reversal move data.
+
+            # Analyze only the first 5° of reversal.
+            steps_to_consider = int(5 * self.step_to_angle_ratio)
+            reversal_subset = reversal_data[:steps_to_consider]
+            deviations = [abs(row[2] - forward_baseline) for row in reversal_subset]
+            max_deviation = max(deviations) if deviations else 0
+
+            # Determine recovery: count steps until the deviation is less than recovery_threshold.
+            recovery_steps = steps_to_consider
+            for idx, dev in enumerate(deviations):
+                if dev < recovery_threshold:
+                    recovery_steps = idx
+                    break
+            fwd_to_bwd_results.append((max_deviation, recovery_steps))
+
+            # Log the result for this transition into the CSV.
+            with open(csv_filename, 'a', newline='') as csvfile:
+                csvwriter = csv.writer(csvfile)
+                csvwriter.writerow([cycle, "forward_to_backward", "", "", max_deviation, "", "", recovery_steps])
+
+            # ----- Backward-to-Forward Transition -----
+            # 1. Return to mid point.
+            self.move_to_angle(90, target_file=csv_filename)
+            time.sleep(0.5)
+
+            # 2. Move backward by angle_delta.
+            target_angle = 90 - angle_delta
+            self.move_to_angle(target_angle, target_file=csv_filename)
+            time.sleep(0.2)
+
+            # Use the last few readings from the backward move as baseline.
+            if len(self.current_run_data) >= 3:
+                backward_baseline = np.mean([row[2] for row in self.current_run_data[-3:]])
+            else:
+                backward_baseline = self.current_run_data[-1][2]
+
+            # 3. Reverse direction: move to (90 + angle_delta).
+            reversal_target = 90 + angle_delta
+            self.move_to_angle(reversal_target, target_file=csv_filename)
+            reversal_data = self.current_run_data
+            steps_to_consider = int(5 * self.step_to_angle_ratio)
+            reversal_subset = reversal_data[:steps_to_consider]
+            deviations = [abs(row[2] - backward_baseline) for row in reversal_subset]
+            max_deviation = max(deviations) if deviations else 0
+
+            recovery_steps = steps_to_consider
+            for idx, dev in enumerate(deviations):
+                if dev < recovery_threshold:
+                    recovery_steps = idx
+                    break
+            bwd_to_fwd_results.append((max_deviation, recovery_steps))
+            with open(csv_filename, 'a', newline='') as csvfile:
+                csvwriter = csv.writer(csvfile)
+                csvwriter.writerow([cycle, "backward_to_forward", "", "", max_deviation, "", "", recovery_steps])
+
+            # Optionally, re-center the motor to 90° between cycles.
+            self.move_to_angle(90, target_file=csv_filename)
+            time.sleep(0.5)
+
+        # Average the results from all cycles.
+        if fwd_to_bwd_results:
+            avg_fwd2bwd_kick = np.mean([result[0] for result in fwd_to_bwd_results])
+            avg_fwd2bwd_duration = np.mean([result[1] for result in fwd_to_bwd_results])
+        else:
+            avg_fwd2bwd_kick = avg_fwd2bwd_duration = 0
+
+        if bwd_to_fwd_results:
+            avg_bwd2fwd_kick = np.mean([result[0] for result in bwd_to_fwd_results])
+            avg_bwd2fwd_duration = np.mean([result[1] for result in bwd_to_fwd_results])
+        else:
+            avg_bwd2fwd_kick = avg_bwd2fwd_duration = 0
+
+        # Save the calibration results.
+        self.cornering_calibration = {
+            'forward_to_backward': {'avg_kick': avg_fwd2bwd_kick, 'avg_duration_steps': avg_fwd2bwd_duration},
+            'backward_to_forward': {'avg_kick': avg_bwd2fwd_kick, 'avg_duration_steps': avg_bwd2fwd_duration}
+        }
+
+        print("Cornering calibration complete:")
+        print(self.cornering_calibration)
+
     def return_idle_force(self):
         return self.idle_force
 
@@ -245,6 +392,7 @@ class StepperMotor:
         self.redis_client.set("current_direction", self.current_direction)
         self.redis_client.set("moving_steps_total", steps)
         print(f"Moving {steps} steps")
+        self.total_step_since_calibration += steps
 
         counter = 0
         angle_increment = 1 / self.step_to_angle_ratio
@@ -278,7 +426,7 @@ class StepperMotor:
                 self.current_force = float(self.raw_force)
                 temp_data.append([i, self.current_angle, float(self.current_force)])
             else:
-                if i < 3:
+                if i < 0:
                     #use reverse direction for first 3 steps to get a better zero force
                     if self.current_direction == 'forward':
                         temp_direction = 'backward'
@@ -364,7 +512,7 @@ class StepperMotor:
             self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
             self.current_angle += angle_increment
             self.raw_force = float(self.ForceSensor.read_force())
-            if i < 4:
+            if i < 0:
                 # use reverse direction for first 3 steps to get a better zero force
                 if self.current_direction == 'forward':
                     temp_direction = 'backward'
@@ -414,6 +562,7 @@ class StepperMotor:
             csvwriter = csv.writer(csvfile)
             # Write the data
             csvwriter.writerows(temp_data)
+        self.total_step_since_calibration += len(temp_data)
         self.current_run_data = temp_data
 
         self.current_state = "idle"
@@ -424,6 +573,9 @@ class StepperMotor:
 
     def return_force(self):
         return self.ForceSensor.read_force()
+
+    def return_steps_since_calibration(self):
+        return self.total_step_since_calibration
 
     def update_shared_memory(self, setting_num):
         data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])

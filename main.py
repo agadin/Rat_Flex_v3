@@ -1558,6 +1558,7 @@ class App(ctk.CTk):
         # Repeat the update process every 500ms
         self.after(500, self.update_output_window)
 
+
     def show_settings(self):
         """Show settings and monitor protocol_runner.py output"""
         self.clear_content_frame()
@@ -1709,6 +1710,7 @@ class App(ctk.CTk):
 
             time.sleep(0.05)
 
+
     def update_displays(self, step_count, current_angle, current_force, minutes, seconds, milliseconds):
         if step_count is not None:
             self.time_display.configure(text=f"{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
@@ -1743,7 +1745,27 @@ class App(ctk.CTk):
             elif calibration_level == 1:
                 self.calibrate_button.configure(fg_color="yellow")
             elif calibration_level == 2:
-                self.calibrate_button.configure(fg_color="Blue")
+                steps_level = int(self.redis_client.get("steps_Level") or 0)
+
+                if steps_level <= 7500:
+                    # Transition from blue (0,0,255) to yellow (255,255,0)
+                    t = steps_level / 7500.0
+                    r = int(255 * t)
+                    g = int(255 * t)
+                    b = int(255 * (1 - t))
+                elif steps_level <= 15000:
+                    # Transition from yellow (255,255,0) to red (255,0,0)
+                    t = (steps_level - 7500) / 7500.0
+                    r = 255
+                    g = int(255 * (1 - t))
+                    b = 0
+                else:
+                    # For steps beyond 15000, default to red
+                    r, g, b = 255, 0, 0
+
+                # Convert RGB to hexadecimal color string
+                color_hex = f'#{r:02x}{g:02x}{b:02x}'
+                self.calibrate_button.configure(fg_color=color_hex)
             else:
                 self.calibrate_button.configure(fg_color="gray")  # Default color for unknown states
         except Exception as e:
