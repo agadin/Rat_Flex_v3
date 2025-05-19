@@ -76,7 +76,6 @@ def start_protocol_runner(app):
                             stderr=stderr_log_file,  # Redirect stderr to the log file
                             text=True
                         )
-
             # Start output reading thread (this is okay in a background thread)
             threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
 
@@ -210,7 +209,7 @@ class App(ctk.CTk):
         self.angle_force_data = []
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-        # start_protocol_runner(self)
+        start_protocol_runner(self)
         self.after(1000, self.check_protocol_process)
         self.initialize_resources()
         icon_path = os.path.abspath('./img/ratfav.ico')
