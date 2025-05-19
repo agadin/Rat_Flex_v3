@@ -382,7 +382,7 @@ def move_to_force(direction, max_force, min_angle=0, max_angle=180):
 def move_to_angle_fast(angle, force):
     global motor
     print(f"Moving to angle: {angle} with force: {force}")
-    motor.move_to_angle(angle, force)
+    motor.move_to_angle_fast(angle, force)
 
 def move_until_force_or_angle(force, angle):
     print(f"Moving until force: {force} or angle: {angle}")
