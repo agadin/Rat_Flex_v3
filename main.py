@@ -537,7 +537,7 @@ class App(ctk.CTk):
                         print("Keeping existing data.")
 
             except Exception as e:
-                CTkMessageboxx(title="Error", message=f"Could not read data.csv:\n{e}", icon="cancel")
+                CTkMessagebox(title="Error", message=f"Could not read data.csv:\n{e}", icon="cancel")
 
         protocol_path = os.path.join('./protocols', protocol_path)
         self.redis_client.set('protocol_trigger', protocol_path)
@@ -703,15 +703,14 @@ class App(ctk.CTk):
 
         self.status_frame = ctk.CTkFrame(
             self.sidebar_frame,
-            fg_color="green",
+            fg_color="gray",
             corner_radius=12,
             height=30,
             width=150
         )
-        self.status_frame.place(relx=0.5, rely=1.0, anchor="s", y=-20)
-
-        self.status_label = ctk.CTkLabel(self.status_frame, text="Protocol Running", font=("Arial", 12))
+        self.status_label = ctk.CTkLabel(self.status_frame, text="PR", font=("Arial", 12))
         self.status_label.pack(expand=True)
+        self.status_frame.place(relx=0.5, rely=1.0, anchor="s", y=-20)
 
 
         # Main content area
