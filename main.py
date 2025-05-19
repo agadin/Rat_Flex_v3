@@ -408,17 +408,6 @@ class App(ctk.CTk):
             print(f"Error reading shared memory: {e}")
             return None
 
-    def is_protocol_runner_running(self):
-        global protocol_process
-        if protocol_process is not None:
-            return protocol_process.poll() is None  # Returns True if still running
-        return False  # Pr
-
-    def check_protocol_process(self):
-        if not self.is_protocol_runner_running():
-            self.show_restart_popup()
-        # Reschedule the next check on the main thread
-        self.after(6000, self.check_protocol_process)
 
     def show_home(self):
         self.clear_content_frame()
