@@ -1,24 +1,12 @@
 Move_to_force: 180, 100, 45, 135
-wait: 0.1
 Move_to_force: 0, 100, 45, 135
-wait: 0.1
 Move_to_force: 180, 100, 45, 135
-wait: 0.1
 Move_to_force: 0, 100, 45, 135
-wait: 0.1
 Move_to_force: 180, 100, 45, 135
-wait: 0.1
 Move_to_force: 0, 100, 45, 135
-wait: 0.1
 Move_to_force: 180, 100, 45, 135
-wait: 0.1
 Move_to_force: 0, 100, 45, 135
-wait: 0.1
 Move_to_force: 180, 100, 45, 135
-wait: 0.1
 Move_to_force: 0, 100, 45, 135
-wait: 0.1
 Move_to_force: 180, 100, 45, 135
-wait: 0.1
 Move_to_force: 0, 100, 45, 135
-wait: 0.1
