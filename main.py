@@ -27,6 +27,7 @@ import sys
 import os
 import signal
 import psutil
+from CTkMessagebox import CTkMessagebox
 
 # Global variable to store process reference
 protocol_process = None
@@ -511,6 +512,33 @@ class App(ctk.CTk):
 
     def run_protocol(self, protocol_path):
         # add ./protocols/ to the protocol path
+        data_path = "data.csv"
+
+        if os.path.exists(data_path):
+            try:
+                df = pd.read_csv(data_path)
+                if not df.empty:
+                    msg = CTkMessagebox(
+                        title="Existing Data Detected",
+                        message="data.csv is not empty.\n\nWhat would you like to do?",
+                        icon="warning",
+                        option_1="Wipe & Continue",
+                        option_2="Keep & Continue",
+                        option_3="Cancel"
+                    )
+
+                    response = msg.get()
+                    if response == "Cancel":
+                        return
+                    elif response == "Wipe & Continue":
+                        open(data_path, 'w').close()
+                        print("data.csv wiped.")
+                    else:
+                        print("Keeping existing data.")
+
+            except Exception as e:
+                CTkMessageboxx(title="Error", message=f"Could not read data.csv:\n{e}", icon="cancel")
+
         protocol_path = os.path.join('./protocols', protocol_path)
         self.redis_client.set('protocol_trigger', protocol_path)
         print(f"Triggered protocol: {protocol_path}")
@@ -672,10 +700,17 @@ class App(ctk.CTk):
         self.mode_toggle = ctk.CTkSwitch(self.sidebar_frame, text="Light/Dark Mode", command=self.toggle_mode)
         self.mode_toggle.pack(pady=5)
 
-        self.status_frame = ctk.CTkFrame(self.sidebar_frame, fg_color="red", corner_radius=12, height=30, width=150)
-        self.status_frame.place(relx=0.5, rely=1.0, anchor="s", y=-20)  # Centered horizontally, 20px from bottom
 
-        self.status_label = ctk.CTkLabel(self.status_frame, text="Protocol Not Running", font=("Arial", 12))
+        self.status_frame = ctk.CTkFrame(
+            self.sidebar_frame,
+            fg_color="green",
+            corner_radius=12,
+            height=30,
+            width=150
+        )
+        self.status_frame.place(relx=0.5, rely=1.0, anchor="s", y=-20)
+
+        self.status_label = ctk.CTkLabel(self.status_frame, text="Protocol Running", font=("Arial", 12))
         self.status_label.pack(expand=True)
 
 
@@ -691,7 +726,7 @@ class App(ctk.CTk):
 
         # Style for all three displays
         display_style = {
-            "width": 250,
+            "width": 200,
             "height": 100,
             "corner_radius": 20,
             "fg_color": "lightblue",
