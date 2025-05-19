@@ -477,10 +477,9 @@ def start_server():
             limit_switch_1=6,
             limit_switch_2=5,
             step_type='halfstep',
-            stepdelay=0.0015,
+            stepdelay=0.0005,
             calibration_file='calibration.csv',
             csv_name=csv_name
-
         )
         while True:
             # Check for a value in the Redis key
