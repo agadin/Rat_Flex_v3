@@ -263,7 +263,7 @@ def process_protocol(protocol_path):
             force = string_to_value_checker(parts[1].strip(), "float")
             move_to_angle_fast(angle, force)
         elif command.startswith("Move_to_angle_refast"):
-            # current command: Move_to_angle_refast:90,force
+            # current command: Move_to_angle_refast:90
             parts = command.split(":")[1].split(",")
             angle_input = parts[0].strip()
             angle = string_to_value_checker(angle_input)

@@ -432,7 +432,15 @@ class App(ctk.CTk):
         self.protocol_var = ctk.StringVar(value=self.protocol_files[0])
 
 
-        self.protocol_dropdown = ctk.CTkComboBox(self.sidebar_frame, values=self.protocol_files, variable=self.protocol_var, width=200)
+        # Update the displayed value of protocol_var dynamically
+        displayed_protocol_var = ctk.StringVar(value=self.protocol_var.get() if self.protocol_var.get() != "calibrate_protocol.txt" else "")
+
+        self.protocol_dropdown = ctk.CTkComboBox(
+            self.sidebar_frame,
+            values=self.protocol_files,
+            variable=displayed_protocol_var,
+            width=200
+        )
         self.protocol_dropdown.pack(pady=5)
 
         self.run_button = ctk.CTkButton(self.sidebar_frame, text="Run Protocol", command=self.run_protocol_init)
@@ -561,7 +569,7 @@ class App(ctk.CTk):
 
         # Create and pack time display
         self.time_display = ctk.CTkLabel(display_frame, text="Time: N/A", **display_style)
-        self.time_display.grid(row=0, column=0, padx=10, pady=10)
+        self.time_display.grid(row=0, column=0, padx=10, pady=5)
         self.time_display.bind("<Button-1>", lambda e: setattr(self, 'clock_values', False))
 
         self.protocol_step_counter = ctk.CTkLabel(display_frame, text="Step: N/A", **display_style)
@@ -569,11 +577,11 @@ class App(ctk.CTk):
 
         # Create and pack step count display
         self.step_display = ctk.CTkLabel(display_frame, text="Steps: N/A", **display_style)
-        self.step_display.grid(row=0, column=1, padx=10, pady=10)
+        self.step_display.grid(row=0, column=1, padx=10, pady=5)
 
         # Create and pack angle display
         self.angle_display = ctk.CTkLabel(display_frame, text="Angle: N/A", **display_style)
-        self.angle_display.grid(row=0, column=2, padx=10, pady=10)
+        self.angle_display.grid(row=0, column=2, padx=10, pady=5)
 
         # Create and pack force display
         self.force_display = ctk.CTkLabel(display_frame, text="Force: N/A", **display_style)
