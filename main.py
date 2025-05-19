@@ -1917,6 +1917,7 @@ class App(ctk.CTk):
                 self.calibrate_button.configure(fg_color=color_hex)
             else:
                 self.calibrate_button.configure(fg_color="gray")  # Default color for unknown states
+
         except Exception as e:
             print(f"Error updating Calibrate button: {e}")
             self.calibrate_button.configure(fg_color="gray")
@@ -1977,7 +1978,6 @@ class App(ctk.CTk):
                         self.ax.set_ylim(-1.75, 1.75)
                         self.ax.set_xlabel("Angle (degrees)", color=text_bg_color)
                         self.ax.set_ylabel("Force (N)", color=text_bg_color)
-                        self.ax.set_facecolor(color=text_bg_color)
                         self.ax.title.set_color(text_bg_color)
                 elif mode == "Simple":
                     current_time = time.time()
