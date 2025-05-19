@@ -255,6 +255,13 @@ def process_protocol(protocol_path):
             angle_input = parts[0].strip()
             angle = string_to_value_checker(angle_input)
             motor.move_to_angle(angle, 'junk.csv')
+        elif command.startswith("Move_to_angle_fast"):
+            # current command: Move_to_angle_fast:90,force
+            parts = command.split(":")[1].split(",")
+            angle_input = parts[0].strip()
+            angle = string_to_value_checker(angle_input)
+            force = string_to_value_checker(parts[1].strip(), "float")
+            move_to_angle_fast(angle, force)
 
         elif command.startswith("Move_to_angle"):
             # current command: Move_to_angle:90,metric,variable_name
@@ -343,13 +350,6 @@ def process_protocol(protocol_path):
         elif command.startswith("End"):
             end_loop()
             break
-        elif command.startswith("Move_to_angle_fast"):
-            # current command: Move_to_angle_fast:90,force
-            parts = command.split(":")[1].split(",")
-            angle_input = parts[0].strip()
-            angle = string_to_value_checker(angle_input)
-            force = string_to_value_checker(parts[1].strip(), "float")
-            move_to_angle_fast(angle, force)
         print(f" Data saved: {data_saved}")
 
     # end_all_commands()
