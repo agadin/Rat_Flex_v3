@@ -214,7 +214,7 @@ class App(ctk.CTk):
         self.angle_force_data = []
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-        start_protocol_runner(self)
+        # start_protocol_runner(self)
         self.initialize_resources()
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
@@ -1794,15 +1794,11 @@ class App(ctk.CTk):
             self.settings_button.configure(text_color="black")
             self.home_button.configure(text_color="black")
             self.protocol_builder_button.configure(text_color="black")
-            self.motor_forward_button.configure(text_color="black")
-            self.motor_reverse_button.configure(text_color="black")
         else:
             self.inspector_button.configure(text_color="white")
             self.settings_button.configure(text_color="white")
             self.home_button.configure(text_color="white")
             self.protocol_builder_button.configure(text_color="white")
-            self.motor_forward_button.configure(text_color="white")
-            self.motor_reverse_button.configure(text_color="white")
 
     def update_shared_memory(self):
         while self.running:
