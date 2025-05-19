@@ -336,7 +336,7 @@ def process_protocol(protocol_path):
             data_saved = True
             motor.calibrate()
         elif command.startswith("wait"):
-            wait_time = string_to_value_checker(command.split(":")[1])
+            wait_time = string_to_value_checker(command.split(":")[1], "float")
             wait(wait_time)
         elif command.startswith("Wait_for_user_input"):
             wait_for_user_input(command)
