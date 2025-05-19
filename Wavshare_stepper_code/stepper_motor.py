@@ -20,7 +20,6 @@ import bisect
 
 class StepperMotor:
     _instance = None
-
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super(StepperMotor, cls).__new__(cls)
@@ -476,6 +475,176 @@ class StepperMotor:
 
         # average_time = total_time / iterations
         # self.redis_client.set("average_time", average_time)
+        self.current_state = "idle"
+        self.current_direction = "idle"
+        self.redis_client.set("current_state", self.current_state)
+        self.redis_client.set("current_direction", self.current_direction)
+        self.redis_client.set("moving_steps_total", "")
+
+    def move_to_angle_fast(self, angle, target_force, target_file=None):
+        if self.step_to_angle_ratio is None:
+            raise Exception("Motor not calibrated. Please run calibrate() first.")
+        if target_file == 'calibrate':
+            save_csv = self.calibration_file
+        elif target_file is not None:
+            save_csv = target_file
+        else:
+            save_csv = self.csv_name
+
+        self.current_state = "moving"
+        self.current_direction = "forward" if angle > self.current_angle else "backward"
+
+        steps = int(abs(angle - self.current_angle) * self.step_to_angle_ratio)
+        self.redis_client.set("current_state", self.current_state)
+        self.redis_client.set("current_direction", self.current_direction)
+        self.redis_client.set("moving_steps_total", steps)
+        print(f"Moving {steps} steps")
+        self.total_step_since_calibration += steps
+
+        angle_increment = 1 / self.step_to_angle_ratio
+        angle_increment = angle_increment if self.current_direction == 'forward' else -angle_increment
+        temp_data = []
+        stop_flag_motor = 0
+        data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
+        for i in range(steps):
+            # start_time = time.time()
+            stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
+            if stop_flag == 1 or stop_flag_motor == 1:
+                self.redis_client.set("current_state", "idle")
+                self.redis_client.set("current_direction", "idle")
+                self.redis_client.set("stop_flag", 0)
+                stop_flag = 0
+                stop_flag_motor = 0
+                packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
+                self.shm.buf[:len(packed_data)] = packed_data
+
+                print("Stopping motor button")
+                break
+            stop_flag_motor = self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
+            self.current_angle += angle_increment
+            self.raw_force = self.ForceSensor.read_force()
+            if i < 0:
+                #use reverse direction for first 3 steps to get a better zero force
+                if self.current_direction == 'forward':
+                    temp_direction = 'backward'
+                else:
+                    temp_direction = 'forward'
+                self.zero_force = self.find_closest_force_optimized(self.current_angle, temp_direction)
+            else:
+                self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
+            self.current_force = float(self.raw_force) -self.zero_force
+            if self.current_force > target_force:
+                stop_flag = 1
+                break
+            try:
+
+                packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
+
+                # Write packed data to shared memory
+                self.shm.buf[:len(packed_data)] = packed_data
+            except Exception as e:
+                print(f"Error: {e}")
+        with open(self.csv_name, 'a+', newline='') as csvfile:
+            csvfile.seek(0)  # Move to the start of the file
+            csvreader = csv.reader(csvfile)
+            rows = list(csvreader)
+
+            csvwriter = csv.writer(csvfile)
+            if not rows:  # If the file is empty
+                csvwriter.writerow([0, time.time()])  # Write the initial row with 0 and the timestamp
+            else:  # If the file is not empty
+                last_row = rows[-1]
+                new_value = int(last_row[0]) + 1  # Increment the value in the first column
+                csvwriter.writerow([new_value, time.time()])  # Write the new row with incremented value and timestamp
+        self.current_state = "idle"
+        self.current_direction = "idle"
+        self.redis_client.set("current_state", self.current_state)
+        self.redis_client.set("current_direction", self.current_direction)
+        self.redis_client.set("moving_steps_total", "")
+
+    def move_until_force(self, direction, target_force, angle_limit_min=0, angle_limit_max=180):
+        temp_data = []
+        raw_force = []
+        print("direction: ", direction)
+        self.redis_client.set("moving_steps_total", target_force)
+        if direction not in [0, 180]:
+            raise ValueError("Direction must be either 0 or 180 degrees")
+
+        self.current_direction = 'backward' if direction == 0 else 'forward'
+        self.current_state = "moving"
+        self.redis_client.set("current_state", self.current_state)
+        self.redis_client.set("current_direction", self.current_direction)
+
+        angle_increment = 1 / self.step_to_angle_ratio
+        angle_increment = angle_increment if self.current_direction == 'forward' else -angle_increment
+        data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
+        self.target_force = float(target_force)
+        i = 0
+        while True:
+            i += 1
+            stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
+            if stop_flag == 1:
+                self.redis_client.set("current_state", "idle")
+                self.redis_client.set("current_direction", "idle")
+                self.redis_client.set("stop_flag", 0)
+                print("Stopping motor button")
+                break
+            self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
+            self.current_angle += angle_increment
+            self.raw_force = float(self.ForceSensor.read_force())
+            if i < 0:
+                # use reverse direction for first 3 steps to get a better zero force
+                if self.current_direction == 'forward':
+                    temp_direction = 'backward'
+                else:
+                    temp_direction = 'forward'
+                self.zero_force = self.find_closest_force_optimized(self.current_angle, temp_direction)
+            else:
+                self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
+
+            self.current_force = float(self.raw_force) - self.zero_force
+
+            try:
+                # Pack the data
+                # packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.ForceSensor.read_force()))
+
+                # Write packed data to the memory-mapped file
+                # self.mm.seek(0)
+                # self.mm.write(packed_data)
+                temp_data.append([i, self.current_angle, float(self.current_force), self.raw_force])
+                packed_data = struct.pack(self.fmt, stop_flag, i, self.current_angle, float(self.current_force))
+
+                # Write packed data to shared memory
+                self.shm.buf[:len(packed_data)] = packed_data
+            except Exception as e:
+                print(f"Error: {e}")
+
+            if i > 10:
+                if abs(self.current_force) >= self.target_force and \
+                        ((self.current_direction == 'backward' and self.current_force > 0) or
+                         (self.current_direction == 'forward' and self.current_force < 0)) or \
+                        (self.current_angle <= angle_limit_min and self.current_direction == 'backward') or \
+                        (self.current_angle >= angle_limit_max and self.current_direction == 'forward'):
+                    break
+
+        start_time = self.read_first_value_in_last_row(self.csv_name)
+        current_time = float(start_time) + 0.03
+        for row in temp_data:
+            row[0] = current_time
+            current_time += 0.03
+
+        for row in temp_data:
+            row.append(self.current_state)
+            row.append(self.current_direction)
+            row.append(self.step_number)
+
+        with open(self.csv_name, 'a', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            # Write the data
+            csvwriter.writerows(temp_data)
+        self.total_step_since_calibration += len(temp_data)
+        self.current_run_data = temp_data
+
         self.current_state = "idle"
         self.current_direction = "idle"
         self.redis_client.set("current_state", self.current_state)

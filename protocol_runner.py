@@ -125,7 +125,6 @@ def create_folder_with_files(provided_name=None, special=False):
         info_file.write(f"Animal ID: {animal_id}\n")
         info_file.write(f"Selected arm: {selected_arm}\n")
 
-
     #variables.txt
     current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     set_vars = redis_client.hgetall('set_vars')
@@ -273,7 +272,6 @@ def process_protocol(protocol_path):
 
         elif command.startswith("Move_to_force"):
             params = command.split(":")[1].split(",")
-
             # Required parameters
             direction = params[0].strip()
             max_force = string_to_value_checker(params[1].strip(), "float")
@@ -345,10 +343,14 @@ def process_protocol(protocol_path):
         elif command.startswith("End"):
             end_loop()
             break
+        elif command.startswith("Move_to_angle_fast"):
+            # current command: Move_to_angle_fast:90,force
+            parts = command.split(":")[1].split(",")
+            angle_input = parts[0].strip()
+            angle = string_to_value_checker(angle_input)
+            force = string_to_value_checker(parts[1].strip(), "float")
+            move_to_angle_fast(angle, force)
         print(f" Data saved: {data_saved}")
-
-
-
 
     # end_all_commands()
     if not data_saved:
@@ -368,26 +370,24 @@ def end_all_commands():
     redis_client.set("current_step", "")
     redis_client.set("stop_flag", "0")
 
-
 def move_to_angle(angle):
     global motor
     print(f"Moving to angle: {angle}")
     motor.move_to_angle(angle)
 
-
 def move_to_force(direction, max_force, min_angle=0, max_angle=180):
     global motor
     motor.move_until_force(int(direction),max_force, min_angle, max_angle)
-    time.sleep(1)  # Simulate the action
 
+def move_to_angle_fast(angle, force):
+    global motor
+    print(f"Moving to angle: {angle} with force: {force}")
+    motor.move_to_angle(angle, force)
 
 def move_until_force_or_angle(force, angle):
     print(f"Moving until force: {force} or angle: {angle}")
-    time.sleep(1)  # Simulate the action
-
 
 def wait(wait_time):
-
     print(f"Waiting for {wait_time} seconds")
     current_csv_time= motor.read_first_value_in_last_row()
     timestep= 0.03
