@@ -1750,7 +1750,6 @@ class App(ctk.CTk):
                 self.calibrate_button.configure(fg_color="yellow")
             elif calibration_level == 2:
                 steps_level = int(self.redis_client.get("steps_Level") or 0)
-                print(f"Steps Level: {steps_level}")
                 if steps_level <= 7500:
                     # Transition from blue (0,0,255) to yellow (255,255,0)
                     t = steps_level / 7500.0
