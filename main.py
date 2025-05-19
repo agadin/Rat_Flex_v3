@@ -144,6 +144,8 @@ class ProtocolViewer(ctk.CTkFrame):
                 lines = f.readlines()
 
             for i, line in enumerate(lines):
+                if i >= 25:  # Limit to the first 25 steps
+                    break
                 step_num = i + 1
                 step_details = self.parse_step(line.strip())
                 self.protocol_steps.append((step_num, *step_details))
