@@ -243,16 +243,123 @@ class App(ctk.CTk):
 
 
         # Top navigation bar
+        # --------------------------
+        # Top Navigation Bar Section
+        # --------------------------
+
         self.nav_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.nav_frame.pack(fill="x", pady=5)
 
-        self.home_button = ctk.CTkButton(self.nav_frame, text="Home", command=self.show_home)
-        self.protocol_builder_button = ctk.CTkButton(self.nav_frame, text="Protocol Builder", command=self.show_protocol_builder)
-        self.inspector_button = ctk.CTkButton(self.nav_frame, text="Inspector", command=self.show_inspector)
-        self.settings_button = ctk.CTkButton(self.nav_frame, text="Settings", command=self.show_settings)
+        # Left frame for the logo
+        self.nav_left_frame = ctk.CTkFrame(self.nav_frame, fg_color="transparent")
+        self.nav_left_frame.pack(side="left")
 
-        for btn in (self.home_button, self.protocol_builder_button, self.inspector_button, self.settings_button):
-            btn.pack(side="left", padx=20, expand=True)
+        # Right frame for nav buttons
+        self.nav_right_frame = ctk.CTkFrame(self.nav_frame, fg_color="transparent")
+        self.nav_right_frame.pack(side="right", padx=20)
+
+        self.data_recording = False
+        self.recorded_graph_times = []
+        self.recorded_input_pressures = []
+        self.recorded_pressure1s = []
+        self.recorded_pressure2s = []
+
+        # --- Logo on Left Side ---
+        # Create a white icon from the SVG file
+        icon_size = (20, 20)
+
+        # Create CTkImage for the first logo (lake logo)
+        logo_image = ctk.CTkImage(
+            light_image=Image.open("./img/lakelogo_dark.png"),  # For light mode
+            dark_image=Image.open("./img/lakelogo.png"),  # For dark mode
+            size=(60, 60)
+        )
+
+        # Create the first CTkButton with the lake logo
+        self.logo_button = ctk.CTkButton(
+            self.nav_left_frame,
+            image=logo_image,
+            text="",
+            fg_color="transparent",
+            hover_color="gray",
+            command=self.show_home
+        )
+        self.logo_button.pack(side="left", padx=1)
+
+
+        # Create CTkImage objects
+        home_icon = ctk.CTkImage(
+            light_image=Image.open("./img/fa-home_dark.png"),
+            dark_image=Image.open("./img/fa-home.png"),
+            size=(20, 20)
+        )
+
+        protocol_icon = ctk.CTkImage(
+            light_image=Image.open("./img/fa-tools_dark.png"),
+            dark_image=Image.open("./img/fa-tools.png"),
+            size=(20, 20)
+        )
+
+        calibrate_icon = ctk.CTkImage(
+            light_image=Image.open("./img/fa-tachometer-alt_dark.png"),
+            dark_image=Image.open("./img/fa-tachometer-alt.png"),
+            size=(20, 20)
+        )
+
+        settings_icon = ctk.CTkImage(
+            light_image=Image.open("./img/fa-cog_dark.png"),
+            dark_image=Image.open("./img/fa-cog.png"),
+            size=(20, 20)
+        )
+
+        # --- Navigation Buttons on Right Side ---
+        self.settings_button = ctk.CTkButton(
+            self.nav_right_frame,
+            text="Settings",
+            text_color="white",
+            image=settings_icon,
+            compound="left",
+            fg_color="transparent",
+            hover_color="gray",
+            command=self.show_settings
+        )
+        self.settings_button.pack(side="right", padx=20)
+
+        self.inspector_button = ctk.CTkButton(
+            self.nav_right_frame,
+            text="Calibrate",
+            text_color="white",
+            image=calibrate_icon,
+            compound="left",
+            fg_color="transparent",
+            hover_color="gray",
+            command=self.show_calibrate
+        )
+        self.inspector_button.pack(side="right", padx=20)
+
+        self.protocol_builder_button = ctk.CTkButton(
+            self.nav_right_frame,
+            text="Protocol Builder",
+            image=protocol_icon,
+            text_color="white",
+            compound="left",
+            fg_color="transparent",
+            hover_color="gray",
+            command=self.show_protocol_builder
+        )
+        self.protocol_builder_button.pack(side="right", padx=20)
+
+        self.home_button = ctk.CTkButton(
+            self.nav_right_frame,
+            text="Home",
+            image=home_icon,
+            text_color="white",
+            compound="left",
+            fg_color="transparent",
+            hover_color="gray",
+            command=self.show_home
+        )
+        self.home_button.pack(side="right", padx=20)
 
         # Main content frame
         self.content_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -433,12 +540,12 @@ class App(ctk.CTk):
 
 
         # Update the displayed value of protocol_var dynamically
-        displayed_protocol_var = ctk.StringVar(value=self.protocol_var.get() if self.protocol_var.get() != "calibrate_protocol.txt" else "")
+        self.displayed_protocol_var = ctk.StringVar(value=self.protocol_var.get() if self.protocol_var.get() != "calibrate_protocol.txt" else "")
 
         self.protocol_dropdown = ctk.CTkComboBox(
             self.sidebar_frame,
             values=self.protocol_files,
-            variable=displayed_protocol_var,
+            variable=self.displayed_protocol_var,
             width=200
         )
         self.protocol_dropdown.pack(pady=5)
@@ -1587,7 +1694,8 @@ class App(ctk.CTk):
         self.update_output_window()
 
     def run_protocol_init(self):
-        selected_protocol = self.protocol_var.get()
+        selected_protocol = self.displayed_protocol_var.get()
+        self.protocol_var = selected_protocol
         current_protocol = self.redis_client.get("current_protocol_out")
         print(f"Selected protocol: {selected_protocol}, Current protocol: {current_protocol}")
         if selected_protocol == current_protocol:
@@ -1814,6 +1922,7 @@ class App(ctk.CTk):
                         self.ax.set_ylim(-1.75, 1.75)
                         self.ax.set_xlabel("Angle (degrees)")
                         self.ax.set_ylabel("Force (N)")
+                        self.ax.set_facecolor("gray")
                 elif mode == "Simple":
                     current_time = time.time()
                     valid_indices = [i for i, t in enumerate(self.time_data) if current_time - t <= 30]
