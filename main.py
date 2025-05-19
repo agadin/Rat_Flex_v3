@@ -333,7 +333,7 @@ class App(ctk.CTk):
             compound="left",
             fg_color="transparent",
             hover_color="gray",
-            command=self.show_calibrate
+            command=self.show_inspector
         )
         self.inspector_button.pack(side="right", padx=20)
 
