@@ -405,6 +405,9 @@ class App(ctk.CTk):
 
     def read_shared_memory(self):
         try:
+            current_protocol_out = self.redis_client.get("current_protocol_out")
+            if not current_protocol_out:
+                self.timing_clock = None
             data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
             stop_flag, step_count, current_angle, current_force = struct.unpack(self.fmt, data)
             return step_count, current_angle, current_force
@@ -440,11 +443,12 @@ class App(ctk.CTk):
 
         self.protocol_folder = './protocols'
         self.protocol_files = [f for f in os.listdir(self.protocol_folder) if os.path.isfile(os.path.join(self.protocol_folder, f))]
-        self.protocol_var = ctk.StringVar(value=self.protocol_files[0])
-
-        #remove calibrate_protocol.txt from the list if it exists
+        # remove calibrate_protocol.txt from the list if it exists
         if "calibrate_protocol.txt" in self.protocol_files:
             self.protocol_files.remove("calibrate_protocol.txt")
+
+        self.protocol_var = ctk.StringVar(value=self.protocol_files[0])
+
 
         self.protocol_dropdown = ctk.CTkComboBox(self.sidebar_frame, values=self.protocol_files, variable=self.protocol_var, width=200)
         self.protocol_dropdown.pack(pady=5)
@@ -1637,7 +1641,6 @@ class App(ctk.CTk):
         self.timing_thread.start()
 
     def check_protocol_status(self):
-        time.sleep(1)
         while True:
             current_protocol_out = self.redis_client.get("current_protocol_out")
            #stop looping when current_protocol_out is empty
@@ -1651,6 +1654,7 @@ class App(ctk.CTk):
     def send_data_to_shared_memory(self,stop_flag=1):
         step_count, current_angle, current_force = self.read_shared_memory()
         try:
+            print(f"Writing to shared memory: stop_flag={stop_flag}, step_count={step_count}, current_angle={current_angle}, current_force={current_force}")
             packed_data = struct.pack(self.fmt, stop_flag, step_count, current_angle, current_force)
             self.shm.buf[:len(packed_data)] = packed_data
         except Exception as e:
