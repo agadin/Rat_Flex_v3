@@ -42,9 +42,10 @@ output_queue = queue.Queue()
 # Function to initialize resources
 # Function to initialize resources
 def is_protocol_running():
-    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+    for proc in psutil.process_iter(['cmdline']):
         try:
-            if "protocol_runner.py" in proc.info['cmdline']:
+            cmdline = proc.info['cmdline']
+            if isinstance(cmdline, list) and any("protocol_runner.py" in part for part in cmdline):
                 return True
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
