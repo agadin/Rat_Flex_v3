@@ -1976,7 +1976,7 @@ class App(ctk.CTk):
                         self.ax.set_ylim(-1.75, 1.75)
                         self.ax.set_xlabel("Angle (degrees)", color=text_bg_color)
                         self.ax.set_ylabel("Force (N)", color=text_bg_color)
-                        self.ax.set_facecolor("gray", color=text_bg_color)
+                        self.ax.set_facecolor(color=text_bg_color)
                         self.ax.title.set_color(text_bg_color)
                 elif mode == "Simple":
                     current_time = time.time()
