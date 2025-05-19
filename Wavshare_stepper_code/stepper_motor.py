@@ -562,7 +562,7 @@ class StepperMotor:
         self.redis_client.set("current_direction", self.current_direction)
         self.redis_client.set("moving_steps_total", "")
 
-    def move_to_angle_refast(self, angle, target_force, target_file=None):
+    def move_to_angle_refast(self, angle, target_file=None):
         if self.step_to_angle_ratio is None:
             raise Exception("Motor not calibrated. Please run calibrate() first.")
         if target_file == 'calibrate':

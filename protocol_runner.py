@@ -262,6 +262,12 @@ def process_protocol(protocol_path):
             angle = string_to_value_checker(angle_input)
             force = string_to_value_checker(parts[1].strip(), "float")
             move_to_angle_fast(angle, force)
+        elif command.startswith("Move_to_angle_refast"):
+            # current command: Move_to_angle_refast:90,force
+            parts = command.split(":")[1].split(",")
+            angle_input = parts[0].strip()
+            angle = string_to_value_checker(angle_input)
+            move_to_angle_refast(angle)
 
         elif command.startswith("Move_to_angle"):
             # current command: Move_to_angle:90,metric,variable_name
@@ -383,6 +389,11 @@ def move_to_angle_fast(angle, force):
     global motor
     print(f"Moving to angle: {angle} with force: {force}")
     motor.move_to_angle_fast(angle, force)
+
+def move_to_angle_refast(angle):
+    global motor
+    print(f"Moving to angle: {angle} as fast as possible")
+    motor.move_to_angle_refast(angle)
 
 def move_until_force_or_angle(force, angle):
     print(f"Moving until force: {force} or angle: {angle}")
