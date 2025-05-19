@@ -202,7 +202,6 @@ class App(ctk.CTk):
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         start_protocol_runner(self)
-        self.after(1000, self.check_protocol_process)
         self.initialize_resources()
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
@@ -1630,8 +1629,6 @@ class App(ctk.CTk):
             if not current_protocol_out:
                 self.timing_clock = None
                 break
-
-
             time.sleep(0.1)  # Adjust the sleep time as needed to reduce CPU usage
 
     def send_data_to_shared_memory(self,stop_flag=1):
@@ -1867,6 +1864,10 @@ class App(ctk.CTk):
         self.running = False
         if hasattr(self, 'update_thread'):
             self.update_thread.join()
+        if protocol_process is not None and protocol_process.poll() is None:  # Check if the process is running
+            protocol_process.terminate()  # Terminate the subprocess
+            protocol_process.wait()
+
         self.destroy()
         try:
             self.shm.close()
