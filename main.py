@@ -24,6 +24,9 @@ import subprocess
 import queue
 import threading
 import sys
+import os
+import signal
+import psutil
 
 # Global variable to store process reference
 protocol_process = None
@@ -38,6 +41,14 @@ output_queue = queue.Queue()
 
 # Function to initialize resources
 # Function to initialize resources
+def is_protocol_running():
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            if "protocol_runner.py" in proc.info['cmdline']:
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    return False
 
 
 # Function to start protocol_runner.py
@@ -56,15 +67,16 @@ def start_protocol_runner(app):
             else:
                 try:
                     protocol_process = subprocess.Popen(
-                        ["xterm", "-e", sys.executable, "protocol_runner.py"],
-                        stdout=stdout_log_file,  # Redirect stdout to the log file
-                        stderr=stderr_log_file,  # Redirect stderr to the log file
-                        text=True
+                        ["xterm", "-e", f"bash -c '{sys.executable} protocol_runner.py; exit'"],
+                        stdout=stdout_log_file,
+                        stderr=stderr_log_file,
+                        text=True,
+                        preexec_fn=os.setsid  # Start a new process group
                     )
                 except FileNotFoundError:
                     try:
                         protocol_process = subprocess.Popen(
-                            ["lxterminal", "-e", sys.executable, "protocol_runner.py"],
+                            ["lxterminal", "--command", f"bash -c '{sys.executable} protocol_runner.py; exit'"],
                             stdout=stdout_log_file,  # Redirect stdout to the log file
                             stderr=stderr_log_file,  # Redirect stderr to the log file
                             text=True
@@ -645,14 +657,26 @@ class App(ctk.CTk):
         self.advanced_slider = AdvancedCurvedSlider(slider_container, width=300, height=150, min_val=10, max_val=170,parent_app=self)
         self.advanced_slider.pack()
 
-        # Light/dark mode automatic toggle
-        current_hour = datetime.datetime.now().hour
-        default_mode = "Dark" if current_hour >= 18 or current_hour < 6 else "Light"
-        ctk.set_appearance_mode(default_mode)
+        self.darkmodeToggle = False
+
+        if self.darkmodeToggle:
+            # Light/dark mode automatic toggle
+            current_hour = datetime.datetime.now().hour
+            default_mode = "Dark" if current_hour >= 18 or current_hour < 6 else "Light"
+            ctk.set_appearance_mode(default_mode)
+        else:
+            ctk.set_appearance_mode("Dark")
 
         # Light/Dark mode toggle
         self.mode_toggle = ctk.CTkSwitch(self.sidebar_frame, text="Light/Dark Mode", command=self.toggle_mode)
         self.mode_toggle.pack(pady=5)
+
+        self.status_frame = ctk.CTkFrame(self.sidebar_frame, fg_color="red", corner_radius=12, height=30, width=150)
+        self.status_frame.place(relx=0.5, rely=1.0, anchor="s", y=-20)  # Centered horizontally, 20px from bottom
+
+        self.status_label = ctk.CTkLabel(self.status_frame, text="Protocol Not Running", font=("Arial", 12))
+        self.status_label.pack(expand=True)
+
 
         # Main content area
         self.main_frame = ctk.CTkFrame(self.content_frame, fg_color="transparent")
@@ -719,6 +743,7 @@ class App(ctk.CTk):
 
         self.initialize_protocol_viewer()
         self.process_queue()
+
 
     def process_queue(self):
         try:
@@ -1763,6 +1788,20 @@ class App(ctk.CTk):
     def toggle_mode(self):
         mode = "Light" if ctk.get_appearance_mode() == "Dark" else "Dark"
         ctk.set_appearance_mode(mode)
+        if mode == "Light":
+            self.inspector_button.configure(text_color="black")
+            self.settings_button.configure(text_color="black")
+            self.home_button.configure(text_color="black")
+            self.protocol_builder_button.configure(text_color="black")
+            self.motor_forward_button.configure(text_color="black")
+            self.motor_reverse_button.configure(text_color="black")
+        else:
+            self.inspector_button.configure(text_color="white")
+            self.settings_button.configure(text_color="white")
+            self.home_button.configure(text_color="white")
+            self.protocol_builder_button.configure(text_color="white")
+            self.motor_forward_button.configure(text_color="white")
+            self.motor_reverse_button.configure(text_color="white")
 
     def update_shared_memory(self):
         while self.running:
@@ -1816,6 +1855,12 @@ class App(ctk.CTk):
 
 
     def update_displays(self, step_count, current_angle, current_force, minutes, seconds, milliseconds):
+        if is_protocol_running():
+            self.status_frame.configure(fg_color="green")
+            self.status_label.configure(text="Protocol Running")
+        else:
+            self.status_frame.configure(fg_color="red")
+            self.status_label.configure(text="Protocol Not Running")
         if step_count is not None:
             self.time_display.configure(text=f"{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
             if step_count < 0:
@@ -1907,6 +1952,15 @@ class App(ctk.CTk):
         def fetch_data():
             # Read shared data for live updates
             shared_data = self.read_shared_memory()
+            if ctk.get_appearance_mode() == "Dark":
+                app_bg_color = "#1F1F1F"
+                text_bg_color = "white"
+            else:
+                app_bg_color = "#FFFFFF"
+                text_bg_color = "black"
+            self.fig.patch.set_facecolor(app_bg_color)
+            self.ax.set_facecolor(app_bg_color)
+
             if shared_data:
 
                 # Plot data based on selected mode
@@ -1917,12 +1971,13 @@ class App(ctk.CTk):
                     if data_copy:
                         # Unzip the tuples into x and y values
                         x_values, y_values = zip(*data_copy)
-                        self.ax.plot(x_values, y_values, label="Angle vs Force")
+                        self.ax.plot(x_values, y_values, label="Angle vs Force", color=text_bg_color)
                         self.ax.set_xlim(0, 180)
                         self.ax.set_ylim(-1.75, 1.75)
-                        self.ax.set_xlabel("Angle (degrees)")
-                        self.ax.set_ylabel("Force (N)")
-                        self.ax.set_facecolor("gray")
+                        self.ax.set_xlabel("Angle (degrees)", color=text_bg_color)
+                        self.ax.set_ylabel("Force (N)", color=text_bg_color)
+                        self.ax.set_facecolor("gray", color=text_bg_color)
+                        self.ax.title.set_color(text_bg_color)
                 elif mode == "Simple":
                     current_time = time.time()
                     valid_indices = [i for i, t in enumerate(self.time_data) if current_time - t <= 30]
@@ -1981,8 +2036,8 @@ class App(ctk.CTk):
         self.running = False
         if hasattr(self, 'update_thread'):
             self.update_thread.join()
-        if protocol_process is not None and protocol_process.poll() is None:  # Check if the process is running
-            protocol_process.terminate()  # Terminate the subprocess
+        if protocol_process is not None and protocol_process.poll() is None:
+            os.killpg(os.getpgid(protocol_process.pid), signal.SIGTERM)  # Kill entire terminal group
             protocol_process.wait()
 
         self.destroy()
