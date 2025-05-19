@@ -516,8 +516,7 @@ class App(ctk.CTk):
 
         if os.path.exists(data_path):
             try:
-                df = pd.read_csv(data_path)
-                if not df.empty:
+                if os.path.getsize(data_path) > 0:
                     msg = CTkMessagebox(
                         title="Existing Data Detected",
                         message="data.csv is not empty.\n\nWhat would you like to do?",
