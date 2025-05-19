@@ -76,16 +76,8 @@ def start_protocol_runner(app):
                             stderr=stderr_log_file,  # Redirect stderr to the log file
                             text=True
                         )
-            # Start output reading thread (this is okay in a background thread)
-            threading.Thread(target=read_process_output, args=(protocol_process, output_queue), daemon=True).start()
-
 
 # Function to read process output
-def read_process_output(process, output_queue):
-    """Reads stdout and stderr from the process and puts it in the queue."""
-    for line in iter(process.stdout.readline, ""):
-        output_queue.put(line)
-    process.stdout.close()
 
 
 def read_calibration_data(file_path):
