@@ -132,6 +132,10 @@ class ProtocolViewer(ctk.CTkFrame):
         # Dynamically update current step opacity
         self.update_current_step()
 
+    def get_label_text_color(self):
+        mode = ctk.get_appearance_mode()
+        return "black" if mode == "Light" else "white"
+
     def load_protocol(self, protocol_var):
         # Clear existing steps
         for widget in self.scrollable_frame.winfo_children():
@@ -170,8 +174,10 @@ class ProtocolViewer(ctk.CTkFrame):
         frame.pack(fill="x", padx=5, pady=5)
 
         # Step number
-        step_num_label = ctk.CTkLabel(frame, text=f"Step {step_num}", width=10)
-        step_num_label.grid(row=0, column=0, padx=5, pady=5)
+        text_color = self.get_label_text_color()
+
+        step_num_label = ctk.CTkLabel(frame, text=f"Step {step_num}", width=10, text_color=text_color)
+        step_name_label = ctk.CTkLabel(frame, text=f"{step_name}: {details}", anchor="w", text_color=text_color)
 
         # Step name and details
         step_name_label = ctk.CTkLabel(frame, text=f"{step_name}: {details}", anchor="w")
