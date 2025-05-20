@@ -589,14 +589,29 @@ class StepperMotor:
         data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
         for i in range(steps):
             self.current_angle += angle_increment
+            # read force when i is odd
             stop_flag_motor = self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
+            if i % 2 == 1:
+                self.raw_force = self.ForceSensor.read_force()
+                if i < 0:
+                    #use reverse direction for first 3 steps to get a better zero force
+                    if self.current_direction == 'forward':
+                        temp_direction = 'backward'
+                    else:
+                        temp_direction = 'forward'
+                    self.zero_force = self.find_closest_force_optimized(self.current_angle, temp_direction)
+                else:
+                    self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
+                self.current_force = float(self.raw_force) -self.zero_force
+            else:
+                time.sleep(self.stepdelay)
             try:
 
                 packed_data = struct.pack(self.fmt, 0, i, self.current_angle, 100)
                 self.shm.buf[:len(packed_data)] = packed_data
             except Exception as e:
                 print(f"Error: {e}")
-            time.sleep(self.stepdelay)
+
 
         with open(save_csv, 'a+', newline='') as csvfile:
             csvfile.seek(0)  # Move to the start of the file
