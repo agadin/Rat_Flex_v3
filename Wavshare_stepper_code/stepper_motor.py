@@ -202,13 +202,17 @@ class StepperMotor:
             time.sleep(self.stepdelay)
 
         steps = 0
+        start_time = time.time()
         while self.motor.limit_switch_2_state:
             self.motor.TurnStep(Dir='backward', steps=1, stepdelay=self.stepdelay)
             time.sleep(self.stepdelay)
             steps += 1
 
+        end_time = time.time()
+        total_time = end_time - start_time
         self.steps_per_revolution = steps
         self.step_to_angle_ratio = steps / 180
+        self.time_per_step = total_time / steps if steps > 0 else None
 
         with open(self.calibration_file, 'w') as file:
             file.write("time,angle,force,state,direction,step\n")
@@ -562,7 +566,7 @@ class StepperMotor:
         self.redis_client.set("current_direction", self.current_direction)
         self.redis_client.set("moving_steps_total", "")
 
-    def move_to_angle_refast(self, angle, target_file=None):
+    def move_to_angle_refast(self, angle, mode, target_duration=None, target_file=None):
         if self.step_to_angle_ratio is None:
             raise Exception("Motor not calibrated. Please run calibrate() first.")
         if target_file == 'calibrate':
@@ -587,11 +591,13 @@ class StepperMotor:
         temp_data = []
         stop_flag_motor = 0
         data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
+        if mode == 'duration' and target_duration is not None:
+            calculated_stepdelay = target_duration / steps
         for i in range(steps):
             self.current_angle += angle_increment
             # read force when i is odd
-            stop_flag_motor = self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
-            if i % 2 == 1:
+            if i % 2 == 1 and mode == 'halfrate':
+                stop_flag_motor = self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
                 self.raw_force = self.ForceSensor.read_force()
                 if i < 0:
                     #use reverse direction for first 3 steps to get a better zero force
@@ -603,7 +609,11 @@ class StepperMotor:
                 else:
                     self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
                 self.current_force = float(self.raw_force) -self.zero_force
+            elif mode == 'duration'
+                stop_flag_motor = self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=calculated_stepdelay)
+                time.sleep(calculated_stepdelay)
             else:
+                stop_flag_motor = self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
                 time.sleep(self.stepdelay)
             try:
 
@@ -626,6 +636,72 @@ class StepperMotor:
 
                 new_value = int(last_row[-1]) + 1  # Increment the last value in the first column
                 csvwriter.writerow([time.time(), 0, 0, 0, 0, 0, new_value])  # Write the new row with incremented value and timestamp
+        self.current_state = "idle"
+        self.current_direction = "idle"
+        self.redis_client.set("current_state", self.current_state)
+        self.redis_client.set("current_direction", self.current_direction)
+        self.redis_client.set("moving_steps_total", "")
+
+    def move_to_angle_duration(self, angle, target_duration, target_file=None):
+        if self.step_to_angle_ratio is None:
+            raise Exception("Motor not calibrated. Please run calibrate() first.")
+
+        if target_file == 'calibrate':
+            save_csv = self.calibration_file
+        elif target_file is not None:
+            save_csv = target_file
+        else:
+            save_csv = self.csv_name
+
+        self.current_state = "moving"
+        self.current_direction = "forward" if angle > self.current_angle else "backward"
+
+        steps = int(abs(angle - self.current_angle) * self.step_to_angle_ratio)
+        if steps == 0:
+            print("No steps to move.")
+            return
+
+        calculated_stepdelay = target_duration / steps
+
+        self.redis_client.set("current_state", self.current_state)
+        self.redis_client.set("current_direction", self.current_direction)
+        self.redis_client.set("moving_steps_total", steps)
+        print(f"Moving {steps} steps over {target_duration:.2f} seconds (step delay: {calculated_stepdelay:.4f}s)")
+        self.total_step_since_calibration += steps
+
+        angle_increment = 1 / self.step_to_angle_ratio
+        angle_increment = angle_increment if self.current_direction == 'forward' else -angle_increment
+
+        for i in range(steps):
+            self.current_angle += angle_increment
+
+            try:
+                self.motor.TurnStep(
+                    Dir=self.current_direction,
+                    steps=1,
+                    stepdelay=calculated_stepdelay
+                )
+                packed_data = struct.pack(self.fmt, 0, i, self.current_angle, 100)
+                self.shm.buf[:len(packed_data)] = packed_data
+                time.sleep(calculated_stepdelay)
+
+            except Exception as e:
+                print(f"Error during step {i}: {e}")
+
+        with open(save_csv, 'a+', newline='') as csvfile:
+            csvfile.seek(0)
+            csvreader = csv.reader(csvfile)
+            rows = list(csvreader)
+
+            csvwriter = csv.writer(csvfile)
+            if not rows:
+                csvwriter.writerow([time.time(), 0, 0, 0, 0, 0, 0])
+            else:
+                last_row = rows[-1]
+                new_value = int(last_row[-1]) + 1
+                csvwriter.writerow([time.time(), 0, 0, 0, 0, 0, new_value])
+
+        # 🔹 Reset state
         self.current_state = "idle"
         self.current_direction = "idle"
         self.redis_client.set("current_state", self.current_state)
