@@ -596,7 +596,7 @@ class StepperMotor:
                 self.shm.buf[:len(packed_data)] = packed_data
             except Exception as e:
                 print(f"Error: {e}")
-
+            time.sleep(self.stepdelay)
 
         with open(save_csv, 'a+', newline='') as csvfile:
             csvfile.seek(0)  # Move to the start of the file
@@ -605,11 +605,11 @@ class StepperMotor:
 
             csvwriter = csv.writer(csvfile)
             if not rows:  # If the file is empty
-                csvwriter.writerow([0, time.time()])  # Write the initial row with 0 and the timestamp
+                csvwriter.writerow([time.time(), 0, 0, 0, 0, 0, 0])  # Write the initial row with 0 and the timestamp
             else:  # If the file is not empty
                 last_row = rows[-1]
                 new_value = int(last_row[0]) + 1  # Increment the value in the first column
-                csvwriter.writerow([new_value, time.time()])  # Write the new row with incremented value and timestamp
+                csvwriter.writerow([time.time(), 0, 0, 0, 0, 0, new_value])  # Write the new row with incremented value and timestamp
         self.current_state = "idle"
         self.current_direction = "idle"
         self.redis_client.set("current_state", self.current_state)
