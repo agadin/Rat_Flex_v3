@@ -608,7 +608,8 @@ class StepperMotor:
                 csvwriter.writerow([time.time(), 0, 0, 0, 0, 0, 0])  # Write the initial row with 0 and the timestamp
             else:  # If the file is not empty
                 last_row = rows[-1]
-                new_value = int(last_row[0]) + 1  # Increment the value in the first column
+
+                new_value = int(last_row[-1]) + 1  # Increment the last value in the first column
                 csvwriter.writerow([time.time(), 0, 0, 0, 0, 0, new_value])  # Write the new row with incremented value and timestamp
         self.current_state = "idle"
         self.current_direction = "idle"

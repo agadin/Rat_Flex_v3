@@ -195,6 +195,13 @@ class ProtocolViewer(ctk.CTkFrame):
 
         self.step_widgets.append((frame, step_num))
 
+    def reload_font_colors(self):
+        color = self.get_label_text_color()
+        for frame in self.scrollable_frame.winfo_children():
+            for widget in frame.winfo_children():
+                if isinstance(widget, ctk.CTkLabel):
+                    widget.configure(text_color=color)
+
     def update_current_step(self):
         """Update opacity dynamically based on the current step."""
         try:
@@ -209,9 +216,12 @@ class ProtocolViewer(ctk.CTkFrame):
                 frame.configure(fg_color="lightblue")  # Simulate higher opacity
             else:
                 frame.configure(fg_color="lightgray")  # Simulate lower opacity
+        current_mode = ctk.get_appearance_mode()
+        if getattr(self, "_last_mode", None) != current_mode:
+            self._last_mode = current_mode
+            self.reload_font_colors()
 
         self.after(500, self.update_current_step)  # Check every 500ms
-
 
 
 class App(ctk.CTk):
