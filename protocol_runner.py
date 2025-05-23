@@ -66,6 +66,9 @@ def get_from_redis_dict(redis_key, variable_name):
         return None
 
 def create_folder_with_files(provided_name=None, special=False):
+    if os.path.exists('data.csv') and os.stat('data.csv').st_size == 0:
+        print("Error: `data.csv` is empty. Stopping create_folder_with_files.")
+        return False  # Stop execution if the file is empty
 
     animal_id = redis_client.get("animal_id")
     if animal_id is None:
