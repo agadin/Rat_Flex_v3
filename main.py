@@ -378,7 +378,7 @@ class App(ctk.CTk):
 
         self.inspector_button = ctk.CTkButton(
             self.nav_right_frame,
-            text="Calibrate",
+            text="Data Inspector",
             text_color="white",
             image=calibrate_icon,
             compound="left",
@@ -1319,7 +1319,7 @@ class App(ctk.CTk):
                 self.add_plot(fig, row, col, colspan)
 
             # Add a table in column 2 (3rd column)
-            self.add_table(rowspan=2)
+            self.add_table(rowspan=1)
 
     def update_content_based_on_checkboxes(self, selected_steps):
         """Update plots and table based on selected checkboxes."""
