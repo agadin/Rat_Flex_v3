@@ -1857,7 +1857,7 @@ class App(ctk.CTk):
             self.total_steps = self.redis_client.get("total_steps")
             print(f"Running protocol: {selected_protocol}")
             self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
-            self.timing_clock = time.time()
+        self.timing_clock = time.time()
     def start_timing_thread(self):
         print('test')
         # self.timing_thread = Thread(target=self.check_protocol_status)
@@ -1942,7 +1942,7 @@ class App(ctk.CTk):
                     minutes, seconds = divmod(remainder, 60)
                     milliseconds = int((elapsed_time - int(elapsed_time)) * 1000)
                     self.clock_values = True
-                    print( f"Elapsed time: {int(hours)}:{int(minutes)}:{int(seconds)}.{milliseconds}")
+
                 else:
                     # zero
                     if self.clock_values is not True:
