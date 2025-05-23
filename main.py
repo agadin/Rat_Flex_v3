@@ -241,6 +241,10 @@ class ProtocolViewer(ctk.CTkFrame):
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
+        print(f" {start_protocol}")
+        if start_protocol:
+            print("Starting protocol runner...")
+            start_protocol_runner(self)
         self.last_update_time = time.time()
         self.update_interval = 1 #second
         self.advanced_slider = None
@@ -250,10 +254,7 @@ class App(ctk.CTk):
         self.initialize_resources()
         global start_protocol
         #print status of start_protocol
-        print(f" {start_protocol}")
-        if start_protocol:
-            print("Starting protocol runner...")
-            start_protocol_runner(self)
+
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
         try:
