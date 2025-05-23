@@ -1847,7 +1847,7 @@ class App(ctk.CTk):
     def start_timing_thread(self):
         print("Starting timing thread")
         self.timing_clock = time.time()
-        self.timing_thread = Thread(target=self.check_protocol_status)
+        # self.timing_thread = Thread(target=self.check_protocol_status)
         self.timing_thread.start()
 
     def check_protocol_status(self):
