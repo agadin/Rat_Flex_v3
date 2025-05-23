@@ -604,7 +604,7 @@ class App(ctk.CTk):
                     self.none_count += 1
                 else:
                     self.none_count = 0
-                if self.none_count == 10:
+                if self.none_count == 6:
                     self.timing_clock = None
                     self.none_count = 0
             data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
