@@ -230,7 +230,6 @@ class App(ctk.CTk):
         self.angle_force_data = []
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-        start_protocol_runner(self)
         self.initialize_resources()
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
@@ -2136,6 +2135,14 @@ class App(ctk.CTk):
 
 
 if __name__ == "__main__":
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Run the RatFlex application.")
+    parser.add_argument("--run-protocol", action="store_true", help="Run the protocol runner on startup.")
+    args = parser.parse_args()
+
+    # Pass the argument to the App class
     app = App()
+    if args.run_protocol:
+        start_protocol_runner(app)
     app.protocol("WM_DELETE_WINDOW", app.destroy)
     app.mainloop()
