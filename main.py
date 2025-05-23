@@ -590,8 +590,8 @@ class App(ctk.CTk):
     def read_shared_memory(self):
         try:
             current_protocol_out = self.redis_client.get("current_protocol_out")
+            print(current_protocol_out)
             if not current_protocol_out:
-                print("No current protocol out")
                 self.timing_clock = None
             data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
             stop_flag, step_count, current_angle, current_force = struct.unpack(self.fmt, data)
@@ -1843,11 +1843,11 @@ class App(ctk.CTk):
             self.total_steps = self.redis_client.get("total_steps")
             print(f"Running protocol: {selected_protocol}")
             self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
-        self.start_timing_thread()
+            self.timing_clock = time.time()
+        print(self.timing_clock)
 
     def start_timing_thread(self):
-        print("Starting timing thread")
-        self.timing_clock = time.time()
+        print('test')
         # self.timing_thread = Thread(target=self.check_protocol_status)
         # self.timing_thread.start()
 
