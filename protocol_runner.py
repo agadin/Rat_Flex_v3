@@ -34,12 +34,23 @@ def verify_and_wipe_data_csv(original_path, copied_path):
             file.truncate(0)
         print("Original data.csv has been wiped out.")
         #send success message containing copied path success into an order list in status_messages. put new message last
-        status_messages = redis_client.lrange("status_messages", 0, -1) or []
-        success_message = f"Verification successful: Copied file saved at {copied_path}."
-        status_messages.append(success_message)
-        redis_client.delete("status_messages")
-        redis_client.rpush("status_messages", *status_messages)
+        try:
+            # Check if the key exists and is not a list
+            if redis_client.exists("status_messages") and redis_client.type("status_messages") != "list":
+                redis_client.delete("status_messages")  # Delete the key if it's not a list
 
+            # Retrieve the list or initialize an empty list
+            status_messages = redis_client.lrange("status_messages", 0, -1) or []
+
+            # Add the success message
+            success_message = f"Verification successful: Copied file saved at {copied_path}."
+            status_messages.append(success_message)
+
+            # Update the Redis list
+            redis_client.delete("status_messages")  # Clear the existing list
+            redis_client.rpush("status_messages", *status_messages)
+        except Exception as e:
+            print(f"Error updating status messages in Redis: {e}")
     else:
         print("Verification failed: The copied file does not match the original.")
 

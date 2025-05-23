@@ -744,15 +744,22 @@ class App(ctk.CTk):
         self.mode_toggle = ctk.CTkSwitch(self.sidebar_frame, text="Light/Dark Mode", command=self.toggle_mode)
         self.mode_toggle.pack(pady=5)
 
-
         self.status_frame = ctk.CTkFrame(
             self.sidebar_frame,
             fg_color="gray",
             corner_radius=12,
-            height=30,
-            width=400
+            height=100,  # Set height to make it a square
+            width=100,  # Set width to match height
+            border_color="black",  # Add black border
+            border_width=2  # Set border width
         )
-        self.status_label = ctk.CTkLabel(self.status_frame, text="PR", font=("Arial", 12))
+        self.status_frame.place(relx=0.5, rely=1.0, anchor="s", y=-20)
+
+        self.status_label = ctk.CTkLabel(
+            self.status_frame,
+            text="PR",
+            font=("Arial", 12)
+        )
         self.status_label.pack(expand=True)
         self.status_frame.place(relx=0.5, rely=1.0, anchor="s", y=-20)
 
