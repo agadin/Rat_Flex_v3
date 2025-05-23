@@ -591,14 +591,16 @@ class App(ctk.CTk):
         try:
             current_protocol_out = self.redis_client.get("current_protocol_out")
             print(current_protocol_out)
-            if not current_protocol_out:
-                if not hasattr(self, "_blank_count"):
-                    self._blank_count = 0
-                self._blank_count += 1
-                if self._blank_count >= 10:
+            # Check if timing_clock has a value
+            if self.timing_clock is not None:
+                none_count = 0
+                if not current_protocol_out:  # Check if current_protocol_out is None or empty
+                    none_count += 1
+                else:
+                    none_count = 0
+                if none_count == 10:
                     self.timing_clock = None
-            else:
-                self._blank_count = 0
+                    none_count = 0
             data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
             stop_flag, step_count, current_angle, current_force = struct.unpack(self.fmt, data)
             return step_count, current_angle, current_force
