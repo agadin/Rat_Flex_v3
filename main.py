@@ -591,6 +591,7 @@ class App(ctk.CTk):
         try:
             current_protocol_out = self.redis_client.get("current_protocol_out")
             if not current_protocol_out:
+                print("No current protocol out")
                 self.timing_clock = None
             data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
             stop_flag, step_count, current_angle, current_force = struct.unpack(self.fmt, data)
@@ -1848,7 +1849,7 @@ class App(ctk.CTk):
         print("Starting timing thread")
         self.timing_clock = time.time()
         # self.timing_thread = Thread(target=self.check_protocol_status)
-        self.timing_thread.start()
+        # self.timing_thread.start()
 
     def check_protocol_status(self):
         while True:
@@ -1921,6 +1922,7 @@ class App(ctk.CTk):
 
 
                 # Update individual displays if widgets exist
+                print(self.timing_clock)
                 if self.timing_clock is not None:
                     elapsed_time = time.time() - self.timing_clock
                     hours, remainder = divmod(elapsed_time, 3600)
