@@ -231,7 +231,7 @@ class App(ctk.CTk):
         self.angle_force_data = []
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
-        # start_protocol_runner(self)
+        start_protocol_runner(self)
         self.initialize_resources()
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
@@ -240,7 +240,6 @@ class App(ctk.CTk):
             img.save(png_icon_path)
             self.icon_img = ImageTk.PhotoImage(file=png_icon_path)
             self.iconphoto(False, self.icon_img)
-            print("Icon set successfully.")
         except Exception as e:
             print(f"Failed to set icon: {e}")
         self.queue = queue.Queue()
@@ -402,23 +401,23 @@ class App(ctk.CTk):
 
         self.show_home()
 
-    def show_overlay_notification(self, message, auto_dismiss_ms=5000):
-                notification = ctk.CTkFrame(self, fg_color="green", corner_radius=10)
-                # Position the notification at the top center
-                notification.place(relx=0.5, rely=0.1, anchor="n")
-                label = ctk.CTkLabel(notification, text=message, text_color="white", font=("Arial", 12))
-                label.pack(side="left", padx=(10, 5), pady=5)
-                close_button = ctk.CTkButton(
-                    notification,
-                    text="X",
-                    width=20,
-                    fg_color="transparent",
-                    text_color="white",
-                    command=notification.destroy
-                )
-                close_button.pack(side="right", padx=(5, 10), pady=5)
-                if auto_dismiss_ms is not None:
-                    notification.after(auto_dismiss_ms, notification.destroy)
+    def show_overlay_notification(self, message, auto_dismiss_ms=5000, color_disp="green"):
+            notification = ctk.CTkFrame(self, fg_color=color_disp, corner_radius=10)
+            # Position the notification slightly higher at the top center
+            notification.place(relx=0.5, rely=0.05, anchor="n")
+            label = ctk.CTkLabel(notification, text=message, text_color="white", font=("Arial", 12))
+            label.pack(side="left", padx=(10, 5), pady=5)
+            close_button = ctk.CTkButton(
+                notification,
+                text="X",
+                width=20,
+                fg_color="transparent",
+                text_color="white",
+                command=notification.destroy
+            )
+            close_button.pack(side="right", padx=(5, 10), pady=5)
+            if auto_dismiss_ms is not None:
+                notification.after(auto_dismiss_ms, notification.destroy)
 
     def show_boot_animation(self):
         # Remove title bar for splash screen effect
@@ -1852,7 +1851,7 @@ class App(ctk.CTk):
 
     def stop_protocol(self):
         self.send_data_to_shared_memory(stop_flag=1)
-        print("Protocol stopped.")
+        self.show_overlay_notification("Protocol Stopper", color_disp="red")
 
     def toggle_mode(self):
         mode = "Light" if ctk.get_appearance_mode() == "Dark" else "Dark"
@@ -1946,7 +1945,7 @@ class App(ctk.CTk):
             if ctk.get_appearance_mode() == "Dark":
                 self.advanced_slider.set_blue_angle(current_angle, '#333333')
             else:
-                self.advanced_slider.set_blue_angle(current_angle, 'cfcfcf')
+                self.advanced_slider.set_blue_angle(current_angle, '#cfcfcf')
         else:
             self.step_display.configure(text="N/A")
             self.angle_display.configure(text="N/A")
