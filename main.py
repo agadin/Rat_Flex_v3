@@ -1396,7 +1396,7 @@ class App(ctk.CTk):
         """
         # Create a container frame inside self.canvas_frame using grid
         table_frame = ctk.CTkFrame(self.canvas_frame)
-        table_frame.grid(row=0, column=1, rowspan=rowspan, sticky="nsew", padx=5, pady=5)
+        table_frame.grid(row=0, column=2, rowspan=rowspan, sticky="nsew", padx=5, pady=5)
         table_frame.grid_columnconfigure(0, weight=1)
         table_frame.grid_rowconfigure(1, weight=1)
 
@@ -1834,7 +1834,7 @@ class App(ctk.CTk):
 
         # Main content area
         self.main_content = ctk.CTkFrame(inspector_frame, corner_radius=0)
-        self.main_content.pack(side="right", fill="both", expand=True)
+        self.main_content.pack(side="left", fill="both", expand=True)
 
         # Metadata display
         self.metadata_label = ctk.CTkLabel(self.main_content, text="", font=("Arial", 14))
@@ -1843,6 +1843,7 @@ class App(ctk.CTk):
         # Canvas frame for plots and table
         self.canvas_frame = ctk.CTkFrame(self.main_content)
         self.canvas_frame.pack(fill="both", expand=True)
+
 
         # Load the first trial and create initial content
         self.load_trial(trials[0])
