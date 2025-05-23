@@ -1854,6 +1854,7 @@ class App(ctk.CTk):
         while True:
             current_protocol_out = self.redis_client.get("current_protocol_out")
            #stop looping when current_protocol_out is empty
+            print(self.timing_clock)
             if not current_protocol_out:
                 self.timing_clock = None
                 break
@@ -1919,7 +1920,6 @@ class App(ctk.CTk):
 
 
                 # Update individual displays if widgets exist
-                print(self.timing_clock)
                 if self.timing_clock is not None:
                     elapsed_time = time.time() - self.timing_clock
                     hours, remainder = divmod(elapsed_time, 3600)
