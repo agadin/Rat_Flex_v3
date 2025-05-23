@@ -248,6 +248,9 @@ class App(ctk.CTk):
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         self.initialize_resources()
+        global start_protocol
+        if start_protocol:
+                start_protocol_runner(self)
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
         try:
@@ -2267,9 +2270,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Pass the argument to the App class
+    start_protocol = args.run_protocol
+    global start_protocol
     app = App()
-    if args.run_protocol:
-        print("Running the protocol runner.")
-        start_protocol_runner(app)
     app.protocol("WM_DELETE_WINDOW", app.destroy)
     app.mainloop()
