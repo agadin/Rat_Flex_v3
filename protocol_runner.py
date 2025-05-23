@@ -269,6 +269,7 @@ def process_protocol(protocol_path):
         stop_flag = redis_client.get("stop_flag")
         if stop_flag == "1":
             print("Protocol stopped.")
+            redis_client.set("stop_flag", "0")
             break
 
         if command.startswith("Move_to_angle_jog"):
