@@ -1319,7 +1319,7 @@ class App(ctk.CTk):
                 self.add_plot(fig, row, col, colspan)
 
             # Add a table in column 2 (3rd column)
-            self.add_table(rowspan=1)
+            self.add_table(rowspan=2)
 
     def update_content_based_on_checkboxes(self, selected_steps):
         """Update plots and table based on selected checkboxes."""
@@ -1396,7 +1396,7 @@ class App(ctk.CTk):
         """
         # Create a container frame inside self.canvas_frame using grid
         table_frame = ctk.CTkFrame(self.canvas_frame)
-        table_frame.grid(row=0, column=2, rowspan=rowspan, sticky="nsew", padx=5, pady=5)
+        table_frame.grid(row=0, column=1, rowspan=rowspan, sticky="nsew", padx=5, pady=5)
         table_frame.grid_columnconfigure(0, weight=1)
         table_frame.grid_rowconfigure(1, weight=1)
 
