@@ -1919,6 +1919,7 @@ class App(ctk.CTk):
 
 
                 # Update individual displays if widgets exist
+                print(self.timing_clock)
                 if self.timing_clock is not None:
                     elapsed_time = time.time() - self.timing_clock
                     hours, remainder = divmod(elapsed_time, 3600)
