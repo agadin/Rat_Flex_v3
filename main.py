@@ -2273,6 +2273,10 @@ if __name__ == "__main__":
 
     # Pass the argument to the App class
     start_protocol = args.run_protocol
+    if start_protocol:
+        print("Running protocol on startup...")
+    else:
+        print("Not running protocol on startup.")
 
     app = App()
     app.protocol("WM_DELETE_WINDOW", app.destroy)
