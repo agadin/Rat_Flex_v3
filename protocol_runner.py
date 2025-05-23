@@ -274,8 +274,6 @@ def process_protocol(protocol_path):
             angle = string_to_value_checker(angle_input)
             move_to_angle_refast(angle, mode, metric1)
 
-        elif command.startswith("Move_to_angle_"):
-
         elif command.startswith("Move_to_angle"):
             # current command: Move_to_angle:90,metric,variable_name
             parts = command.split(":")[1].split(",")
