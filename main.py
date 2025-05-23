@@ -250,7 +250,8 @@ class App(ctk.CTk):
         self.initialize_resources()
         global start_protocol
         if start_protocol:
-                start_protocol_runner(self)
+            print("Starting protocol runner...")
+            start_protocol_runner(self)
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
         try:
