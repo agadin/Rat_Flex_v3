@@ -402,6 +402,23 @@ class App(ctk.CTk):
 
         self.show_home()
 
+    def show_overlay_notification(self, message, auto_dismiss_ms=5000):
+        notification = ctk.CTkFrame(self, fg_color="green", corner_radius=10)
+        notification.place(relx=0.5, rely=0.5, anchor="center")
+        label = ctk.CTkLabel(notification, text=message, text_color="white", font=("Arial", 12))
+        label.pack(side="left", padx=(10, 5), pady=5)
+        close_button = ctk.CTkButton(
+            notification,
+            text="X",
+            width=20,
+            fg_color="transparent",
+            text_color="white",
+            command=notification.destroy
+        )
+        close_button.pack(side="right", padx=(5, 10), pady=5)
+        if auto_dismiss_ms is not None:
+            notification.after(auto_dismiss_ms, notification.destroy)
+
     def show_boot_animation(self):
         # Remove title bar for splash screen effect
         self.overrideredirect(True)
@@ -529,7 +546,8 @@ class App(ctk.CTk):
     def run_protocol(self, protocol_path):
         # add ./protocols/ to the protocol path
         data_path = "data.csv"
-
+        #running protocol_path
+        self.show_overlay_notification(f"Running {protocol_path}...", auto_dismiss_ms=2000)
         if os.path.exists(data_path):
             try:
                 if os.path.getsize(data_path) > 0:

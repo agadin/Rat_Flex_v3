@@ -89,7 +89,21 @@ class StepperMotor:
             print(f"Error closing shared memory: {e}")
         shm_name = 'shared_data'
         shm_size = struct.calcsize('i d d d')  # 4 bytes for int, 3 doubles (8 bytes each)
-        self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
+
+        try:
+            self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
+        except FileExistsError:
+            # Unlink the existing shared memory
+            existing_shm = sm.SharedMemory(name=shm_name)
+            existing_shm.close()
+            existing_shm.unlink()
+
+            # Delete the shared_memory.dat file if it exists
+            if os.path.exists("shared_memory.dat"):
+                os.remove("shared_memory.dat")
+
+            # Recreate the shared memory
+            self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
 
     def load_calibration(self, path=None):
         if path is None:
