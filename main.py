@@ -2264,6 +2264,7 @@ class App(ctk.CTk):
 
 
 if __name__ == "__main__":
+    global start_protocol
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run the RatFlex application.")
     parser.add_argument("--run-protocol", action="store_true", help="Run the protocol runner on startup.")
@@ -2271,7 +2272,7 @@ if __name__ == "__main__":
 
     # Pass the argument to the App class
     start_protocol = args.run_protocol
-    global start_protocol
+
     app = App()
     app.protocol("WM_DELETE_WINDOW", app.destroy)
     app.mainloop()
