@@ -249,6 +249,8 @@ class App(ctk.CTk):
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         self.initialize_resources()
         global start_protocol
+        #print status of start_protocol
+        print(f" {start_protocol}")
         if start_protocol:
             print("Starting protocol runner...")
             start_protocol_runner(self)
