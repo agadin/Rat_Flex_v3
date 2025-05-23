@@ -254,6 +254,7 @@ class App(ctk.CTk):
         self.clock_values = False
         self.timing_clock = None
         self.step_time = None
+        self.none_count = 0
         self.total_steps = 0
         self.show_boot_animation()
 
@@ -593,14 +594,13 @@ class App(ctk.CTk):
             print(current_protocol_out)
             # Check if timing_clock has a value
             if self.timing_clock is not None:
-                none_count = 0
                 if not current_protocol_out:  # Check if current_protocol_out is None or empty
-                    none_count += 1
+                    self.none_count += 1
                 else:
-                    none_count = 0
-                if none_count == 10:
+                    self.none_count = 0
+                if self.none_count == 10:
                     self.timing_clock = None
-                    none_count = 0
+                    self.none_count = 0
             data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
             stop_flag, step_count, current_angle, current_force = struct.unpack(self.fmt, data)
             return step_count, current_angle, current_force
