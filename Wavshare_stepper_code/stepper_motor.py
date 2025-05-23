@@ -606,7 +606,8 @@ class StepperMotor:
         stop_flag_motor = 0
         data = bytes(self.shm.buf[:struct.calcsize(self.fmt)])
         if mode == 'duration' and target_duration is not None:
-            calculated_stepdelay = target_duration / steps
+            calculated_stepdelay = target_duration / (2*steps) #times 2 bc it is applied twice
+
         for i in range(steps):
             self.current_angle += angle_increment
             stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)

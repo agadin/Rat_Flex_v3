@@ -62,6 +62,13 @@ import threading
 def start_protocol_runner(app):
     global protocol_process
 
+    #clear protocol_runner_stdout.log and protocol_runner_stderr.log
+    with open("protocol_runner_stdout.log", "w") as f:
+        f.write("")
+
+    with open("protocol_runner_stderr.log", "w") as f:
+        f.write("")
+        
     # Open log files for writing
     stdout_log_file = open("protocol_runner_stdout.log", "w")
     stderr_log_file = open("protocol_runner_stderr.log", "w")
