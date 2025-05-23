@@ -591,7 +591,6 @@ class App(ctk.CTk):
     def read_shared_memory(self):
         try:
             current_protocol_out = self.redis_client.get("current_protocol_out")
-            print(current_protocol_out)
             # Check if timing_clock has a value
             if self.timing_clock is not None:
                 if not current_protocol_out:  # Check if current_protocol_out is None or empty
@@ -1852,8 +1851,6 @@ class App(ctk.CTk):
             print(f"Running protocol: {selected_protocol}")
             self.protocol_name_label.configure(text=f"Current Protocol: {selected_protocol}")
             self.timing_clock = time.time()
-        print(self.timing_clock)
-
     def start_timing_thread(self):
         print('test')
         # self.timing_thread = Thread(target=self.check_protocol_status)
@@ -1880,7 +1877,9 @@ class App(ctk.CTk):
             print(f"Error writing to shared memory: {e}")
 
     def stop_protocol(self):
-        self.send_data_to_shared_memory(stop_flag=1)
+        # send self.send_data_to_shared_memory(stop_flag=1) multiple times to ensure the protocol stops
+        for _ in range(10):
+            self.send_data_to_shared_memory(stop_flag=1)
         self.redis_client.set("stop_flag", 1)
         self.show_overlay_notification("Protocol Stopped", color_disp="red")
 
@@ -1930,7 +1929,6 @@ class App(ctk.CTk):
 
 
                 # Update individual displays if widgets exist
-                print(self.timing_clock)
                 if self.timing_clock is not None:
                     elapsed_time = time.time() - self.timing_clock
                     hours, remainder = divmod(elapsed_time, 3600)
