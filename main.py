@@ -106,9 +106,6 @@ def read_calibration_data(file_path):
     return calibration_data
 
 
-def run_calibration():
-    app.protocol_var.set("calibrate_protocol.txt")
-    app.run_protocol("calibrate_protocol.txt")
 
 
 import os
@@ -227,6 +224,8 @@ class ProtocolViewer(ctk.CTkFrame):
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
+        self.last_update_time = time.time()
+        self.update_interval = 1 #second
         self.advanced_slider = None
         self.angle_force_data = []
         self.running = True  # Initialize the running attribute
@@ -400,6 +399,10 @@ class App(ctk.CTk):
         self.settings_frame = None
 
         self.show_home()
+
+    def run_calibration(self):
+        self.protocol_var = ctk.StringVar(value="calibrate_protocol.txt")
+        self.run_protocol("calibrate_protocol.txt")
 
     def show_overlay_notification(self, message, auto_dismiss_ms=5000, color_disp="green"):
             notification = ctk.CTkFrame(self, fg_color=color_disp, corner_radius=10)
@@ -1851,6 +1854,7 @@ class App(ctk.CTk):
 
     def stop_protocol(self):
         self.send_data_to_shared_memory(stop_flag=1)
+        self.redis_client.set("stop_flag", 1)
         self.show_overlay_notification("Protocol Stopper", color_disp="red")
 
     def toggle_mode(self):
@@ -1988,6 +1992,19 @@ class App(ctk.CTk):
         except Exception as e:
             print(f"Error updating Calibrate button: {e}")
             self.calibrate_button.configure(fg_color="gray")
+
+        try:
+            # check redis status check the ordered list display the first message and then delet (next message will be display after 1 second)
+            current_time = time.time()
+            if current_time - self.last_update_time >= self.update_interval:
+                # Get the ordered list from Redis
+                messages = self.redis_client.lrange("message_list", 0, -1)
+                if messages:
+                    self.show_overlay_notification(messages, color_disp="blue")
+                else:
+                    return
+                self.last_update_time = current_time
+
 
 
     def clear_graphs(self):
