@@ -2269,6 +2269,7 @@ if __name__ == "__main__":
     # Pass the argument to the App class
     app = App()
     if args.run_protocol:
+        print("Running the protocol runner.")
         start_protocol_runner(app)
     app.protocol("WM_DELETE_WINDOW", app.destroy)
     app.mainloop()
