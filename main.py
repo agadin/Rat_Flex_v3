@@ -1228,6 +1228,28 @@ class App(ctk.CTk):
 
         else:
             metadata = "Invalid folder name format."
+
+        info_file_path = os.path.join(self.trial_path, "information.txt")
+
+        if os.path.exists(info_file_path):
+            try:
+                # Open and read the file
+                with open(info_file_path, "r") as info_file:
+                    lines = info_file.readlines()
+
+                # Parse each line and append to metadata
+                for line in lines:
+                    metadata += line.strip() + "    "
+            except Exception as e:
+                metadata = f"Error reading information.txt: {e}"
+        else:
+            metadata = "information.txt not found in the selected folder."
+
+        # open up information.txt inside the selected folder and parse and display all avaiable information ie Created on: 2025-02-07 12:04
+        # Total time: 64.68000000000168
+        # Total steps: 20
+        # Animal ID: 6549
+        # Selected arm: Left Arm
         self.metadata_label.configure(text=metadata)
 
     def plot_figures(self):
@@ -1439,7 +1461,7 @@ class App(ctk.CTk):
         for col in general_stats.columns:
             general_tree.heading(col, text=col)
             # Let columns stretch as needed
-            general_tree.column(col, anchor="center", width=150, stretch=True)
+            general_tree.column(col, anchor="center", width=300, stretch=True)
         for _, row in general_stats.iterrows():
             general_tree.insert("", "end", values=list(row))
         general_tree.grid(row=0, column=0, sticky="ew")
