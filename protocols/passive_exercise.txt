@@ -1,398 +1,242 @@
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
-Move_to_force: 180, 100, 45, 135
-Move_to_force: 0, 100, 45, 135
+Move_to_angle_refast: 135, duration, 2.5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 45, duration, 5
+Move_to_angle_refast: 135, duration, 5
+Move_to_angle_refast: 90, duration, 2.5
