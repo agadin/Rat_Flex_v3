@@ -413,7 +413,7 @@ def move_to_angle_fast(angle, force):
 
 def move_to_angle_refast(angle, mode, metric1):
     global motor
-    print(f"Moving to angle: {angle} as fast as possible")
+    print(f"Moving to angle: {angle} at {mode}")
     motor.move_to_angle_refast(angle, mode, metric1)
 
 
