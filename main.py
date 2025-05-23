@@ -600,7 +600,7 @@ class App(ctk.CTk):
         self.sidebar_frame.pack(side="left", fill="y", padx=15)
 
         # Calibrate button
-        self.calibrate_button = ctk.CTkButton(self.sidebar_frame, text="Calibrate", command=run_calibration)
+        self.calibrate_button = ctk.CTkButton(self.sidebar_frame, text="Calibrate", command=self.run_calibration())
         self.calibrate_button.pack(pady=5, padx=15)
 
         # Protocol selector
