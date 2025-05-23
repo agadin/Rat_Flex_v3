@@ -240,6 +240,7 @@ class ProtocolViewer(ctk.CTkFrame):
 
 class App(ctk.CTk):
     def __init__(self):
+        global start_protocol
         super().__init__()
         print(f" {start_protocol}")
         if start_protocol:
