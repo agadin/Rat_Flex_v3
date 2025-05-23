@@ -54,43 +54,50 @@ def is_protocol_running():
 
 
 # Function to start protocol_runner.py
-def start_protocol_runner(app):
-            global protocol_process
-            stdout_log_file = open("protocol_runner_stdout.log", "w")  # Open a log file for stdout
-            stderr_log_file = open("protocol_runner_stderr.log", "w")  # Open a log file for stderr
-            if sys.platform.startswith('win'):
-                protocol_process = subprocess.Popen(
-                    [sys.executable, "protocol_runner.py"],
-                    stdout=stdout_log_file,  # Redirect stdout to the log file
-                    stderr=stderr_log_file,  # Redirect stderr to the log file
-                    text=True,
-                    creationflags=subprocess.CREATE_NEW_CONSOLE
-                )
-            else:
-                try:
-                    protocol_process = subprocess.Popen(
-                        ["xterm", "-e", f"bash -c '{sys.executable} protocol_runner.py; exit'"],
-                        stdout=stdout_log_file,
-                        stderr=stderr_log_file,
-                        text=True,
-                        preexec_fn=os.setsid  # Start a new process group
-                    )
-                except FileNotFoundError:
-                    try:
-                        protocol_process = subprocess.Popen(
-                            ["lxterminal", "--command", f"bash -c '{sys.executable} protocol_runner.py; exit'"],
-                            stdout=stdout_log_file,  # Redirect stdout to the log file
-                            stderr=stderr_log_file,  # Redirect stderr to the log file
-                            text=True
-                        )
-                    except FileNotFoundError:
-                        protocol_process = subprocess.Popen(
-                            [sys.executable, "protocol_runner.py"],
-                            stdout=stdout_log_file,  # Redirect stdout to the log file
-                            stderr=stderr_log_file,  # Redirect stderr to the log file
-                            text=True
-                        )
+import subprocess
+import threading
 
+def start_protocol_runner(app):
+    global protocol_process
+
+    # Open log files for writing
+    stdout_log_file = open("protocol_runner_stdout.log", "w")
+    stderr_log_file = open("protocol_runner_stderr.log", "w")
+
+    if sys.platform.startswith('win'):
+        protocol_process = subprocess.Popen(
+            [sys.executable, "protocol_runner.py"],
+            stdout=stdout_log_file,
+            stderr=subprocess.PIPE,  # Capture stderr
+            text=True,
+            creationflags=subprocess.CREATE_NEW_CONSOLE
+        )
+    else:
+        try:
+            protocol_process = subprocess.Popen(
+                ["xterm", "-e", f"bash -c '{sys.executable} protocol_runner.py; exit'"],
+                stdout=stdout_log_file,
+                stderr=subprocess.PIPE,  # Capture stderr
+                text=True,
+                preexec_fn=os.setsid
+            )
+        except FileNotFoundError:
+            protocol_process = subprocess.Popen(
+                [sys.executable, "protocol_runner.py"],
+                stdout=stdout_log_file,
+                stderr=subprocess.PIPE,  # Capture stderr
+                text=True
+            )
+
+    # Function to continuously write stderr to the log file
+    def log_stderr(pipe, log_file):
+        for line in iter(pipe.readline, ''):
+            log_file.write(line)
+            log_file.flush()
+        pipe.close()
+
+    # Start a thread to handle stderr logging
+    threading.Thread(target=log_stderr, args=(protocol_process.stderr, stderr_log_file), daemon=True).start()
 # Function to read process output
 
 
@@ -741,7 +748,7 @@ class App(ctk.CTk):
             fg_color="gray",
             corner_radius=12,
             height=30,
-            width=150
+            width=400
         )
         self.status_label = ctk.CTkLabel(self.status_frame, text="PR", font=("Arial", 12))
         self.status_label.pack(expand=True)
@@ -1854,7 +1861,7 @@ class App(ctk.CTk):
     def stop_protocol(self):
         self.send_data_to_shared_memory(stop_flag=1)
         self.redis_client.set("stop_flag", 1)
-        self.show_overlay_notification("Protocol Stopper", color_disp="red")
+        self.show_overlay_notification("Protocol Stopped", color_disp="red")
 
     def toggle_mode(self):
         mode = "Light" if ctk.get_appearance_mode() == "Dark" else "Dark"
@@ -1928,6 +1935,7 @@ class App(ctk.CTk):
         else:
             self.status_frame.configure(fg_color="red")
             self.status_label.configure(text="Protocol Not Running")
+            self.show_overlay_notification("Protocol Not Running", color_disp="red")
         if step_count is not None:
             self.time_display.configure(text=f"{int(minutes):02}:{int(seconds):02}.{milliseconds:03}")
             if step_count < 0:
