@@ -253,8 +253,6 @@ class App(ctk.CTk):
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
         self.initialize_resources()
-        global start_protocol
-        #print status of start_protocol
 
         icon_path = os.path.abspath('./img/ratfav.ico')
         png_icon_path = os.path.abspath('./img/ratfav.png')
