@@ -609,8 +609,11 @@ class StepperMotor:
             calculated_stepdelay = target_duration / steps
         for i in range(steps):
             self.current_angle += angle_increment
+            stop_flag, temp1, temp2, temp3 = struct.unpack(self.fmt, data)
             # read force when i is odd
-            if i % 2 == 1 and mode == 'halfrate':
+            if stop_flag == 1 or stop_flag_motor == 1:
+                return
+            elif i % 2 == 1 and mode == 'halfrate':
                 stop_flag_motor = self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=self.stepdelay)
                 self.raw_force = self.ForceSensor.read_force()
                 if i < 0:
