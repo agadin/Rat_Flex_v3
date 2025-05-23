@@ -102,10 +102,12 @@ class AdvancedCurvedSlider(tk.Canvas):
         if not self.user_typing:
             self.angle_var.set(str(round(self.value_from_angle(self.blue_angle),1)))
 
-    def set_blue_angle(self, angle_degrees):
+    def set_blue_angle(self, angle_degrees, background_color):
         """
         Set the blue circle's position using an angle in degrees.
         """
+        #update background color of arc based on hex in background_color
+        self.configure(bg=background_color)
         self.blue_angle = math.radians(angle_degrees)
         self.update_blue_position()
 

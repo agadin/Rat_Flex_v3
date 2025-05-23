@@ -1941,7 +1941,11 @@ class App(ctk.CTk):
             if current_step_number is None:
                 current_step_number = 0
             self.protocol_step_counter.configure(text=f"Step: {current_step_number} / {self.total_steps}")
-            self.advanced_slider.set_blue_angle(current_angle)
+            #pass in background color here dependning on light or dark mode
+            if ctk.get_appearance_mode() == "Dark":
+                self.advanced_slider.set_blue_angle(current_angle, '#333333')
+            else:
+                self.advanced_slider.set_blue_angle(current_angle, 'cfcfcf')
         else:
             self.step_display.configure(text="N/A")
             self.angle_display.configure(text="N/A")
