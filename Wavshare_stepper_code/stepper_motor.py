@@ -623,7 +623,7 @@ class StepperMotor:
                 else:
                     self.zero_force = self.find_closest_force_optimized(self.current_angle, self.current_direction)
                 self.current_force = float(self.raw_force) -self.zero_force
-            elif mode == 'duration'
+            elif mode == 'duration':
                 stop_flag_motor = self.motor.TurnStep(Dir=self.current_direction, steps=1, stepdelay=calculated_stepdelay)
                 time.sleep(calculated_stepdelay)
             else:
