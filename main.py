@@ -1855,6 +1855,7 @@ class App(ctk.CTk):
             current_protocol_out = self.redis_client.get("current_protocol_out")
            #stop looping when current_protocol_out is empty
             print(self.timing_clock)
+            print(current_protocol_out)
             if not current_protocol_out:
                 self.timing_clock = None
                 break
