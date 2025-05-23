@@ -2004,6 +2004,8 @@ class App(ctk.CTk):
                 else:
                     return
                 self.last_update_time = current_time
+        except Exception as e:
+            print(f"Error updating Calibrate button: {e}")
 
 
 
