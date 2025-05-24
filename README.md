@@ -128,7 +128,7 @@ Rat Flex is distributed under the **MIT License**.
 ## Citation
 
 ```
-Gannon A., Lake S.P. (2025) Rat Flex: An open‑source platform for in‑vivo rodent joint‑mechanics testing. *bioRxiv*. https://doi.org/10.1101/2025.04.04.089215
+Gadin A., Lake S.P. (2025) Rat Flex: An open‑source platform for in‑vivo rodent joint‑mechanics testing. *bioRxiv*. https://doi.org/10.1101/2025.04.04.089215
 ```
 
 ## Contact
