@@ -1,7 +1,12 @@
 # Rat Flex
 
-*A modular system for ****in‑vivo**** joint‑mechanics testing in small animals*
+*A modular system for ****in‑vivo**** joint‑mechanics testing in small animals including rats and mice*
 
+<div align="center">
+  <img src="https://raw.githubusercontent.com/agadin/Rat_Flex_v3/refs/heads/main/img/ratflexdiag.jpg" alt="Rat Flex Overview" />
+  <br>
+  <img src="https://raw.githubusercontent.com/agadin/Rat_Flex_v3/refs/heads/main/img/ratflexhomescreen.png" alt="Rat Flex UI" />
+</div>
 ---
 
 ## Overview
