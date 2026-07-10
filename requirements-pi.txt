@@ -1,0 +1,9 @@
+# RatFlex — Raspberry Pi device-only dependencies (hardware I/O).
+# Install ON THE PI IN ADDITION to requirements.txt:
+#     pip install -r requirements.txt -r requirements-pi.txt
+# Do NOT install these on Mac/Windows — lgpio is Raspberry Pi GPIO and won't build.
+
+-r requirements.txt
+
+lgpio           # Raspberry Pi GPIO (stepper driver, limit switches)
+pyserial~=3.5   # serial load cell (force_sensor.py)

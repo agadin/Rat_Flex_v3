@@ -1,7 +1,20 @@
-pyserial~=3.5
-streamlit~=1.36.0
-redis
-websocket-client
-websockets
+# RatFlex — shared + GUI/viewer dependencies.
+# Installs and runs on Mac / Windows / Linux (detached viewer mode).
+# On the Raspberry Pi device, also install requirements-pi.txt for hardware I/O.
+
+# --- GUI / data viewer (main.py) ---
+customtkinter
+CTkMessagebox
+opencv-python
+pillow
 matplotlib
-lgpio
+seaborn
+pandas
+numpy
+psutil
+
+# --- coordination ---
+redis
+
+# --- alternate Streamlit entry points (control_viewer.py, simple_main.py) ---
+streamlit~=1.36.0
