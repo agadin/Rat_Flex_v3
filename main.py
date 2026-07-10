@@ -1316,7 +1316,10 @@ class App(ctk.CTk):
             figures = []
 
             # Constants for scaling
-            FIGSIZE_ROW = (5, 3)  # Larger width for row-spanning plot
+            # In detached (viewer) mode the tables sit full-width below the
+            # plots, so the main Angle-vs-Force plot doesn't need to span the
+            # whole row -- make it narrower for a cleaner, less-stretched look.
+            FIGSIZE_ROW = (3.6, 3) if DETACHED_MODE else (5, 3)  # row-spanning plot
             FIGSIZE_SMALL = (3, 2)  # Smaller size for side-by-side plots
             DPI = 125  # Moderate DPI for clarity
             FONT_SIZE = 6  # Font size suitable for small plots
@@ -1467,9 +1470,16 @@ class App(ctk.CTk):
         are added using grid so that they do not conflict with other grid-managed widgets
         in self.canvas_frame.
         """
-        # Create a container frame inside self.canvas_frame using grid
+        # Create a container frame inside self.canvas_frame using grid.
+        # Detached (viewer) mode: place the tables full-width BELOW the plots
+        #   (row 2, spanning all 3 columns) so wide tables never need to be
+        #   scrolled sideways next to the plots.
+        # Pi mode: keep the original side-by-side placement in column 2.
         table_frame = ctk.CTkFrame(self.canvas_frame)
-        table_frame.grid(row=0, column=2, rowspan=rowspan, sticky="nsew", padx=5, pady=5)
+        if DETACHED_MODE:
+            table_frame.grid(row=2, column=0, columnspan=3, sticky="nsew", padx=5, pady=5)
+        else:
+            table_frame.grid(row=0, column=2, rowspan=rowspan, sticky="nsew", padx=5, pady=5)
         table_frame.grid_columnconfigure(0, weight=1)
         table_frame.grid_rowconfigure(1, weight=1)
 
@@ -1644,9 +1654,12 @@ class App(ctk.CTk):
 
         detailed_tree = ttk.Treeview(scroll_frame, columns=list(custom_data.columns), show="headings",
                                      height=visible_rows)
+        # In detached mode the table is full-width, so use a smaller base column
+        # width and let stretch fill the window -- avoids sideways scrolling.
+        col_width = 110 if DETACHED_MODE else 150
         for col in custom_data.columns:
             detailed_tree.heading(col, text=col)
-            detailed_tree.column(col, anchor="center", width=150, stretch=True)
+            detailed_tree.column(col, anchor="center", width=col_width, stretch=True)
         for _, row in custom_data.iterrows():
             detailed_tree.insert("", "end", values=list(row))
         detailed_tree.grid(row=0, column=0, sticky="nsew")
@@ -1917,13 +1930,19 @@ class App(ctk.CTk):
         self.canvas_frame = ctk.CTkFrame(self.main_content)
         self.canvas_frame.pack(fill="both", expand=True)
         # Make the plot/table grid responsive so content reflows on resize.
-        # Row 0 (main plot) gets more vertical space than row 1 (small plots);
-        # columns 0/1 hold plots, column 2 holds the stats table.
+        # Row 0 (main plot) gets more vertical space than row 1 (small plots).
+        # Columns 0/1 hold plots. In Pi mode column 2 holds the stats table
+        # side-by-side; in detached mode the table sits full-width in row 2.
         self.canvas_frame.grid_rowconfigure(0, weight=3)
         self.canvas_frame.grid_rowconfigure(1, weight=2)
         self.canvas_frame.grid_columnconfigure(0, weight=1)
         self.canvas_frame.grid_columnconfigure(1, weight=1)
-        self.canvas_frame.grid_columnconfigure(2, weight=1)
+        if DETACHED_MODE:
+            # Third row for the full-width tables below the plots.
+            self.canvas_frame.grid_rowconfigure(2, weight=2)
+        else:
+            # Third column holds the side-by-side stats table.
+            self.canvas_frame.grid_columnconfigure(2, weight=1)
 
 
         # Load the first trial and create initial content
