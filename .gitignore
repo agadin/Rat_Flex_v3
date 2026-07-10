@@ -25,3 +25,10 @@ gui_out.log
 
 # Local viewer/wiki working files (not tracked; keep visible in-tree)
 wiki/
+
+# Trial data and generated analysis artifacts (kept on disk, not in the repo)
+data/
+OUTPUT_FIGURES/
+*.ipynb
+fixed_data.csv
+rightarmtest2badplatform.csv
