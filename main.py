@@ -290,6 +290,7 @@ class App(ctk.CTk):
         self.angle_force_data = []
         self.running = True  # Initialize the running attribute
         self.redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+        self._check_redis_connection()
         self.initialize_resources()
 
         icon_path = os.path.abspath('./img/ratfav.ico')
@@ -570,6 +571,39 @@ class App(ctk.CTk):
         # Start the video playback
         play_video()
         self.overrideredirect(False)
+
+    def _check_redis_connection(self):
+        """Ping Redis once at startup and warn clearly if it isn't running.
+
+        RatFlex coordinates through a local Redis server. If it's down, later
+        calls would fail with confusing tracebacks -- instead, detect it here
+        and show a friendly, actionable message (console + popup).
+        """
+        try:
+            self.redis_client.ping()
+            return True
+        except Exception as e:
+            print("=" * 60)
+            print("WARNING: Could not connect to Redis at localhost:6379.")
+            print("RatFlex needs a local Redis server running.")
+            print("  macOS:  brew install redis && brew services start redis")
+            print("  Linux:  sudo systemctl start redis")
+            print(f"  (details: {e})")
+            print("=" * 60)
+            try:
+                CTkMessagebox(
+                    title="Redis not running",
+                    message=("Could not connect to Redis at localhost:6379.\n\n"
+                             "RatFlex needs a local Redis server running.\n\n"
+                             "macOS:  brew services start redis\n"
+                             "Linux:  sudo systemctl start redis\n\n"
+                             "The viewer will open, but live/protocol features "
+                             "won't work until Redis is running."),
+                    icon="warning",
+                )
+            except Exception:
+                pass
+            return False
 
     def initialize_resources(self):
 

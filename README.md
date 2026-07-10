@@ -51,18 +51,28 @@ Key capabilities
 git clone https://github.com/agadin/Rat_Flex_v3.git
 cd Rat_Flex_v3
 
-# Activate packaged virtual‑env (base) then install deps if needed
-source base/bin/activate
-pip install -r requirements.txt           # first time or after updates
+# Install dependencies
+pip install -r requirements.txt           # GUI / viewer (Mac / Windows / Pi)
+# On the Raspberry Pi device, ALSO install the hardware deps:
+pip install -r requirements.txt -r requirements-pi.txt
+
+# A local Redis server must be running (see the wiki for setup):
+#   macOS:  brew install redis && brew services start redis
+#   Linux:  sudo systemctl start redis
 
 # Run the interactive GUI in one terminal
 python main.py
 
-# In a second terminal run scripted protocols
-python protocol_runner.py --protocol example_protocol.txt
+# On the Raspberry Pi, in a second terminal, run scripted protocols
+python protocol_runner.py                 # reads protocols from the protocols/ folder
 ```
 
-> **Why two terminals?** Keeping `main.py` (GUI) and `protocol_runner.py` in separate shells isolates logs and makes debugging easier during development.
+> **Detached (viewer) mode:** On Mac / Windows, `main.py` runs on its own as a hardware‑free
+> data viewer — it auto‑detects that it isn't a Pi and never touches the motor/serial/GPIO. You
+> do **not** run `protocol_runner.py` off the device. See the *Quick Start (Detached Mode)* wiki
+> page.
+
+> **Why two terminals (on the Pi)?** Keeping `main.py` (GUI) and `protocol_runner.py` in separate shells isolates logs and makes debugging easier during development.
 
 ### 2. End‑user workflow (lab desktop/Raspberry Pi)
 
