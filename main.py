@@ -60,8 +60,46 @@ def is_protocol_running():
 import subprocess
 import threading
 
+def is_raspberry_pi():
+    """Return True only when running on real Raspberry Pi hardware.
+
+    Used to decide whether hardware-driving features (the protocol runner,
+    stepper/GPIO/serial access) are available. On any non-Pi host (Mac,
+    Windows, generic Linux dev box) this returns False so the app runs as a
+    detached, hardware-free data viewer. The Pi is unaffected: on the device
+    this returns True and behaviour is identical to before.
+    """
+    # Linux is a prerequisite; Mac/Windows are never a Pi.
+    if not sys.platform.startswith("linux"):
+        return False
+    try:
+        # The device-tree model string reliably identifies a Pi.
+        with open("/proc/device-tree/model", "r") as f:
+            if "raspberry pi" in f.read().lower():
+                return True
+    except (FileNotFoundError, OSError):
+        pass
+    try:
+        with open("/proc/cpuinfo", "r") as f:
+            info = f.read().lower()
+            if "raspberry pi" in info or "bcm2" in info:
+                return True
+    except (FileNotFoundError, OSError):
+        pass
+    return False
+
+
+# Populated in __main__; when True the app runs as a hardware-free viewer.
+DETACHED_MODE = False
+
+
 def start_protocol_runner(app):
     global protocol_process
+
+    # Safety: never spawn the hardware-driving protocol runner off-device.
+    if DETACHED_MODE:
+        print("Detached mode: skipping protocol runner (no hardware present).")
+        return
 
     #clear protocol_runner_stdout.log and protocol_runner_stderr.log
     with open("protocol_runner_stdout.log", "w") as f:
@@ -282,15 +320,19 @@ class App(ctk.CTk):
 
 
         # Window configuration
-        self.title("RatFlex")
-        self.resizable(False, False)
-        # Calculate the center of the screen
+        self.title("RatFlex — Detached Viewer" if DETACHED_MODE else "RatFlex")
+        self.resizable(True, True)
+        self.minsize(1000, 640)
+        # Calculate the center of the screen. Clamp the window to the screen so
+        # it fits on smaller (e.g. laptop) displays instead of overflowing.
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
-        x_coordinate = (screen_width // 2) - (1800 // 2)
-        y_coordinate = (screen_height // 2) - (920 // 2)
+        win_width = min(1800, screen_width - 40)
+        win_height = min(920, screen_height - 80)
+        x_coordinate = max(0, (screen_width // 2) - (win_width // 2))
+        y_coordinate = max(0, (screen_height // 2) - (win_height // 2))
 
-        self.geometry(f"1800x920+{x_coordinate}+{y_coordinate}")
+        self.geometry(f"{win_width}x{win_height}+{x_coordinate}+{y_coordinate}")
 
 
         # Top navigation bar
@@ -546,15 +588,21 @@ class App(ctk.CTk):
             self.shm = sm.SharedMemory(name='shared_memory')
         except FileNotFoundError:
             print("Shared memory not found. Creating new shared memory block.")
-            self.redis_client.set("shared_memory_error", 1)
-            time.sleep(1)
+            try:
+                self.redis_client.set("shared_memory_error", 1)
+            except Exception:
+                pass
+            # Try to attach to an existing block; if none exists (e.g. running
+            # the viewer standalone with no protocol_runner), create it here.
             try:
                 self.shm = sm.SharedMemory(name=shm_name)
+            except FileNotFoundError:
+                self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
             except FileExistsError:
                 # Unlink the existing shared memory and create a new one
                 existing_shm = sm.SharedMemory(name=shm_name)
                 existing_shm.unlink()
-                self.shm = sm.SharedMemory(name=shm_name)
+                self.shm = sm.SharedMemory(create=True, name=shm_name, size=shm_size)
                 
     def clear_content_frame(self):
         for widget in self.content_frame.winfo_children():
@@ -1268,7 +1316,10 @@ class App(ctk.CTk):
             figures = []
 
             # Constants for scaling
-            FIGSIZE_ROW = (5, 3)  # Larger width for row-spanning plot
+            # In detached (viewer) mode the tables sit full-width below the
+            # plots, so the main Angle-vs-Force plot doesn't need to span the
+            # whole row -- make it narrower for a cleaner, less-stretched look.
+            FIGSIZE_ROW = (3.6, 3) if DETACHED_MODE else (5, 3)  # row-spanning plot
             FIGSIZE_SMALL = (3, 2)  # Smaller size for side-by-side plots
             DPI = 125  # Moderate DPI for clarity
             FONT_SIZE = 6  # Font size suitable for small plots
@@ -1407,7 +1458,10 @@ class App(ctk.CTk):
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
         canvas = FigureCanvasTkAgg(figure, self.canvas_frame)
         canvas_widget = canvas.get_tk_widget()
-        canvas_widget.grid(row=row, column=col, columnspan=colspan, padx=5, pady=5)
+        # sticky="nsew" makes each plot fill its (responsive) grid cell so the
+        # Inspector content reflows when the window is resized.
+        canvas_widget.grid(row=row, column=col, columnspan=colspan,
+                           padx=5, pady=5, sticky="nsew")
         canvas.draw()
 
     def add_table(self, rowspan):
@@ -1416,9 +1470,16 @@ class App(ctk.CTk):
         are added using grid so that they do not conflict with other grid-managed widgets
         in self.canvas_frame.
         """
-        # Create a container frame inside self.canvas_frame using grid
+        # Create a container frame inside self.canvas_frame using grid.
+        # Detached (viewer) mode: place the tables full-width BELOW the plots
+        #   (row 2, spanning all 3 columns) so wide tables never need to be
+        #   scrolled sideways next to the plots.
+        # Pi mode: keep the original side-by-side placement in column 2.
         table_frame = ctk.CTkFrame(self.canvas_frame)
-        table_frame.grid(row=0, column=2, rowspan=rowspan, sticky="nsew", padx=5, pady=5)
+        if DETACHED_MODE:
+            table_frame.grid(row=2, column=0, columnspan=3, sticky="nsew", padx=5, pady=5)
+        else:
+            table_frame.grid(row=0, column=2, rowspan=rowspan, sticky="nsew", padx=5, pady=5)
         table_frame.grid_columnconfigure(0, weight=1)
         table_frame.grid_rowconfigure(1, weight=1)
 
@@ -1593,9 +1654,12 @@ class App(ctk.CTk):
 
         detailed_tree = ttk.Treeview(scroll_frame, columns=list(custom_data.columns), show="headings",
                                      height=visible_rows)
+        # In detached mode the table is full-width, so use a smaller base column
+        # width and let stretch fill the window -- avoids sideways scrolling.
+        col_width = 110 if DETACHED_MODE else 150
         for col in custom_data.columns:
             detailed_tree.heading(col, text=col)
-            detailed_tree.column(col, anchor="center", width=150, stretch=True)
+            detailed_tree.column(col, anchor="center", width=col_width, stretch=True)
         for _, row in custom_data.iterrows():
             detailed_tree.insert("", "end", values=list(row))
         detailed_tree.grid(row=0, column=0, sticky="nsew")
@@ -1865,6 +1929,20 @@ class App(ctk.CTk):
         # Canvas frame for plots and table
         self.canvas_frame = ctk.CTkFrame(self.main_content)
         self.canvas_frame.pack(fill="both", expand=True)
+        # Make the plot/table grid responsive so content reflows on resize.
+        # Row 0 (main plot) gets more vertical space than row 1 (small plots).
+        # Columns 0/1 hold plots. In Pi mode column 2 holds the stats table
+        # side-by-side; in detached mode the table sits full-width in row 2.
+        self.canvas_frame.grid_rowconfigure(0, weight=3)
+        self.canvas_frame.grid_rowconfigure(1, weight=2)
+        self.canvas_frame.grid_columnconfigure(0, weight=1)
+        self.canvas_frame.grid_columnconfigure(1, weight=1)
+        if DETACHED_MODE:
+            # Third row for the full-width tables below the plots.
+            self.canvas_frame.grid_rowconfigure(2, weight=2)
+        else:
+            # Third column holds the side-by-side stats table.
+            self.canvas_frame.grid_columnconfigure(2, weight=1)
 
 
         # Load the first trial and create initial content
@@ -2294,10 +2372,23 @@ if __name__ == "__main__":
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run the RatFlex application.")
     parser.add_argument("--run-protocol", action="store_true", help="Run the protocol runner on startup.")
+    parser.add_argument("--detached", action="store_true",
+                        help="Force detached (viewer-only) mode: never touch hardware. "
+                             "Auto-enabled on non-Raspberry-Pi hosts.")
     args = parser.parse_args()
 
-    # Pass the argument to the App class
-    start_protocol = args.run_protocol
+    # Detached mode = explicit flag OR not running on Pi hardware.
+    # On the Raspberry Pi (no flag) this stays False -> full hardware behaviour.
+    DETACHED_MODE = args.detached or not is_raspberry_pi()
+    if DETACHED_MODE:
+        print("Detached (viewer-only) mode: hardware features disabled.")
+    else:
+        print("Raspberry Pi detected: full hardware mode.")
+
+    # In detached mode the protocol runner is never started, even if requested.
+    start_protocol = args.run_protocol and not DETACHED_MODE
+    if args.run_protocol and DETACHED_MODE:
+        print("Ignoring --run-protocol in detached mode (no hardware).")
     if start_protocol:
         print("Running protocol on startup...")
     else:
